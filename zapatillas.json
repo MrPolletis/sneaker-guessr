@@ -1,0 +1,1787 @@
+[
+  {
+    "id": "1",
+    "nombre": "Nike Air Force 1 Low",
+    "marca": "Nike",
+    "colorway": "Triple White",
+    "año": "2007",
+    "imagen": "imgs/nike-air-force-low-1-triple-white.webp"
+  }
+  ,{
+    "id": "2",
+    "nombre": "Nike Dunk Low",
+    "marca": "Nike",
+    "colorway": "Panda",
+    "año": "1999",
+    "imagen": "imgs/nike-dunk-low-panda.webp"
+  },
+  {
+    "id": "3",
+    "nombre": "Nike Cortez",
+    "marca": "Nike",
+    "colorway": "Varsity Red",
+    "año": "1972",
+    "imagen": "imgs/nike-cortez-varsity-red.webp"
+  },
+  {
+    "id": "4",
+    "nombre": "Nike Air More Uptempo 96",
+    "marca": "Nike",
+    "colorway": "Black White",
+    "año": "1996",
+    "imagen": "imgs/nike-air-more-uptempo-96-black-white.webp"
+  },
+{
+    "id": "5",
+    "nombre": "Nike Vomero 5",
+    "marca": "Nike",
+    "colorway": "Triple Black",
+    "año": "2024",
+    "imagen": "imgs/nike-vomero-5-triple-black.webp"
+  },
+  {
+    "id": "6",
+    "nombre": "Nike P6000",
+    "marca": "Nike",
+    "colorway": "Triple Black",
+    "año": "2019",
+    "imagen": "imgs/nike-p6000-triple-black.webp"
+  },
+{
+    "id": "7",
+    "nombre": "Nike Reactx Rejuven8",
+    "marca": "Nike",
+    "colorway": "Triple Black",
+    "año": "2025",
+    "imagen": "imgs/nike-reactx-rejuven8-triple-black.webp"
+  },
+{
+    "id": "8",
+    "nombre": "Nike Mind 001",
+    "marca": "Nike",
+    "colorway": "Black",
+    "año": "2026",
+    "imagen": "imgs/nike-mind-001-black.webp"
+  }
+  ,
+{
+    "id": "9",
+    "nombre": "Nike Vapormax Plus",
+    "marca": "Nike",
+    "colorway": "Triple Black",
+    "año": "2018",
+    "imagen": "imgs/nike-vapormax-plus-triple-black.webp"
+  }
+  ,
+{
+    "id": "10",
+    "nombre": "Jordan 1 High",
+    "marca": "Jordan",
+    "colorway": "Chicago",
+    "año": "1985",
+    "imagen": "imgs/jordan-1-high-chicago.webp"
+  }
+  ,
+{
+    "id": "11",
+    "nombre": "Jordan 2 High",
+    "marca": "Jordan",
+    "colorway": "Chicago",
+    "año": "1986",
+    "imagen": "imgs/jordan-2-high-chicago.webp"
+  }
+  ,
+{
+    "id": "12",
+    "nombre": "Jordan 3",
+    "marca": "Jordan",
+    "colorway": "White Cement",
+    "año": "1988",
+    "imagen": "imgs/jordan-3-white-cement.webp"
+  }
+  ,
+{
+    "id": "13",
+    "nombre": "Jordan 4",
+    "marca": "Jordan",
+    "colorway": "Rare Air",
+    "año": "2025",
+    "imagen": "imgs/jordan-4-rare-air.webp"
+  }
+   ,
+{
+    "id": "14",
+    "nombre": "Jordan 6",
+    "marca": "Jordan",
+    "colorway": "Reverse Infrared Salesman",
+    "año": "2026",
+    "imagen": "imgs/jordan-6-reverse-infrared-salesman.webp"
+  }
+  ,
+{
+    "id": "15",
+    "nombre": "Jordan 11 High",
+    "marca": "Jordan",
+    "colorway": "Cool Grey",
+    "año": "2001",
+    "imagen": "imgs/jordan-11-high-cool-grey.webp"
+  }
+  ,
+{
+    "id": "16",
+    "nombre": "Jordan 13",
+    "marca": "Jordan",
+    "colorway": "Playoff",
+    "año": "1997",
+    "imagen": "imgs/jordan-13-playoff.webp"
+  }
+   ,
+{
+    "id": "17",
+    "nombre": "Jordan 6 rings",
+    "marca": "Jordan",
+    "colorway": "Black Ice",
+    "año": "2018",
+    "imagen": "imgs/jordan-6-rings-black-ice.webp"
+  }
+  ,
+{
+    "id": "18",
+    "nombre": "Jordan Spizike",
+    "marca": "Jordan",
+    "colorway": "Black Cat",
+    "año": "2024",
+    "imagen": "imgs/jordan-spizike-black-cat.webp"
+  }
+  ,
+{
+    "id": "19",
+    "nombre": "Jordan 4 RM",
+    "marca": "Jordan",
+    "colorway": "Pine Green",
+    "año": "2025",
+    "imagen": "imgs/jordan-4-rm-pine-green.webp"
+  }
+  ,
+{
+    "id": "20",
+    "nombre": "Jordan Jumpman Two Trey",
+    "marca": "Jordan",
+    "colorway": "Bred",
+    "año": "2022",
+    "imagen": "imgs/jordan-jumpman-two-trey-bred.webp"
+  }
+  ,
+{
+    "id": "21",
+    "nombre": "Nike Air Max 1",
+    "marca": "Nike",
+    "colorway": "Anniversary Red",
+    "año": "1987",
+    "imagen": "imgs/nike-air-max-1-anniversary-red.webp"
+  }
+  ,
+{
+    "id": "21",
+    "nombre": "Nike Air Max 90",
+    "marca": "Nike",
+    "colorway": "Hyper Royal",
+    "año": "1990",
+    "imagen": "imgs/nike-air-max-90-hyper-royal.webp"
+  }
+  ,
+{
+    "id": "22",
+    "nombre": "Nike Air Max 95",
+    "marca": "Nike",
+    "colorway": "Neon",
+    "año": "1995",
+    "imagen": "imgs/nike-air-max-95-neon.webp"
+  }
+  ,
+{
+    "id": "23",
+    "nombre": "Nike Air Max 97",
+    "marca": "Nike",
+    "colorway": "Silver Bullet",
+    "año": "1997",
+    "imagen": "imgs/nike-air-max-97-silver-bullet.webp"
+  }
+  ,
+{
+    "id": "24",
+    "nombre": "Nike Air Max Plus",
+    "marca": "Nike",
+    "colorway": "Sunset",
+    "año": "1998",
+    "imagen": "imgs/nike-air-max-plus-sunset.webp"
+  }
+  ,
+{
+    "id": "25",
+    "nombre": "Nike Vapormax 3",
+    "marca": "Nike",
+    "colorway": "Triple Black",
+    "año": "2017",
+    "imagen": "imgs/nike-vapormax-3-triple-black.webp"
+  }
+  ,
+{
+    "id": "26",
+    "nombre": "Nike Vapormax 2021",
+    "marca": "Nike",
+    "colorway": "Triple Black",
+    "año": "2021",
+    "imagen": "imgs/nike-vapormax-2021-triple-black.webp"
+  }
+  ,
+{
+    "id": "27",
+    "nombre": "Nike Vapormax 2023",
+    "marca": "Nike",
+    "colorway": "Platinum Anthracite",
+    "año": "2023",
+    "imagen": "imgs/nike-vapormax-2023-pure-platinum-anthracite.webp"
+  }
+  ,
+{
+    "id": "28",
+    "nombre": "Nike Air Max 270",
+    "marca": "Nike",
+    "colorway": "Black White",
+    "año": "2018",
+    "imagen": "imgs/nike-air-max-270-black-white.webp"
+  }
+   ,
+{
+    "id": "29",
+    "nombre": "Nike Air Max 1000",
+    "marca": "Nike",
+    "colorway": "Black",
+    "año": "2024",
+    "imagen": "imgs/nike-air-max-1000-black.webp"
+  }
+  ,
+{
+    "id": "30",
+    "nombre": "Nike Air Max 2013",
+    "marca": "Nike",
+    "colorway": "White Metallic Silver",
+    "año": "2013",
+    "imagen": "imgs/nike-air-max-2013-white-metallic-silver.webp"
+  }
+  ,
+{
+    "id": "31",
+    "nombre": "Nike Air Max Scorpion",
+    "marca": "Nike",
+    "colorway": "Have a Nike Day",
+    "año": "2023",
+    "imagen": "imgs/nike-air-max-scorpion-have-a-nike-day.webp"
+  }
+  ,
+{
+    "id": "32",
+    "nombre": "Nike Air Liquid Max",
+    "marca": "Nike",
+    "colorway": "Poison Dart Frog",
+    "año": "2026",
+    "imagen": "imgs/nike-air-liquid-max-poison-dart-frog.webp"
+  }
+   ,
+{
+    "id": "33",
+    "nombre": "Nike Air Max DN",
+    "marca": "Nike",
+    "colorway": "All Night",
+    "año": "2024",
+    "imagen": "imgs/nike-air-max-dn-all-night.webp"
+  }
+   ,
+{
+    "id": "34",
+    "nombre": "Nike Air Max DN8",
+    "marca": "Nike",
+    "colorway": "Black Volt",
+    "año": "2025",
+    "imagen": "imgs/nike-air-max-dn8-black-volt.webp"
+  }
+  ,
+{
+    "id": "35",
+    "nombre": "Nike Air Max DN8",
+    "marca": "Nike",
+    "colorway": "Black Volt",
+    "año": "2025",
+    "imagen": "imgs/nike-air-max-dn8-black-volt.webp"
+  }
+  ,
+{
+    "id": "36",
+    "nombre": "Adidas Stan Smith",
+    "marca": "Adidas",
+    "colorway": "Fairway",
+    "año": "1965",
+    "imagen": "imgs/adidas-stan-smith-fairway.webp"
+  }
+   ,
+{
+    "id": "37",
+    "nombre": "Adidas Superstar",
+    "marca": "Adidas",
+    "colorway": "White Black",
+    "año": "1969",
+    "imagen": "imgs/adidas-superstar-white-black.webp"
+  }
+  ,
+{
+    "id": "38",
+    "nombre": "Adidas Campus",
+    "marca": "Adidas",
+    "colorway": "Grey Gum",
+    "año": "1980",
+    "imagen": "imgs/adidas-campus-grey-gum.webp"
+  }
+,
+{
+    "id": "39",
+    "nombre": "Adidas Gazelle",
+    "marca": "Adidas",
+    "colorway": "Fusion Gum",
+    "año": "1966",
+    "imagen": "imgs/adidas-gazelle-blue-fusion-gum.webp"
+  }
+  ,
+{
+    "id": "40",
+    "nombre": "Adidas Spezial",
+    "marca": "Adidas",
+    "colorway": "Collegiate Navy Clear Sky",
+    "año": "1979",
+    "imagen": "imgs/adidas-spezial-collegiate-navy-clear-sky.webp"
+  }
+   ,
+{
+    "id": "41",
+    "nombre": "Adidas Yeezy 350",
+    "marca": "Adidas",
+    "colorway": "Zebra",
+    "año": "2017",
+    "imagen": "imgs/adidas-yeezy-350-zebra.webp"
+  }
+  ,
+{
+    "id": "42",
+    "nombre": "Adidas Yeezy Slide",
+    "marca": "Adidas",
+    "colorway": "Onyx",
+    "año": "2019",
+    "imagen": "imgs/adidas-yeezy-slide-onyx.webp"
+  }
+  ,
+{
+    "id": "43",
+    "nombre": "Adidas Ultraboost",
+    "marca": "Adidas",
+    "colorway": "Triple White",
+    "año": "2015",
+    "imagen": "imgs/adidas-ultraboost-triple-white.webp"
+  }
+  ,
+{
+    "id": "44",
+    "nombre": "Adidas Forum",
+    "marca": "Adidas",
+    "colorway": "Chalk White Gum",
+    "año": "1984",
+    "imagen": "imgs/adidas-forum-chalk-white-gum.webp"
+  }
+  ,
+{
+    "id": "45",
+    "nombre": "New Balance 574",
+    "marca": "New Balance",
+    "colorway": "Nimbus CLoud",
+    "año": "1988",
+    "imagen": "imgs/New-Balance-574-nimbus-cloud.webp"
+  }
+  ,
+{
+    "id": "46",
+    "nombre": "New Balance 990v3",
+    "marca": "New Balance",
+    "colorway": "Grey",
+    "año": "2012",
+    "imagen": "imgs/new-balance-990v3-grey.webp"
+  }
+  ,
+{
+    "id": "47",
+    "nombre": "New Balance 530",
+    "marca": "New Balance",
+    "colorway": "Metallic Silver",
+    "año": "1992",
+    "imagen": "imgs/new-balance-530-white-metallic-silver.webp"
+  }
+  ,
+{
+    "id": "48",
+    "nombre": "New Balance 550",
+    "marca": "New Balance",
+    "colorway": "White Grey",
+    "año": "1989",
+    "imagen": "imgs/new-balance-550-white-grey.webp"
+  }
+  ,
+{
+    "id": "49",
+    "nombre": "New Balance 9060",
+    "marca": "New Balance",
+    "colorway": "Sea Salt",
+    "año": "2022",
+    "imagen": "imgs/new-balance-9060-sea-salt.webp"
+  }
+  ,
+{
+    "id": "50",
+    "nombre": "New Balance 327",
+    "marca": "New Balance",
+    "colorway": "Sea Salt",
+    "año": "2020",
+    "imagen": "imgs/new-balance-327-sea-salt.webp"
+  }
+  ,
+{
+    "id": "51",
+    "nombre": "New Balance 1906R",
+    "marca": "New Balance",
+    "colorway": "Silver Metallic Black",
+    "año": "2022",
+    "imagen": "imgs/new-balance-1906R-silver-metallic-black.webp"
+  }
+  ,
+{
+    "id": "52",
+    "nombre": "New Balance 992",
+    "marca": "New Balance",
+    "colorway": "Grey",
+    "año": "2006",
+    "imagen": "imgs/new-balance-992-Grey.webp"
+  }
+  ,
+{
+    "id": "53",
+    "nombre": "Puma Suede Classic",
+    "marca": "Puma",
+    "colorway": "Black White",
+    "año": "1968",
+    "imagen": "imgs/puma-suede-classic-black-white.webp"
+  }
+  ,
+{
+    "id": "54",
+    "nombre": "Puma Palermo",
+    "marca": "Puma",
+    "colorway": "White Black Gum",
+    "año": "1980",
+    "imagen": "imgs/puma-palermo-white-black-gum.webp"
+  }
+  ,
+{
+    "id": "55",
+    "nombre": "Puma RS-X",
+    "marca": "Puma",
+    "colorway": "Warm White",
+    "año": "2018",
+    "imagen": "imgs/puma-rs-x-warm-white.webp"
+  }
+  ,
+{
+    "id": "56",
+    "nombre": "Puma Speedcat",
+    "marca": "Puma",
+    "colorway": "Red White",
+    "año": "1999",
+    "imagen": "imgs/puma-speedcat-red-white.webp"
+  },
+  {
+    "id": "57",
+    "nombre": "Jordan 1 High",
+    "marca": "Jordan",
+    "colorway": "Dior",
+    "año": "2020",
+    "imagen": "imgs/jordan-1-high-dior.webp"
+  },
+  {
+    "id": "58",
+    "nombre": "Jordan 1 High",
+    "marca": "Jordan",
+    "colorway": "Off-White UNC",
+    "año": "2018",
+    "imagen": "imgs/jordan-1-high-off-white-unc.webp"
+  },
+  {
+    "id": "59",
+    "nombre": "Jordan 1 High",
+    "marca": "Jordan",
+    "colorway": "Bred",
+    "año": "1985",
+    "imagen": "imgs/jordan-1-high-bred.webp"
+  },
+  {
+    "id": "60",
+    "nombre": "Jordan 1 Low",
+    "marca": "Jordan",
+    "colorway": "Travis Scott Fragment",
+    "año": "2021",
+    "imagen": "imgs/jordan-1-low-travis-scott-fragment.webp"
+  },
+  {
+    "id": "61",
+    "nombre": "Jordan 1 High",
+    "marca": "Jordan",
+    "colorway": "Travis Scott Mocha",
+    "año": "2019",
+    "imagen": "imgs/jordan-1-high-travis-scott-mocha.webp"
+  },
+  {
+    "id": "62",
+    "nombre": "Nike Dunk Low",
+    "marca": "Nike",
+    "colorway": "Grey Fog",
+    "año": "2021",
+    "imagen": "imgs/nike-dunk-low-grey-fog.webp"
+  },
+  {
+    "id": "63",
+    "nombre": "Nike Dunk SB Low",
+    "marca": "Nike",
+    "colorway": "Freddy Krueger",
+    "año": "2007",
+    "imagen": "imgs/nike-dunk-freddy-krueger.webp"
+  },
+  {
+    "id": "64",
+    "nombre": "Nike Air Force 1 Low",
+    "marca": "Nike",
+    "colorway": "Triple Black",
+    "año": "2007",
+    "imagen": "imgs/nike-air-force-1-triple-black.webp"
+  },
+  {
+    "id": "65",
+    "nombre": "Nike Air Force 1 Low",
+    "marca": "Nike",
+    "colorway": "Utopia",
+    "año": "2023",
+    "imagen": "imgs/nike-air-force-1-utopia.webp"
+  },
+  {
+    "id": "66",
+    "nombre": "Nike Air Force 1 Low",
+    "marca": "Nike",
+    "colorway": "Tiffany & Co. 1837",
+    "año": "2023",
+    "imagen": "imgs/nike-air-force-1-tiffany.webp"
+  },
+  {
+    "id": "67",
+    "nombre": "Jordan 3",
+    "marca": "Jordan",
+    "colorway": "True Blue",
+    "año": "1988",
+    "imagen": "imgs/jordan-3-true-blue.webp"
+  },
+  {
+    "id": "68",
+    "nombre": "Jordan 3",
+    "marca": "Jordan",
+    "colorway": "Fire Red",
+    "año": "1988",
+    "imagen": "imgs/jordan-3-fire-red.webp"
+  },
+  {
+    "id": "69",
+    "nombre": "Jordan 3",
+    "marca": "Jordan",
+    "colorway": "World's Best Dad",
+    "año": "2024",
+    "imagen": "imgs/jordan-3-world's-best-dad.webp"
+  },
+  {
+    "id": "70",
+    "nombre": "Jordan 3",
+    "marca": "Jordan",
+    "colorway": "Black Cat",
+    "año": "2007",
+    "imagen": "imgs/jordan-3-black-cat.webp"
+  },
+  {
+    "id": "71",
+    "nombre": "Jordan 3",
+    "marca": "Jordan",
+    "colorway": "Black Cement",
+    "año": "1988",
+    "imagen": "imgs/jordan-3-black-cement.webp"
+  },
+  {
+    "id": "72",
+    "nombre": "Jordan 2 Low",
+    "marca": "Jordan",
+    "colorway": "Christmas",
+    "año": "2023",
+    "imagen": "imgs/jordan-2-low-christmas.webp"
+  },
+  {
+    "id": "73",
+    "nombre": "Jordan 2 Low",
+    "marca": "Jordan",
+    "colorway": "UNC",
+    "año": "2004",
+    "imagen": "imgs/jordan-2-low-unc.webp"
+  },
+  {
+    "id": "74",
+    "nombre": "Jordan 2 High",
+    "marca": "Jordan",
+    "colorway": "Lucky Green",
+    "año": "2023",
+    "imagen": "imgs/jordan-2-high-lucky-green.webp"
+  },
+  {
+    "id": "75",
+    "nombre": "Jordan 2 High",
+    "marca": "Jordan",
+    "colorway": "Black Cement",
+    "año": "2023",
+    "imagen": "imgs/jordan-2-high-black-cement.webp"
+  },
+  {
+    "id": "76",
+    "nombre": "Jordan 1 Low",
+    "marca": "Jordan",
+    "colorway": "Travis Scott Black Phantom",
+    "año": "2022",
+    "imagen": "imgs/jordan-1-low-travis-scott-black-phantom.webp"
+  },
+  {
+    "id": "77",
+    "nombre": "Jordan 4",
+    "marca": "Jordan",
+    "colorway": "Red Thunder",
+    "año": "2022",
+    "imagen": "imgs/jordan-4-red-thunder.webp"
+  },
+  {
+    "id": "78",
+    "nombre": "Jordan 4",
+    "marca": "Jordan",
+    "colorway": "Rust Pink",
+    "año": "2021",
+    "imagen": "imgs/jordan-4-rust-pink-thunder.webp"
+  },
+  {
+    "id": "79",
+    "nombre": "Jordan 4",
+    "marca": "Jordan",
+    "colorway": "Military Blue",
+    "año": "1989",
+    "imagen": "imgs/jordan-4-military-blue.webp"
+  },
+  {
+    "id": "80",
+    "nombre": "Jordan 4",
+    "marca": "Jordan",
+    "colorway": "Military Black",
+    "año": "2022",
+    "imagen": "imgs/jordan-4-military-black.webp"
+  },
+  {
+    "id": "81",
+    "nombre": "Jordan 4",
+    "marca": "Jordan",
+    "colorway": "SE Wet Cement",
+    "año": "2024",
+    "imagen": "imgs/jordan-4-se-wet-cement.webp"
+  },
+  {
+    "id": "82",
+    "nombre": "Jordan 4",
+    "marca": "Jordan",
+    "colorway": "Bred",
+    "año": "1989",
+    "imagen": "imgs/jordan-4-bred.webp"
+  },
+  {
+    "id": "83",
+    "nombre": "Jordan 4 Retro SP",
+    "marca": "Jordan",
+    "colorway": "Nike SB Navy",
+    "año": "2025",
+    "imagen": "imgs/jordan-4-sp-navy.webp"
+  },
+  {
+    "id": "84",
+    "nombre": "Jordan 4 RM",
+    "marca": "Jordan",
+    "colorway": "Nigel Sylvester Brick After Brick",
+    "año": "2024",
+    "imagen": "imgs/jordan-4-nigel-sylvester-brick-after-brick.webp"
+  },
+  {
+    "id": "85",
+    "nombre": "Jordan 4",
+    "marca": "Jordan",
+    "colorway": "White Cement",
+    "año": "1989",
+    "imagen": "imgs/jordan-4-white-cement.webp"
+  },
+  {
+    "id": "86",
+    "nombre": "Jordan 3",
+    "marca": "Jordan",
+    "colorway": "Midnight Navy",
+    "año": "2023",
+    "imagen": "imgs/jordan-3-midnight-navy.webp"
+  },
+  {
+    "id": "87",
+    "nombre": "Jordan 7",
+    "marca": "Jordan",
+    "colorway": "Chambray",
+    "año": "2006",
+    "imagen": "imgs/jordan-7-chambray.webp"
+  },
+  {
+    "id": "88",
+    "nombre": "Jordan 7",
+    "marca": "Jordan",
+    "colorway": "Citrus",
+    "año": "2006",
+    "imagen": "imgs/jordan-7-citrus.webp"
+  },
+  {
+    "id": "89",
+    "nombre": "Jordan 7",
+    "marca": "Jordan",
+    "colorway": "Cardinal",
+    "año": "1992",
+    "imagen": "imgs/jordan-7-cardinal.webp"
+  },
+  {
+    "id": "90",
+    "nombre": "Jordan 6",
+    "marca": "Jordan",
+    "colorway": "Midnight Navy",
+    "año": "2000",
+    "imagen": "imgs/jordan-6-midnight-navy.webp"
+  },
+  {
+    "id": "91",
+    "nombre": "Jordan 6",
+    "marca": "Jordan",
+    "colorway": "Chrome",
+    "año": "2002",
+    "imagen": "imgs/jordan-6-chrome.webp"
+  },
+  {
+    "id": "92",
+    "nombre": "Jordan 6",
+    "marca": "Jordan",
+    "colorway": "Olympic",
+    "año": "2000",
+    "imagen": "imgs/jordan-6-olympic.webp"
+  },
+  {
+    "id": "93",
+    "nombre": "Jordan 6",
+    "marca": "Jordan",
+    "colorway": "Carmine",
+    "año": "1991",
+    "imagen": "imgs/jordan-6-carmine.webp"
+  },
+  {
+    "id": "94",
+    "nombre": "Jordan 5",
+    "marca": "Jordan",
+    "colorway": "Grape",
+    "año": "1990",
+    "imagen": "imgs/jordan-5-grape.webp"
+  },
+  {
+    "id": "95",
+    "nombre": "Jordan 5",
+    "marca": "Jordan",
+    "colorway": "Black Metallic Reimagined",
+    "año": "1990",
+    "imagen": "imgs/jordan-5-black-metallic-reimagined.webp"
+  },
+  {
+    "id": "96",
+    "nombre": "Jordan 5",
+    "marca": "Jordan",
+    "colorway": "Fire Red",
+    "año": "1990",
+    "imagen": "imgs/jordan-5-fire-red.webp"
+  },
+  {
+    "id": "97",
+    "nombre": "Jordan 10",
+    "marca": "Jordan",
+    "colorway": "Powder Blue",
+    "año": "1994",
+    "imagen": "imgs/jordan-10-powder-blue.webp"
+  },
+  {
+    "id": "98",
+    "nombre": "Jordan 10",
+    "marca": "Jordan",
+    "colorway": "Shadow",
+    "año": "1994",
+    "imagen": "imgs/jordan-10-shadow.webp"
+  },
+  {
+    "id": "99",
+    "nombre": "Jordan 9",
+    "marca": "Jordan",
+    "colorway": "Bred",
+    "año": "2018",
+    "imagen": "imgs/jordan-9-bred.webp"
+  },
+  {
+    "id": "100",
+    "nombre": "Jordan 9",
+    "marca": "Jordan",
+    "colorway": "Olive",
+    "año": "1993",
+    "imagen": "imgs/jordan-9-olive.webp"
+  },
+  {
+    "id": "101",
+    "nombre": "Jordan 9",
+    "marca": "Jordan",
+    "colorway": "Cool Grey",
+    "año": "2002",
+    "imagen": "imgs/jordan-9-cool-grey.webp"
+  },
+  {
+    "id": "102",
+    "nombre": "Jordan 9",
+    "marca": "Jordan",
+    "colorway": "Space Jam",
+    "año": "1993",
+    "imagen": "imgs/jordan-9-space-jam.webp"
+  },
+  {
+    "id": "103",
+    "nombre": "Jordan 8",
+    "marca": "Jordan",
+    "colorway": "Aqua",
+    "año": "1993",
+    "imagen": "imgs/jordan-8-aqua.webp"
+  },
+  {
+    "id": "104",
+    "nombre": "Jordan 8",
+    "marca": "Jordan",
+    "colorway": "Bugs Bunny",
+    "año": "1993",
+    "imagen": "imgs/jordan-8-bugs-bunny.webp"
+  },
+  {
+    "id": "105",
+    "nombre": "Jordan 7",
+    "marca": "Jordan",
+    "colorway": "Raptor",
+    "año": "1992",
+    "imagen": "imgs/jordan-7-raptor.webp"
+  },
+  {
+    "id": "106",
+    "nombre": "Jordan 7",
+    "marca": "Jordan",
+    "colorway": "Marvin the Martian",
+    "año": "2015",
+    "imagen": "imgs/jordan-7-marvin-the-martian.webp"
+  },
+  {
+    "id": "107",
+    "nombre": "Jordan 11 Low",
+    "marca": "Jordan",
+    "colorway": "Diffused Blue",
+    "año": "2024",
+    "imagen": "imgs/jordan-11-low-diffused-blue.webp"
+  },
+  {
+    "id": "108",
+    "nombre": "Jordan 11 Low",
+    "marca": "Jordan",
+    "colorway": "Cement Grey",
+    "año": "2023",
+    "imagen": "imgs/jordan-11-low-cement-grey.webp"
+  },
+  {
+    "id": "109",
+    "nombre": "Jordan 11",
+    "marca": "Jordan",
+    "colorway": "Rare Air",
+    "año": "2025",
+    "imagen": "imgs/jordan-11-high-rare-air.webp"
+  },
+  {
+    "id": "110",
+    "nombre": "Jordan 11",
+    "marca": "Jordan",
+    "colorway": "Gratitude",
+    "año": "2023",
+    "imagen": "imgs/jordan-11-high-gratitude.webp"
+  },
+  {
+    "id": "111",
+    "nombre": "Jordan 11",
+    "marca": "Jordan",
+    "colorway": "Bred",
+    "año": "1996",
+    "imagen": "imgs/jordan-11-high-bred.webp"
+  },
+  {
+    "id": "112",
+    "nombre": "Jordan 11",
+    "marca": "Jordan",
+    "colorway": "Cherry",
+    "año": "2022",
+    "imagen": "imgs/jordan-11-high-cherry.webp"
+  },
+  {
+    "id": "113",
+    "nombre": "Jordan 11",
+    "marca": "Jordan",
+    "colorway": "Legend Blue",
+    "año": "1996",
+    "imagen": "imgs/jordan-11-high-legend-blue.webp"
+  },
+  {
+    "id": "114",
+    "nombre": "Jordan 11",
+    "marca": "Jordan",
+    "colorway": "Gamma Blue",
+    "año": "2013",
+    "imagen": "imgs/jordan-11-high-gamma-blue.webp"
+  },
+  {
+    "id": "115",
+    "nombre": "Jordan 10",
+    "marca": "Jordan",
+    "colorway": "Chicago",
+    "año": "1995",
+    "imagen": "imgs/jordan-10-chicago.webp"
+  },
+  {
+    "id": "116",
+    "nombre": "Jordan 10",
+    "marca": "Jordan",
+    "colorway": "NYC",
+    "año": "2016",
+    "imagen": "imgs/jordan-10-nyc.webp"
+  },
+  {
+    "id": "117",
+    "nombre": "Jordan 14",
+    "marca": "Jordan",
+    "colorway": "University Blue",
+    "año": "2006",
+    "imagen": "imgs/jordan-14-university-blue.webp"
+  },
+  {
+    "id": "118",
+    "nombre": "Jordan 14",
+    "marca": "Jordan",
+    "colorway": "Ferrari",
+    "año": "2014",
+    "imagen": "imgs/jordan-14-ferrari.webp"
+  },
+  {
+    "id": "119",
+    "nombre": "Jordan 13",
+    "marca": "Jordan",
+    "colorway": "He Got Game",
+    "año": "1997",
+    "imagen": "imgs/jordan-13-he-got-game.webp"
+  },
+  {
+    "id": "120",
+    "nombre": "Jordan 13",
+    "marca": "Jordan",
+    "colorway": "Chicago",
+    "año": "1998",
+    "imagen": "imgs/jordan-13-chicago.webp"
+  },
+  {
+    "id": "121",
+    "nombre": "Jordan 13",
+    "marca": "Jordan",
+    "colorway": "Black Cat",
+    "año": "2017",
+    "imagen": "imgs/jordan-13-black-cat.webp"
+  },
+  {
+    "id": "122",
+    "nombre": "Jordan 12",
+    "marca": "Jordan",
+    "colorway": "Playoff",
+    "año": "1997",
+    "imagen": "imgs/jordan-12-playoff.webp"
+  },
+  {
+    "id": "123",
+    "nombre": "Jordan 12",
+    "marca": "Jordan",
+    "colorway": "Flu Game",
+    "año": "1997",
+    "imagen": "imgs/jordan-12-flu-game.webp"
+  },
+  {
+    "id": "124",
+    "nombre": "Jordan 12",
+    "marca": "Jordan",
+    "colorway": "Bloodline",
+    "año": "2024",
+    "imagen": "imgs/jordan-12-bloodline.webp"
+  },
+  {
+    "id": "125",
+    "nombre": "Jordan 12",
+    "marca": "Jordan",
+    "colorway": "Taxi",
+    "año": "1996",
+    "imagen": "imgs/jordan-12-taxi.webp"
+  },
+  {
+    "id": "126",
+    "nombre": "Jordan 11 Low",
+    "marca": "Jordan",
+    "colorway": "Emerald",
+    "año": "2018",
+    "imagen": "imgs/jordan-11-low-emerald.webp"
+  },
+  {
+    "id": "127",
+    "nombre": "Jordan Spizike Low",
+    "marca": "Jordan",
+    "colorway": "White Cool Grey",
+    "año": "2024",
+    "imagen": "imgs/jordan-spizike-white-cool-grey.webp"
+  },
+  {
+    "id": "128",
+    "nombre": "Jordan 6 Rings",
+    "marca": "Jordan",
+    "colorway": "Black Cement",
+    "año": "2018",
+    "imagen": "imgs/jordan-6-rings-black-cement.webp"
+  },
+  {
+    "id": "129",
+    "nombre": "Jordan 6 Rings",
+    "marca": "Jordan",
+    "colorway": "White Lucky Green",
+    "año": "2023",
+    "imagen": "imgs/jordan-6-rings-white-lucky-green.webp"
+  },
+  {
+    "id": "130",
+    "nombre": "Jordan 6 Rings",
+    "marca": "Jordan",
+    "colorway": "Bred",
+    "año": "2008",
+    "imagen": "imgs/jordan-6-rings-bred.webp"
+  },
+  {
+    "id": "131",
+    "nombre": "Jordan 6 Rings",
+    "marca": "Jordan",
+    "colorway": "Defining Moments",
+    "año": "2020",
+    "imagen": "imgs/jordan-6-rings-defining-moments.webp"
+  },
+  {
+    "id": "132",
+    "nombre": "Jordan 6 Rings",
+    "marca": "Jordan",
+    "colorway": "White University Red",
+    "año": "2024",
+    "imagen": "imgs/jordan-6-rings-white-university-red.webp"
+  },
+  {
+    "id": "133",
+    "nombre": "Jordan 6 Rings",
+    "marca": "Jordan",
+    "colorway": "Black Infrared",
+    "año": "2019",
+    "imagen": "imgs/jordan-6-rings-black-infrared.webp"
+  },
+  {
+    "id": "134",
+    "nombre": "Jordan 17 Low",
+    "marca": "Jordan",
+    "colorway": "Lightning UNC",
+    "año": "2002",
+    "imagen": "imgs/jordan-17-unc.webp"
+  },
+  {
+    "id": "135",
+    "nombre": "Jordan 16",
+    "marca": "Jordan",
+    "colorway": "CEO",
+    "año": "2017",
+    "imagen": "imgs/jordan-16-ceo.webp"
+  },
+  {
+    "id": "136",
+    "nombre": "Jordan 15",
+    "marca": "Jordan",
+    "colorway": "Stealth",
+    "año": "1999",
+    "imagen": "imgs/jordan-15-stealth.webp"
+  },
+  {
+    "id": "137",
+    "nombre": "Jordan Spizike Low",
+    "marca": "Jordan",
+    "colorway": "Coconut Milk",
+    "año": "2024",
+    "imagen": "imgs/jordan-spizike-coconut-milk.webp"
+  },
+  {
+    "id": "138",
+    "nombre": "Jordan Spizike Low",
+    "marca": "Jordan",
+    "colorway": "Team Red",
+    "año": "2024",
+    "imagen": "imgs/jordan-spizike-team-red.webp"
+  },
+  {
+    "id": "139",
+    "nombre": "Jordan Spizike Low",
+    "marca": "Jordan",
+    "colorway": "UNC",
+    "año": "2024",
+    "imagen": "imgs/jordan-spizike-unc.webp"
+  },
+  {
+    "id": "140",
+    "nombre": "Jordan 4 RM",
+    "marca": "Jordan",
+    "colorway": "Black Light Bone",
+    "año": "2024",
+    "imagen": "imgs/jordan-4-rm-black-light-bone.webp"
+  },
+  {
+    "id": "141",
+    "nombre": "Jordan Jumpman Two Trey",
+    "marca": "Jordan",
+    "colorway": "Concord",
+    "año": "2022",
+    "imagen": "imgs/jordan-jumpman-two-trey-concord.webp"
+  },
+  {
+    "id": "142",
+    "nombre": "Jordan Jumpman Two Trey",
+    "marca": "Jordan",
+    "colorway": "Bred Concord",
+    "año": "2022",
+    "imagen": "imgs/jordan-jumpman-two-trey-bred-concord.webp"
+  },
+  {
+    "id": "143",
+    "nombre": "Nike Air Max 1",
+    "marca": "Nike",
+    "colorway": "Anniversary Royal",
+    "año": "1987",
+    "imagen": "imgs/nike-air-max-1-anniversary-royal.webp"
+  },
+  {
+    "id": "144",
+    "nombre": "Nike Air Max 1 '86",
+    "marca": "Nike",
+    "colorway": "Big Bubble Obsidian",
+    "año": "1986",
+    "imagen": "imgs/nike-air-max-1'86-big-bubble-obsidian.webp"
+  },
+  {
+    "id": "145",
+    "nombre": "Nike Air Max 1",
+    "marca": "Nike",
+    "colorway": "Travis Scott Saturn Gold",
+    "año": "2022",
+    "imagen": "imgs/nike-air-max-1-travis-scott-saturn-gold.webp"
+  },
+  {
+    "id": "146",
+    "nombre": "Nike Air Max 2 Light",
+    "marca": "Nike",
+    "colorway": "Black White",
+    "año": "1994",
+    "imagen": "imgs/nike-air-max-2-light-black-white.webp"
+  },
+  {
+    "id": "147",
+    "nombre": "Nike Air Max 95 Ultra",
+    "marca": "Nike",
+    "colorway": "Black Reflective",
+    "año": "2021",
+    "imagen": "imgs/nike-air-max-95-ultra-black-reflective.webp"
+  },
+  {
+    "id": "148",
+    "nombre": "Nike Air Max 95",
+    "marca": "Nike",
+    "colorway": "Anatomy of Air",
+    "año": "2022",
+    "imagen": "imgs/nike-air-max-95-anatomy-of-air.webp"
+  },
+  {
+    "id": "149",
+    "nombre": "Nike Air Max 95",
+    "marca": "Nike",
+    "colorway": "Corteiz Honey Blacks",
+    "año": "2023",
+    "imagen": "imgs/nike-air-max-95-corteiz-honey-blacks.webp"
+  },
+  {
+    "id": "150",
+    "nombre": "Nike Air Max 95",
+    "marca": "Nike",
+    "colorway": "Triple Black",
+    "año": "2014",
+    "imagen": "imgs/nike-air-max-95-triple-black.webp"
+  },
+  {
+    "id": "151",
+    "nombre": "Nike Air Max 95",
+    "marca": "Nike",
+    "colorway": "Pink Foam",
+    "año": "2020",
+    "imagen": "imgs/nike-air-max-95-pink-foam.webp"
+  },
+  {
+    "id": "152",
+    "nombre": "Nike Air Max 95",
+    "marca": "Nike",
+    "colorway": "Blue Spark",
+    "año": "2009",
+    "imagen": "imgs/nike-air-max-95-blue-spark.webp"
+  },
+  {
+    "id": "153",
+    "nombre": "Nike Air Max 90",
+    "marca": "Nike",
+    "colorway": "Laser Blue",
+    "año": "1990",
+    "imagen": "imgs/nike-air-max-90-laser-blue.webp"
+  },
+  {
+    "id": "154",
+    "nombre": "Nike Air Max 90 x Off-White",
+    "marca": "Nike",
+    "colorway": "Black",
+    "año": "2019",
+    "imagen": "imgs/nike-air-max-90-off-white-black.webp"
+  },
+  {
+    "id": "155",
+    "nombre": "Nike Air Max 90 x Off-White",
+    "marca": "Nike",
+    "colorway": "Desert Ore Extra Credit",
+    "año": "2019",
+    "imagen": "imgs/nike-air-max-90-off-white-extra-credit.webp"
+  },
+  {
+    "id": "156",
+    "nombre": "Nike Air Max 90",
+    "marca": "Nike",
+    "colorway": "Infrared 3M",
+    "año": "2015",
+    "imagen": "imgs/nike-air-max-90-infrared-3m.webp"
+  },
+  {
+    "id": "157",
+    "nombre": "Nike Air Max 95 Ultra",
+    "marca": "Nike",
+    "colorway": "White Spruce",
+    "año": "2021",
+    "imagen": "imgs/nike-air-max-95-ultra-white-spruce.webp"
+  },
+  {
+    "id": "158",
+    "nombre": "Nike Air Max 97",
+    "marca": "Nike",
+    "colorway": "Triple Black",
+    "año": "2017",
+    "imagen": "imgs/nike-air-max-97-triple-black.webp"
+  },
+  {
+    "id": "159",
+    "nombre": "Nike Air Max 97",
+    "marca": "Nike",
+    "colorway": "Triple White",
+    "año": "2017",
+    "imagen": "imgs/nike-air-max-97-triple-white.webp"
+  },
+  {
+    "id": "160",
+    "nombre": "Nike Air Max 1/97 x Sean Wotherspoon",
+    "marca": "Nike",
+    "colorway": "Sean Wotherspoon",
+    "año": "2017",
+    "imagen": "imgs/nike-air-max-1-97-sean-wotherspoon.webp"
+  },
+  {
+    "id": "161",
+    "nombre": "Nike Air Max 97 x Off-White",
+    "marca": "Nike",
+    "colorway": "Black",
+    "año": "2018",
+    "imagen": "imgs/nike-air-max-97-off-white-black.webp"
+  },
+  {
+    "id": "162",
+    "nombre": "Nike Air Max Plus",
+    "marca": "Nike",
+    "colorway": "Triple Black",
+    "año": "1998",
+    "imagen": "imgs/nike-air-max-plus-triple-black.webp"
+  },
+  {
+    "id": "163",
+    "nombre": "Nike Air Max Plus",
+    "marca": "Nike",
+    "colorway": "Hyper Blue",
+    "año": "1998",
+    "imagen": "imgs/nike-air-max-plus-hyper-blue.webp"
+  },
+  {
+    "id": "164",
+    "nombre": "Nike Air Max Plus",
+    "marca": "Nike",
+    "colorway": "Voltage Purple",
+    "año": "1998",
+    "imagen": "imgs/nike-air-max-plus-voltage-purple.webp"
+  },
+  {
+    "id": "165",
+    "nombre": "Nike Air Max Plus",
+    "marca": "Nike",
+    "colorway": "Black Dusty Cactus",
+    "año": "2024",
+    "imagen": "imgs/nike-air-max-plus-black-dusty-cactus.webp"
+  },
+  {
+    "id": "166",
+    "nombre": "Nike Air Max Plus Ultra",
+    "marca": "Nike",
+    "colorway": "Triple Black",
+    "año": "2017",
+    "imagen": "imgs/nike-air-max-plus-ultra-triple-black.webp"
+  },
+  {
+    "id": "167",
+    "nombre": "Nike Air Max Plus 3",
+    "marca": "Nike",
+    "colorway": "Hyper Blue",
+    "año": "2000",
+    "imagen": "imgs/nike-air-max-plus-3-hyper-blue.webp"
+  },
+  {
+    "id": "168",
+    "nombre": "Nike Air Max Plus 3",
+    "marca": "Nike",
+    "colorway": "Black White",
+    "año": "2020",
+    "imagen": "imgs/nike-air-max-plus-3-black-white.webp"
+  },
+  {
+    "id": "169",
+    "nombre": "Nike Air Max Plus 3",
+    "marca": "Nike",
+    "colorway": "Black Silver",
+    "año": "2019",
+    "imagen": "imgs/nike-air-max-plus-3-black-silver.webp"
+  },
+  {
+    "id": "170",
+    "nombre": "Nike Air Max Plus 3",
+    "marca": "Nike",
+    "colorway": "Wolf Grey",
+    "año": "2020",
+    "imagen": "imgs/nike-air-max-plus-3-wolf-grey.webp"
+  },
+  {
+    "id": "171",
+    "nombre": "Nike Air Max Plus 2",
+    "marca": "Nike",
+    "colorway": "Black Reflect Silver",
+    "año": "2000",
+    "imagen": "imgs/nike-air-max-plus-2-black-reflect-silver.webp"
+  },
+  {
+    "id": "172",
+    "nombre": "Nike Air Max Plus 2",
+    "marca": "Nike",
+    "colorway": "Valor Blue",
+    "año": "2000",
+    "imagen": "imgs/nike-air-max-plus-2-valor-blue.webp"
+  },
+  {
+    "id": "173",
+    "nombre": "Nike Air Max Plus Drift",
+    "marca": "Nike",
+    "colorway": "Bred",
+    "año": "2024",
+    "imagen": "imgs/nike-air-max-plus-drift-bred.webp"
+  },
+  {
+    "id": "174",
+    "nombre": "Nike Air Max Plus Drift",
+    "marca": "Nike",
+    "colorway": "White Silver Black",
+    "año": "2024",
+    "imagen": "imgs/nike-air-max-plus-drift-white-silver-black.webp"
+  },
+  {
+    "id": "175",
+    "nombre": "Nike Air Max Plus Terrascape",
+    "marca": "Nike",
+    "colorway": "Triple Black",
+    "año": "2021",
+    "imagen": "imgs/nike-air-max-plus-terrascape-triple-black.webp"
+  },
+  {
+    "id": "176",
+    "nombre": "Nike Air Max Plus",
+    "marca": "Nike",
+    "colorway": "SE Just Do It",
+    "año": "2018",
+    "imagen": "imgs/nike-air-max-plus-se-just-do-it.webp"
+  },
+  {
+    "id": "177",
+    "nombre": "Nike Air Max Plus 3",
+    "marca": "Nike",
+    "colorway": "Black Red",
+    "año": "2020",
+    "imagen": "imgs/nike-air-max-plus-3-black-red.webp"
+  },
+  {
+    "id": "178",
+    "nombre": "Nike Air Vapormax 2019 Utility",
+    "marca": "Nike",
+    "colorway": "Black",
+    "año": "2019",
+    "imagen": "imgs/nike-vapormax-2019-utility-black.webp"
+  },
+  {
+    "id": "179",
+    "nombre": "Nike Air Vapormax 3.0",
+    "marca": "Nike",
+    "colorway": "Zebra",
+    "año": "2019",
+    "imagen": "imgs/nike-vapormax-3-zebra.webp"
+  },
+  {
+    "id": "180",
+    "nombre": "Nike Air Vapormax 3.0",
+    "marca": "Nike",
+    "colorway": "Pure Platinum",
+    "año": "2019",
+    "imagen": "imgs/nike-vapormax-3-pure-platinum.webp"
+  },
+  {
+    "id": "181",
+    "nombre": "Nike Air Vapormax 3.0",
+    "marca": "Nike",
+    "colorway": "Oreo",
+    "año": "2019",
+    "imagen": "imgs/nike-vapormax-3-oreo.webp"
+  },
+  {
+    "id": "182",
+    "nombre": "Nike Air Vapormax Flyknit",
+    "marca": "Nike",
+    "colorway": "White Pure Platinum",
+    "año": "2017",
+    "imagen": "imgs/nike-vapormax-white-pure-platinum.webp"
+  },
+  {
+    "id": "183",
+    "nombre": "Nike Air Vapormax 2020 Flyknit",
+    "marca": "Nike",
+    "colorway": "Oreo",
+    "año": "2020",
+    "imagen": "imgs/nike-vapormax-2020-oreo.webp"
+  },
+  {
+    "id": "184",
+    "nombre": "Nike Air Vapormax 2021 Flyknit",
+    "marca": "Nike",
+    "colorway": "Monochrome",
+    "año": "2021",
+    "imagen": "imgs/nike-vapormax-2021-monocrome.webp"
+  },
+  {
+    "id": "185",
+    "nombre": "Nike Air Vapormax 2023 Flyknit",
+    "marca": "Nike",
+    "colorway": "Anthracite Black",
+    "año": "2023",
+    "imagen": "imgs/nike-vapormax-2023-anthracite-black.webp"
+  },
+  {
+    "id": "186",
+    "nombre": "Nike Air Vapormax 2023 Flyknit",
+    "marca": "Nike",
+    "colorway": "Triple Red",
+    "año": "2023",
+    "imagen": "imgs/nike-vapormax-2023-triple-red.webp"
+  },
+  {
+    "id": "187",
+    "nombre": "Nike Air Vapormax Flyknit",
+    "marca": "Nike",
+    "colorway": "Triple Red",
+    "año": "2017",
+    "imagen": "imgs/nike-vapormax-triple-red.webp"
+  },
+  {
+    "id": "188",
+    "nombre": "Nike Air Vapormax Plus",
+    "marca": "Nike",
+    "colorway": "Aluminium",
+    "año": "2019",
+    "imagen": "imgs/nike-vapormax-plus-aluminium.webp"
+  },
+  {
+    "id": "189",
+    "nombre": "Nike Air Vapormax Plus",
+    "marca": "Nike",
+    "colorway": "White Platinum",
+    "año": "2018",
+    "imagen": "imgs/nike-vapormax-plus-white-platinum.webp"
+  },
+  {
+    "id": "190",
+    "nombre": "Nike Air Vapormax Plus",
+    "marca": "Nike",
+    "colorway": "Overbranding Black",
+    "año": "2018",
+    "imagen": "imgs/nike-vapormax-plus-overbranding.webp"
+  },
+  {
+    "id": "191",
+    "nombre": "Nike Air Vapormax 2023 Flyknit",
+    "marca": "Nike",
+    "colorway": "Triple Black",
+    "año": "2023",
+    "imagen": "imgs/nike-vapormax-2023-triple-black.webp"
+  },
+  {
+    "id": "192",
+    "nombre": "Nike Air Vapormax 2023 Flyknit",
+    "marca": "Nike",
+    "colorway": "Light Ultramarine",
+    "año": "2023",
+    "imagen": "imgs/nike-vapormax-2023-light-ultramarine.webp"
+  },
+  {
+    "id": "193",
+    "nombre": "Nike Air Max Scorpion",
+    "marca": "Nike",
+    "colorway": "Triple Black",
+    "año": "2022",
+    "imagen": "imgs/nike-air-max-scorpion-triple-black.webp"
+  },
+  {
+    "id": "194",
+    "nombre": "Nike Air Max 2013",
+    "marca": "Nike",
+    "colorway": "Sunset",
+    "año": "2013",
+    "imagen": "imgs/nike-air-max-2013-sunset.webp"
+  },
+  {
+    "id": "195",
+    "nombre": "Nike Air Max 270",
+    "marca": "Nike",
+    "colorway": "White Pack",
+    "año": "2018",
+    "imagen": "imgs/nike-air-max-270-white.webp"
+  },
+  {
+    "id": "196",
+    "nombre": "Nike Air Max 1000",
+    "marca": "Nike",
+    "colorway": "Lilac Hyper Pink",
+    "año": "2024",
+    "imagen": "imgs/nike-air-max-1000-lilac-hyper-pink.webp"
+  },
+  {
+    "id": "197",
+    "nombre": "Nike Air Max Scorpion",
+    "marca": "Nike",
+    "colorway": "Black Anthracite",
+    "año": "2022",
+    "imagen": "imgs/nike-air-max-scorpion-black-anthracite.webp"
+  },
+  {
+    "id": "198",
+    "nombre": "Nike Air Liquid Max x Fragment Design",
+    "marca": "Nike",
+    "colorway": "Black Anthracite",
+    "año": "2026",
+    "imagen": "imgs/nike-air-liquid-max-black-anthracite-fragment.webp"
+  },
+  {
+    "id": "199",
+    "nombre": "Nike Air Max Dn",
+    "marca": "Nike",
+    "colorway": "Medium Violet",
+    "año": "2024",
+    "imagen": "imgs/nike-air-max-dn-medium-violet.webp"
+  },
+  {
+    "id": "200",
+    "nombre": "Nike Air Max Dn",
+    "marca": "Nike",
+    "colorway": "Black Green Strike",
+    "año": "2024",
+    "imagen": "imgs/nike-air-max-dn-black-green-strike.webp"
+  },
+  {
+    "id": "201",
+    "nombre": "Nike Air Max Dn x Supreme",
+    "marca": "Nike",
+    "colorway": "Black Galactic Jade",
+    "año": "2024",
+    "imagen": "imgs/nike-air-max-dn-supreme-black-galactic-jade.webp"
+  },
+  {
+    "id": "202",
+    "nombre": "Nike Air Max Dn8",
+    "marca": "Nike",
+    "colorway": "Green Strike",
+    "año": "2025",
+    "imagen": "imgs/nike-air-max-dn8-green-strike.webp"
+  },
+  {
+    "id": "203",
+    "nombre": "Adidas Stan Smith",
+    "marca": "Adidas",
+    "colorway": "Off-White Halo Blue",
+    "año": "2023",
+    "imagen": "imgs/adidas-stan-smith-off-white-halo-blue.webp"
+  },
+  {
+    "id": "204",
+    "nombre": "Adidas Stan Smith",
+    "marca": "Adidas",
+    "colorway": "White Royal Blue",
+    "año": "1971",
+    "imagen": "imgs/adidas-stan-smith-white-royal-blue.webp"
+  },
+  {
+    "id": "205",
+    "nombre": "Adidas Stan Smith",
+    "marca": "Adidas",
+    "colorway": "Off-White Technical Lacing",
+    "año": "2024",
+    "imagen": "imgs/adidas-stan-smith-off-white-technical-lacing.webp"
+  },
+  {
+    "id": "206",
+    "nombre": "Adidas Stan Smith x Sp5der",
+    "marca": "Adidas",
+    "colorway": "Black Silver Metallic",
+    "año": "2024",
+    "imagen": "imgs/adidas-stan-smith-sp5der-black-silver-metallic.webp"
+  },
+  {
+    "id": "207",
+    "nombre": "Adidas Superstar x BAPE",
+    "marca": "Adidas",
+    "colorway": "ABC Camo White",
+    "año": "2021",
+    "imagen": "imgs/adidas-superstar-bape.webp"
+  },
+  {
+    "id": "208",
+    "nombre": "Adidas Campus 80s x BAPE",
+    "marca": "Adidas",
+    "colorway": "30th Anniversary World Cup",
+    "año": "2023",
+    "imagen": "imgs/adidas-campus-bape-world-cup.webp"
+  },
+  {
+    "id": "209",
+    "nombre": "Adidas Campus x Bad Bunny",
+    "marca": "Adidas",
+    "colorway": "The Last Campus",
+    "año": "2024",
+    "imagen": "imgs/adidas-campus-bad-bunny-the-last-campus.webp"
+  },
+  {
+    "id": "210",
+    "nombre": "Adidas Gazelle Indoor x Bad Bunny",
+    "marca": "Adidas",
+    "colorway": "Core White",
+    "año": "2024",
+    "imagen": "imgs/adidas-gazelle-bad-bunny-core-white.webp"
+  },
+  {
+    "id": "211",
+    "nombre": "Adidas Gazelle x Bad Bunny x Messi",
+    "marca": "Adidas",
+    "colorway": "La Voz de los Fans",
+    "año": "2024",
+    "imagen": "imgs/adidas-gazelle-messi-bad-bunny-la-voz-de-los-fans.webp"
+  },
+  {
+    "id": "212",
+    "nombre": "Adidas Handball Spezial x Sporty & Rich",
+    "marca": "Adidas",
+    "colorway": "Shadow Red",
+    "año": "2023",
+    "imagen": "imgs/adidas-espezial-sporty-&-rich-shadow-red.webp"
+  },
+  {
+    "id": "213",
+    "nombre": "Adidas Yeezy Boost 350 V2",
+    "marca": "Adidas",
+    "colorway": "Carbon Beluga",
+    "año": "2023",
+    "imagen": "imgs/adidas-yeezy-350-carbon-beluga.webp"
+  },
+  {
+    "id": "214",
+    "nombre": "Adidas Yeezy Boost 350 V2",
+    "marca": "Adidas",
+    "colorway": "Core Black Red",
+    "año": "2016",
+    "imagen": "imgs/adidas-yeezy-350-red.webp"
+  },
+  {
+    "id": "215",
+    "nombre": "Adidas Yeezy Foam Runner",
+    "marca": "Adidas",
+    "colorway": "Onyx",
+    "año": "2022",
+    "imagen": "imgs/adidas-yeezy-foam-runner-onyx.webp"
+  },
+  {
+    "id": "216",
+    "nombre": "Adidas Yeezy Foam Runner",
+    "marca": "Adidas",
+    "colorway": "MX Cinder",
+    "año": "2023",
+    "imagen": "imgs/adidas-yeezy-foam-runner-mx-cinder.webp"
+  }
+  ]

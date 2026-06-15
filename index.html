@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SneakerGuessr</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo">SneakerGuessr</div>
+        <div class="score-display">SCORE: <span id="score-val">0</span></div>
+        <div style="display: flex; gap: 18px; align-items: center;">
+            <div class="settings" id="info-btn" style="font-size: 26px;">ℹ️</div>
+            <div class="settings" id="stats-btn" style="font-size: 28px;">🏆</div>
+        </div>
+    </header>
+
+    <main class="main">
+
+        <div class="menu-container" id="menu-screen">
+            <h1 class="menu-title">SneakerGuessr</h1>
+            <button class="btn play-btn" id="play-btn">PLAY</button>
+            <button class="btn secondary-btn" id="game-mode-setup-btn">GAME MODE</button>
+        </div>
+
+        <div id="game-screen" class="hidden">
+            <div class="game-container">
+                <div id="feedback-toast" class="feedback-banner hidden"></div>
+
+                <div class="img-wrapper">
+                    <img id="sneaker-img" src="" alt="Sneaker" class="sneaker-img">
+                </div>
+                
+                <div id="feedback-details" class="feedback-correction hidden"></div>
+
+                <div id="options-container" class="answers"></div>
+
+                <div id="expert-mode-container" class="hidden">
+                    <p id="expert-instruction" style="margin-bottom: 20px; font-size: 14px; color: #ff6a00; font-weight: 600; text-align: center; white-space: pre-line; line-height: 1.5;"></p>
+                    <input type="text" id="sneaker-input" placeholder="Nombre del modelo...">
+                    <button id="submit-guess" class="btn play-btn" style="margin-top: 20px; font-size: 16px; width: 100%;">ADIVINAR</button>
+                </div>
+
+                <button id="back-to-menu-btn" class="btn secondary-btn" style="margin-top: 25px; width: 100%; border-color: #333;">VOLVER AL MENÚ</button>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="stats-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close-btn" id="close-stats-btn">&times;</span>
+            <h2>🏆 MIS RÉCORDS</h2>
+            <div class="stats-grid">
+                <div class="stat-box full-width">
+                    <span class="stat-label">PUNTOS TOTALES (DE SIEMPRE)</span>
+                    <span class="stat-val" id="total-points-val">0</span>
+                </div>
+                
+                <div class="stat-box" style="border-color: #333;">
+                    <span class="stat-label" style="color: #bbb;">Classic (Normal)</span>
+                    <span class="stat-val" id="streak-classic-normal-val">0</span>
+                </div>
+                <div class="stat-box" style="border-color: #333;">
+                    <span class="stat-label" style="color: #bbb;">Classic (Hard)</span>
+                    <span class="stat-val" id="streak-classic-hard-val">0</span>
+                </div>
+                <div class="stat-box" style="grid-column: span 2; margin-bottom: 10px; border-color: #333;">
+                    <span class="stat-label" style="color: #bbb;">Classic (Expert)</span>
+                    <span class="stat-val" id="streak-classic-expert-val">0</span>
+                </div>
+
+                <div class="stat-box">
+                    <span class="stat-label">Expert (Normal)</span>
+                    <span class="stat-val" id="streak-expert-normal-val">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Expert (Hard)</span>
+                    <span class="stat-val" id="streak-expert-hard-val">0</span>
+                </div>
+                <div class="stat-box" style="grid-column: span 2;">
+                    <span class="stat-label">Expert (Expert)</span>
+                    <span class="stat-val" id="streak-expert-expert-val">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-mode-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 450px;">
+            <span class="close-btn" id="close-game-mode-btn">&times;</span>
+            <h2 style="margin-bottom: 25px; text-align: center; font-weight: 800; letter-spacing: 1px;">⚙️ AJUSTES DE PARTIDA</h2>
+            
+            <div style="margin-bottom: 30px;">
+                <h3 style="font-size: 13px; color: #888; margin-bottom: 12px; letter-spacing: 1px; font-weight: 600;">MODO DE JUEGO</h3>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn-opt" id="opt-mode-classic">CLASSIC (Opciones)</button>
+                    <button class="btn-opt" id="opt-mode-expert">EXPERT (Escribir)</button>
+                </div>
+            </div>
+            
+            <div>
+                <h3 style="font-size: 13px; color: #888; margin-bottom: 12px; letter-spacing: 1px; font-weight: 600;">DIFICULTAD</h3>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn-opt diff-normal" id="opt-diff-normal">NORMAL</button>
+                    <button class="btn-opt diff-hard" id="opt-diff-hard">HARD</button>
+                    <button class="btn-opt diff-expert" id="opt-diff-expert">EXPERT</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="info-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 480px;">
+            <span class="close-btn" id="close-info-btn">&times;</span>
+            <h2>ℹ️ ¿CÓMO JUGAR?</h2>
+            <div style="line-height: 1.6; font-size: 14px; color: #e0e0e0; text-align: left;">
+                <p style="margin-bottom: 15px; text-align: center; font-weight: 600; color: #ff6a00;">
+                    ¡Demuestra tus conocimientos de cultura sneakerhead adivinando el calzado de la imagen!
+                </p>
+                <hr style="border: 0; height: 1px; background: #333; margin-bottom: 15px;">
+                
+                <h3 style="color: #fff; font-size: 15px; margin-bottom: 5px;">🕹️ MODOS DE JUEGO</h3>
+                <ul style="margin-left: 20px; margin-bottom: 15px; padding-left: 5px;">
+                    <li><strong>Classic:</strong> Elige la respuesta correcta entre 4 opciones con botones.</li>
+                    <li><strong>Expert:</strong> Pon a prueba tu memoria escribiendo la respuesta exacta.</li>
+                </ul>
+                
+                <h3 style="color: #fff; font-size: 15px; margin-bottom: 5px;">🔥 DIFICULTADES</h3>
+                <ul style="margin-left: 20px; padding-left: 5px;">
+                    <li><strong style="color: #2ecc71;">Normal:</strong> Solo el <strong>Nombre del modelo</strong> (Ej: <em>Nike Air Jordan 1</em>).</li>
+                    <li><strong style="color: #f1c40f;">Hard:</strong> Requiere <strong>Nombre + Colorway</strong> (Ej: <em>Nike Air Jordan 1 Chicago</em>).</li>
+                    <li><strong style="color: #e74c3c;">Expert:</strong> Requiere <strong>Nombre + Colorway + Año</strong> (Ej: <em>Nike Air Jordan 1 Chicago 1985</em>).</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
