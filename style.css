@@ -421,13 +421,28 @@ body:has(#menu-screen:not(.hidden)) .header .logo {
     border-color: #e74c3c !important;
 }
 
-/* Se aplica solo a pantallas de teléfonos (menos de 768px de ancho) */
+/* Esto se activa solo si la pantalla mide menos de 768px (móviles y tablets) */
 @media (max-width: 768px) {
-  body {
-    flex-direction: column; /* Pasa de horizontal a vertical */
+  
+  /* Supongamos que tu contenedor principal tiene Flexbox */
+  .contenedor-principal, main, body {
+    display: flex;
+    flex-direction: column; /* Apila las cosas hacia abajo, no de lado */
+    align-items: center;
+    width: 100%;
+    padding: 10px;
   }
-  .contenedor-zapatilla {
-    width: 100%; /* Ocupa todo el ancho móvil */
+
+  /* La imagen de la zapatilla o el área del juego */
+  .caja-zapatilla, img {
+    max-width: 100%; /* Evita que la zapatilla se salga de la pantalla */
+    height: auto;    /* Mantiene las proporciones de la imagen */
   }
-  /* Reduce tamaños de letra o márgenes muy grandes aquí */
+
+  /* Los botones de respuesta para que sean fáciles de pulsar con el pulgar */
+  .botones-respuesta, button {
+    width: 90%;      /* Botones anchos, estilo aplicación */
+    margin: 8px 0;
+    font-size: 18px; /* Letra grande para que se lea bien en mano */
+  }
 }
