@@ -420,3 +420,14 @@ body:has(#menu-screen:not(.hidden)) .header .logo {
     color: #0d0d0d !important;
     border-color: #e74c3c !important;
 }
+
+/* Se aplica solo a pantallas de teléfonos (menos de 768px de ancho) */
+@media (max-width: 768px) {
+  body {
+    flex-direction: column; /* Pasa de horizontal a vertical */
+  }
+  .contenedor-zapatilla {
+    width: 100%; /* Ocupa todo el ancho móvil */
+  }
+  /* Reduce tamaños de letra o márgenes muy grandes aquí */
+}
