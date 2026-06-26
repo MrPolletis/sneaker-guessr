@@ -421,28 +421,37 @@ body:has(#menu-screen:not(.hidden)) .header .logo {
     border-color: #e74c3c !important;
 }
 
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 /* Esto se activa solo si la pantalla mide menos de 768px (móviles y tablets) */
 @media (max-width: 768px) {
   
-  /* Supongamos que tu contenedor principal tiene Flexbox */
-  .contenedor-principal, main, body {
-    display: flex;
-    flex-direction: column; /* Apila las cosas hacia abajo, no de lado */
-    align-items: center;
+  /* Reduce el tamaño del título para que no rompa la pantalla */
+  h1, .tu-clase-de-titulo {
+    font-size: 2rem; /* Ve probando si un número más pequeño te va mejor */
+    text-align: center;
+    max-width: 100%;
+    word-wrap: break-word; /* Si aun así no cabe, permite que se parta en dos líneas */
+  }
+
+  /* Asegura que el contenedor de la pantalla de inicio no use anchos fijos en px */
+  .tu-contenedor-de-inicio {
     width: 100%;
-    padding: 10px;
+    max-width: 400px; /* Evita que se estire demasiado si es una tablet */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
-  /* La imagen de la zapatilla o el área del juego */
-  .caja-zapatilla, img {
-    max-width: 100%; /* Evita que la zapatilla se salga de la pantalla */
-    height: auto;    /* Mantiene las proporciones de la imagen */
-  }
-
-  /* Los botones de respuesta para que sean fáciles de pulsar con el pulgar */
-  .botones-respuesta, button {
-    width: 90%;      /* Botones anchos, estilo aplicación */
-    margin: 8px 0;
-    font-size: 18px; /* Letra grande para que se lea bien en mano */
+  /* Fuerza a los botones de la pantalla de inicio a no salirse */
+  .tu-contenedor-de-inicio button {
+    width: 100%; /* O un 90% si quieres que respire por los lados */
+    max-width: 300px; /* Para que no queden gigantescos a lo ancho */
   }
 }
