@@ -430,14 +430,17 @@ body:has(#menu-screen:not(.hidden)) .header .logo {
 
 /* Esto se activa solo si la pantalla mide menos de 768px (móviles y tablets) */
 @media (max-width: 768px) {
+    
   
   /* Reduce el tamaño del título para que no rompa la pantalla */
-  h1, .tu-clase-de-titulo {
-    font-size: 2rem; /* Ve probando si un número más pequeño te va mejor */
-    text-align: center;
-    max-width: 100%;
-    word-wrap: break-word; /* Si aun así no cabe, permite que se parta en dos líneas */
-  }
+h1 {
+  font-size: 8vw; /* Se encoge o estira según el ancho del móvil */
+  text-align: center;
+  width: 100%;
+  display: block;
+  margin: 20px 0;
+  box-sizing: border-box;
+}
 
   /* Asegura que el contenedor de la pantalla de inicio no use anchos fijos en px */
   .tu-contenedor-de-inicio {
@@ -454,4 +457,28 @@ body:has(#menu-screen:not(.hidden)) .header .logo {
     width: 100%; /* O un 90% si quieres que respire por los lados */
     max-width: 300px; /* Para que no queden gigantescos a lo ancho */
   }
+}
+
+Modificación trofeo y score
+/* Cambia el nombre por la clase de tu contenedor superior */
+.header-marcador {
+  display: flex;
+  flex-direction: row !important; /* Fuerza a que se mantengan de lado, no hacia abajo */
+  justify-content: space-between; /* Deja espacio regular entre el trofeo y el marcador */
+  align-items: center;            /* Los centra verticalmente entre sí */
+  width: 100%;
+  padding: 0 15px;
+  box-sizing: border-box;
+}
+
+/* El icono del trofeo */
+.icono-trofeo, img.trofeo { 
+  max-width: 35px; /* Que no sea gigante en móvil */
+  height: auto;
+}
+
+/* El texto del Score */
+.texto-score {
+  font-size: 18px;
+  white-space: nowrap; /* Truco pro: evita que el texto se parta en dos líneas */
 }
