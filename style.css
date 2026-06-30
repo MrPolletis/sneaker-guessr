@@ -428,57 +428,64 @@ body:has(#menu-screen:not(.hidden)) .header .logo {
   padding: 0;
 }
 
-/* Esto se activa solo si la pantalla mide menos de 768px (móviles y tablets) */
+/* ==========================================================================
+   DISEÑO RESPONSIVO PARA MÓVILES (CORREGIDO)
+   ========================================================================== */
 @media (max-width: 768px) {
     
-  
-  /* Reduce el tamaño del título para que no rompa la pantalla */
-h1 {
-  font-size: 8vw; /* Se encoge o estira según el ancho del móvil */
-  text-align: center;
-  width: 100%;
-  display: block;
-  margin: 20px 0;
-  box-sizing: border-box;
-}
+    /* 1. Ajuste del Header y espacio horizontal */
+    .header {
+        padding: 15px 20px; /* Reducimos el padding de 40px para ganar espacio */
+    }
 
-  /* Asegura que el contenedor de la pantalla de inicio no use anchos fijos en px */
-  .tu-contenedor-de-inicio {
-    width: 100%;
-    max-width: 400px; /* Evita que se estire demasiado si es una tablet */
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
+    /* Reducimos el tamaño del logo para cuando sea visible en la pantalla de juego */
+    .logo {
+        font-size: 20px; 
+    }
 
-  /* Fuerza a los botones de la pantalla de inicio a no salirse */
-  .tu-contenedor-de-inicio button {
-    width: 100%; /* O un 90% si quieres que respire por los lados */
-    max-width: 300px; /* Para que no queden gigantescos a lo ancho */
-  }
-}
+    /* TRUCO PRO: Cambiamos visibility por display:none en el inicio */
+    /* Así el logo deja de ocupar espacio físico y el marcador/iconos respiran */
+    body:has(#menu-screen:not(.hidden)) .header .logo {
+        display: none !important;
+    }
 
-Modificación trofeo y score
-/* Cambia el nombre por la clase de tu contenedor superior */
-.header-marcador {
-  display: flex;
-  flex-direction: row !important; /* Fuerza a que se mantengan de lado, no hacia abajo */
-  justify-content: space-between; /* Deja espacio regular entre el trofeo y el marcador */
-  align-items: center;            /* Los centra verticalmente entre sí */
-  width: 100%;
-  padding: 0 15px;
-  box-sizing: border-box;
-}
+    /* 2. Corrección del Marcador (Score) y los Iconos */
+    .score-display {
+        font-size: 16px;
+        white-space: nowrap; /* Evita estrictamente que el texto salte de línea */
+        color: #ff6a00;
+    }
 
-/* El icono del trofeo */
-.icono-trofeo, img.trofeo { 
-  max-width: 35px; /* Que no sea gigante en móvil */
-  height: auto;
-}
+    /* Reducimos el espacio (gap) del contenedor inline de tus iconos */
+    .header > div[style*="display: flex"] {
+        gap: 12px !important; 
+    }
 
-/* El texto del Score */
-.texto-score {
-  font-size: 18px;
-  white-space: nowrap; /* Truco pro: evita que el texto se parta en dos líneas */
+    /* Achicamos los emojis de ajustes y trofeo para que no desborden */
+    .settings {
+        font-size: 22px !important; 
+    }
+
+    /* 3. Corrección del Título Principal "SneakerGuessr" */
+    .menu-title {
+        font-size: 9vw; /* Se adapta dinámicamente al ancho de la pantalla */
+        white-space: normal; /* Permite envolver en caso de pantallas ultra delgadas */
+        width: 100%;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    /* 4. Ajuste de los botones del menú */
+    .menu-container {
+        width: 100%;
+        max-width: 290px; /* Centra y limita el ancho del bloque de botones */
+        margin: 0 auto;
+        padding: 10px;
+    }
+
+    .menu-container .btn {
+        width: 100%; /* Los botones ocuparán todo el ancho de su contenedor */
+        font-size: 16px;
+        padding: 14px;
+    }
 }
