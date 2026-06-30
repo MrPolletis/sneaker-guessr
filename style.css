@@ -466,26 +466,32 @@ body:has(#menu-screen:not(.hidden)) .header .logo {
         font-size: 22px !important; 
     }
 
-    /* 3. Corrección del Título Principal "SneakerGuessr" */
-    .menu-title {
-        font-size: 9vw; /* Se adapta dinámicamente al ancho de la pantalla */
-        white-space: normal; /* Permite envolver en caso de pantallas ultra delgadas */
-        width: 100%;
-        text-align: center;
-        margin-bottom: 20px;
-    }
-
-    /* 4. Ajuste de los botones del menú */
+    /* 3. Ajuste de la pantalla de inicio (Menú contenedor) */
     .menu-container {
-        width: 100%;
-        max-width: 290px; /* Centra y limita el ancho del bloque de botones */
-        margin: 0 auto;
-        padding: 10px;
+        width: 100% !important;
+        max-width: 100% !important;  /* Permitimos que use todo el ancho de la pantalla del móvil */
+        display: flex;
+        flex-direction: column;
+        align-items: center !important; /* Centra horizontalmente el título y los botones en la pantalla */
+        padding: 0 20px;
+        box-sizing: border-box;
     }
 
+    /* 4. Corrección del Título Principal "SneakerGuessr" */
+    .menu-title {
+        font-size: 8.5vw; /* Tamaño fluido: se encoge perfectamente en móviles pequeños */
+        width: 100% !important;
+        text-align: center !important; /* Al medir la caja el 100%, el texto se centra perfectamente en la pantalla */
+        margin-bottom: 25px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    /* 5. Ajuste exclusivo para los botones del menú */
     .menu-container .btn {
-        width: 100%; /* Los botones ocuparán todo el ancho de su contenedor */
+        width: 100% !important; 
+        max-width: 280px !important; /* Los botones se quedan compactos, estéticos y centrados */
         font-size: 16px;
         padding: 14px;
+        margin-bottom: 10px; /* Un pequeño espacio entre botones */
     }
-}
