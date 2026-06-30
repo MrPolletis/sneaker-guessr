@@ -431,67 +431,71 @@ body:has(#menu-screen:not(.hidden)) .header .logo {
 /* ==========================================================================
    DISEÑO RESPONSIVO PARA MÓVILES (CORREGIDO)
    ========================================================================== */
+/* ==========================================================================
+   DISEÑO RESPONSIVO PARA MÓVILES (CORREGIDO Y COMPACTO)
+   ========================================================================== */
 @media (max-width: 768px) {
     
     /* 1. Ajuste del Header y espacio horizontal */
     .header {
-        padding: 15px 20px; /* Reducimos el padding de 40px para ganar espacio */
+        padding: 12px 15px;
     }
 
-    /* Reducimos el tamaño del logo para cuando sea visible en la pantalla de juego */
     .logo {
         font-size: 20px; 
     }
 
-    /* TRUCO PRO: Cambiamos visibility por display:none en el inicio */
-    /* Así el logo deja de ocupar espacio físico y el marcador/iconos respiran */
+    /* Oculta el logo en la pantalla de inicio para dar total prioridad al marcador */
     body:has(#menu-screen:not(.hidden)) .header .logo {
         display: none !important;
     }
 
-    /* 2. Corrección del Marcador (Score) y los Iconos */
+    /* Ajustes del Marcador (Score) y los 4 iconos inline */
     .score-display {
         font-size: 16px;
-        white-space: nowrap; /* Evita estrictamente que el texto salte de línea */
-        color: #ff6a00;
+        white-space: nowrap;
     }
 
-    /* Reducimos el espacio (gap) del contenedor inline de tus iconos */
     .header > div[style*="display: flex"] {
-        gap: 12px !important; 
+        gap: 10px !important; 
     }
 
-    /* Achicamos los emojis de ajustes y trofeo para que no desborden */
     .settings {
-        font-size: 22px !important; 
+        font-size: 20px !important; 
+    }
+    
+    #stats-btn {
+        font-size: 22px !important;
     }
 
-    /* 3. Ajuste de la pantalla de inicio (Menú contenedor) */
+    /* 2. Pantalla de inicio (Contenedor del menú) */
     .menu-container {
         width: 100% !important;
-        max-width: 100% !important;  /* Permitimos que use todo el ancho de la pantalla del móvil */
+        max-width: 100% !important;
         display: flex;
         flex-direction: column;
-        align-items: center !important; /* Centra horizontalmente el título y los botones en la pantalla */
+        align-items: center !important;
+        gap: 12px !important; /* Ajuste clave: junta los botones entre sí de forma limpia */
         padding: 0 20px;
         box-sizing: border-box;
     }
 
-    /* 4. Corrección del Título Principal "SneakerGuessr" */
+    /* 3. Título Principal Centrado */
     .menu-title {
-        font-size: 8.5vw; /* Tamaño fluido: se encoge perfectamente en móviles pequeños */
+        font-size: 8.5vw;
         width: 100% !important;
-        text-align: center !important; /* Al medir la caja el 100%, el texto se centra perfectamente en la pantalla */
-        margin-bottom: 25px;
+        text-align: center !important;
+        margin-bottom: 15px; /* Reduce la distancia entre el título y el primer botón */
         letter-spacing: 1px;
         text-transform: uppercase;
     }
 
-    /* 5. Ajuste exclusivo para los botones del menú */
+    /* 4. Ajuste compacto de los botones del menú */
     .menu-container .btn {
         width: 100% !important; 
-        max-width: 280px !important; /* Los botones se quedan compactos, estéticos y centrados */
+        max-width: 280px !important; /* Mantiene los botones estéticos y centrados */
         font-size: 16px;
         padding: 14px;
-        margin-bottom: 10px; /* Un pequeño espacio entre botones */
+        margin-bottom: 0 !important; /* Quitamos el margen para que solo actúe el gap del contenedor */
     }
+}

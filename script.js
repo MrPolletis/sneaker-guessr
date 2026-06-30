@@ -438,3 +438,89 @@ function checkAnswer(guess) {
         nextQuestion();
     }, 2000);
 }
+// ==========================================================================
+// NUEVAS FUNCIONALIDADES: TRADUCCIÓN E IDIOMA + COMPARTIR
+// ==========================================================================
+
+// 1. DICCIONARIO DE TRADUCCIONES
+const dictionary = {
+    es: {
+        scoreText: "MARCADOR",
+        playBtn: "JUGAR",
+        gameModeBtn: "MODO DE JUEGO",
+        correctToast: "✅ ¡Correcto!",
+        incorrectToast: "❌ ¡Fallaste!",
+        streakText: "Racha",
+        shareMessage: (streak, points) => `¡Llevo una racha de ${streak} aciertos y ${points} puntos en SneakerGuessr! ¿Podrás superarme? 👟🔥 Juega gratis aquí: https://sneakerguessr.com`,
+        copiedAlert: "📋 ¡Texto de compartir copiado al portapapeles!"
+    },
+    en: {
+        scoreText: "SCORE",
+        playBtn: "PLAY",
+        gameModeBtn: "GAME MODE",
+        correctToast: "✅ Correct!",
+        incorrectToast: "❌ Incorrect!",
+        streakText: "Streak",
+        shareMessage: (streak, points) => `I'm on a streak of ${streak} correct answers and ${points} points on SneakerGuessr! Can you beat me? 👟🔥 Play for free here: https://sneakerguessr.com`,
+        copiedAlert: "📋 Sharing text copied to clipboard!"
+    }
+};
+
+// Variable de estado global para el idioma (por defecto comprueba localStorage o usa español)
+let currentLang = localStorage.getItem("sneaker_lang") || "es";
+
+// Función para aplicar la traducción en la interfaz de usuario
+function applyLanguage(lang) {
+    const texts = dictionary[lang];
+    
+    // Traducir elementos principales si existen en el HTML
+    if (document.getElementById("score-text")) document.getElementById("score-text").innerText = texts.scoreText;
+    if (document.getElementById("play-btn")) document.getElementById("play-btn").innerText = texts.playBtn;
+    if (document.getElementById("game-mode-setup-btn")) document.getElementById("game-mode-setup-btn").innerText = texts.gameModeBtn;
+    
+    // Cambiar el icono visual del botón indicador de idioma si lo deseas (opcional)
+    document.getElementById("lang-btn").innerText = lang === "es" ? "🇪🇸" : "🇬🇧";
+}
+
+// Evento para cambiar de idioma al pulsar el botón del globo 🌐
+document.getElementById("lang-btn").addEventListener("click", () => {
+    currentLang = currentLang === "es" ? "en" : "es";
+    localStorage.setItem("sneaker_lang", currentLang);
+    applyLanguage(currentLang);
+});
+
+// 2. FUNCIÓN SÚPER AVANZADA PARA COMPARTIR EN REDES
+document.getElementById("share-btn").addEventListener("click", async () => {
+    // Obtenemos los valores dinámicos actuales del juego
+    const currentScore = score || 0; 
+    const currentStreakVal = currentStreak || 0;
+    
+    const textToShare = dictionary[currentLang].shareMessage(currentStreakVal, currentScore);
+
+    // Si el dispositivo acepta la API nativa de compartir (Móviles, Safari, etc.)
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'SneakerGuessr',
+                text: textToShare,
+                url: 'https://sneakerguessr.com'
+            });
+        } catch (err) {
+            console.log("Compartir cancelado o con errores", err);
+        }
+    } else {
+        // Alerta alternativa para ordenadores de escritorio (Copia el texto automáticamente)
+        try {
+            await navigator.clipboard.writeText(textToShare);
+            alert(dictionary[currentLang].copiedAlert);
+        } catch (err) {
+            // Fallback extremo si falla el portapapeles automático
+            alert(textToShare);
+        }
+    }
+});
+
+// Inicializar el idioma correcto al cargar la página web
+document.addEventListener("DOMContentLoaded", () => {
+    applyLanguage(currentLang);
+});
