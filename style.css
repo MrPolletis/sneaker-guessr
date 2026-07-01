@@ -429,9 +429,6 @@ body:has(#menu-screen:not(.hidden)) .header .logo {
 }
 
 /* ==========================================================================
-   DISEÑO RESPONSIVO PARA MÓVILES (CORREGIDO)
-   ========================================================================== */
-/* ==========================================================================
    DISEÑO RESPONSIVO PARA MÓVILES (CORREGIDO Y COMPACTO)
    ========================================================================== */
 @media (max-width: 768px) {
@@ -442,7 +439,7 @@ body:has(#menu-screen:not(.hidden)) .header .logo {
     }
 
     .logo {
-        font-size: 20px; 
+        font-size: 15px; 
     }
 
     /* Oculta el logo en la pantalla de inicio para dar total prioridad al marcador */

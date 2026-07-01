@@ -465,7 +465,7 @@ function checkAnswer(guess) {
 // 1. DICCIONARIO COMPLETO DE TRADUCCIONES (Música, Menú, Juego, Modales y Alertas)
 const dictionary = {
     es: {
-        scoreText: "MARCADOR",
+        scoreText: "PUNTOS",
         playBtn: "JUGAR",
         gameModeBtn: "MODO DE JUEGO",
         submitGuessBtn: "ADIVINAR",
