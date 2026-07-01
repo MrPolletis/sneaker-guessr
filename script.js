@@ -177,7 +177,7 @@ async function startGame() {
         sneakers = await response.json();
         
         if (!sneakers || sneakers.length === 0) {
-            alert("El archivo zapatillas.json parece estar vacío.");
+            alert(dictionary[currentLang].emptyJsonAlert);
             return;
         }
         score = 0;
@@ -191,7 +191,7 @@ async function startGame() {
         prepareGamePool(); 
         nextQuestion();
     } catch (error) {
-        alert("Error crítico al cargar zapatillas.json. Abre index.html usando 'Live Server'.");
+        alert(dictionary[currentLang].criticalErrorAlert);
         console.error(error);
     }
 }
@@ -250,17 +250,31 @@ function nextQuestion() {
 
 function updateExpertInstructions() {
     const instructionEl = document.getElementById("expert-instruction");
+    if (!instructionEl) return;
     const diff = difficulties[difficultyIndex];
     
-    if (diff === 'normal') {
-        instructionEl.innerText = "Modo: NORMAL\n📝 Escribe solo el nombre del modelo\nEjemplo: Nike Air Max 95";
-        sneakerInput.placeholder = "Nombre del modelo...";
-    } else if (diff === 'hard') {
-        instructionEl.innerText = "Modo: DIFÍCIL\n🎨 Estructura: Nombre + Colorway\nEjemplo: Nike Air Max 95 Neon";
-        sneakerInput.placeholder = "Nombre + Colorway...";
-    } else if (diff === 'expert') {
-        instructionEl.innerText = "Modo: EXPERTO 🔥\n📅 Estructura: Nombre + Colorway + Año\nEjemplo: Nike Air Max 95 Neon 1995";
-        sneakerInput.placeholder = "Nombre + Colorway + Año...";
+    if (currentLang === 'es') {
+        if (diff === 'normal') {
+            instructionEl.innerText = "Modo: NORMAL\n📝 Escribe solo el nombre del modelo\nEjemplo: Nike Air Max 95";
+            sneakerInput.placeholder = "Nombre del modelo...";
+        } else if (diff === 'hard') {
+            instructionEl.innerText = "Modo: DIFÍCIL\n🎨 Estructura: Nombre + Colorway\nEjemplo: Nike Air Max 95 Neon";
+            sneakerInput.placeholder = "Nombre + Colorway...";
+        } else if (diff === 'expert') {
+            instructionEl.innerText = "Modo: EXPERTO 🔥\n📅 Estructura: Nombre + Colorway + Año\nEjemplo: Nike Air Max 95 Neon 1995";
+            sneakerInput.placeholder = "Nombre + Colorway + Año...";
+        }
+    } else {
+        if (diff === 'normal') {
+            instructionEl.innerText = "Mode: NORMAL\n📝 Type only the model name\nExample: Nike Air Max 95";
+            sneakerInput.placeholder = "Model name...";
+        } else if (diff === 'hard') {
+            instructionEl.innerText = "Mode: HARD\n🎨 Structure: Name + Colorway\nExample: Nike Air Max 95 Neon";
+            sneakerInput.placeholder = "Name + Colorway...";
+        } else if (diff === 'expert') {
+            instructionEl.innerText = "Mode: EXPERT 🔥\n📅 Structure: Name + Colorway + Year\nExample: Nike Air Max 95 Neon 1995";
+            sneakerInput.placeholder = "Name + Colorway + Year...";
+        }
     }
 }
 
@@ -322,7 +336,14 @@ submitBtn.addEventListener("click", () => {
 });
 
 function openStatsModal() {
-    const diff = difficulties[difficultyIndex];
+    statsModal.classList.remove("hidden");
+    
+    // Actualizar las etiquetas dinámicas de récords al abrir
+    const recordLabels = document.querySelectorAll("#stats-modal .stat-box:not(.full-width) .stat-label");
+    if (recordLabels.length >= 6) {
+        recordLabels[0].innerText = gameMode === 'classic' ? "Classic (Normal)" : "Classic (Normal)";
+    }
+
     document.getElementById("total-points-val").innerText = localStorage.getItem("sneaker_total_points") || "0";
     
     document.getElementById("streak-classic-normal-val").innerText = localStorage.getItem("sneaker_streak_classic_normal") || "0";
@@ -332,8 +353,6 @@ function openStatsModal() {
     document.getElementById("streak-expert-normal-val").innerText = localStorage.getItem("sneaker_streak_expert_normal") || "0";
     document.getElementById("streak-expert-hard-val").innerText = localStorage.getItem("sneaker_streak_expert_hard") || "0";
     document.getElementById("streak-expert-expert-val").innerText = localStorage.getItem("sneaker_streak_expert_expert") || "0";
-    
-    statsModal.classList.remove("hidden");
 }
 
 function checkAnswer(guess) {
@@ -415,17 +434,17 @@ function checkAnswer(guess) {
             localStorage.setItem(`sneaker_streak_${keyModo}`, currentStreak);
         }
 
-        feedbackToast.innerText = `✅ ¡Correcto! (Racha: ${currentStreak})`;
+        feedbackToast.innerText = dictionary[currentLang].correctToast(currentStreak);
         feedbackToast.className = "feedback-banner correct";
         feedbackToast.classList.remove("hidden");
     } else {
         currentStreak = 0;
 
-        feedbackToast.innerText = "❌ ¡Fallaste!";
+        feedbackToast.innerText = dictionary[currentLang].incorrectToast;
         feedbackToast.className = "feedback-banner incorrect";
         feedbackToast.classList.remove("hidden");
 
-        feedbackDetails.innerHTML = `La respuesta exacta era:<br><strong>${respuestaRevelada}</strong>`;
+        feedbackDetails.innerHTML = `${dictionary[currentLang].exactAnswerWas}<br><strong>${respuestaRevelada}</strong>`;
         feedbackDetails.classList.remove("hidden");
     }
     
@@ -438,19 +457,37 @@ function checkAnswer(guess) {
         nextQuestion();
     }, 2000);
 }
+
 // ==========================================================================
 // NUEVAS FUNCIONALIDADES: TRADUCCIÓN E IDIOMA + COMPARTIR
 // ==========================================================================
 
-// 1. DICCIONARIO DE TRADUCCIONES
+// 1. DICCIONARIO COMPLETO DE TRADUCCIONES (Música, Menú, Juego, Modales y Alertas)
 const dictionary = {
     es: {
         scoreText: "MARCADOR",
         playBtn: "JUGAR",
         gameModeBtn: "MODO DE JUEGO",
-        correctToast: "✅ ¡Correcto!",
+        submitGuessBtn: "ADIVINAR",
+        backToMenuBtn: "VOLVER AL MENÚ",
+        
+        // Modales e interfaces fijas
+        statsTitle: "🏆 MIS RÉCORDS",
+        totalPointsLabel: "PUNTOS TOTALES (DE SIEMPRE)",
+        gameSettingsTitle: "⚙️ AJUSTES DE PARTIDA",
+        gameModeHeading: "MODO DE JUEGO",
+        difficultyHeading: "DIFICULTAD",
+        infoTitle: "ℹ️ ¿CÓMO JUGAR?",
+        infoBody: `<p style="margin-bottom: 15px; text-align: center; font-weight: 600; color: #ff6a00;">¡Demuestra tus conocimientos de cultura sneakerhead adivinando el calzado de la imagen!</p><hr style="border: 0; height: 1px; background: #333; margin-bottom: 15px;"><h3 style="color: #fff; font-size: 15px; margin-bottom: 5px;">🕹️ MODOS DE JUEGO</h3><ul style="margin-left: 20px; margin-bottom: 15px; padding-left: 5px;"><li><strong>Classic:</strong> Elige la respuesta correcta entre 4 opciones con botones.</li><li><strong>Expert:</strong> Pon a prueba tu memoria escribiendo la respuesta exacta.</li></ul><h3 style="color: #fff; font-size: 15px; margin-bottom: 5px;">🔥 DIFICULTADES</h3><ul style="margin-left: 20px; padding-left: 5px;"><li><strong style="color: #2ecc71;">Normal:</strong> Solo el <strong>Nombre del modelo</strong> (Ej: <em>Nike Air Jordan 1</em>).</li><li><strong style="color: #f1c40f;">Hard:</strong> Requiere <strong>Nombre + Colorway</strong> (Ej: <em>Nike Air Jordan 1 Chicago</em>).</li><li><strong style="color: #e74c3c;">Expert:</strong> Requiere <strong>Nombre + Colorway + Año</strong> (Ej: <em>Nike Air Jordan 1 Chicago 1985</em>).</li></ul>`,
+        
+        // Componentes internos de partida
+        correctToast: (streak) => `✅ ¡Correcto! (Racha: ${streak})`,
         incorrectToast: "❌ ¡Fallaste!",
-        streakText: "Racha",
+        exactAnswerWas: "La respuesta exacta era:",
+        emptyJsonAlert: "El archivo zapatillas.json parece estar vacío.",
+        criticalErrorAlert: "Error crítico al cargar zapatillas.json. Abre index.html usando 'Live Server'.",
+        
+        // Compartir en redes
         shareMessage: (streak, points) => `¡Llevo una racha de ${streak} aciertos y ${points} puntos en SneakerGuessr! ¿Podrás superarme? 👟🔥 Juega gratis aquí: https://sneakerguessr.com`,
         copiedAlert: "📋 ¡Texto de compartir copiado al portapapeles!"
     },
@@ -458,9 +495,26 @@ const dictionary = {
         scoreText: "SCORE",
         playBtn: "PLAY",
         gameModeBtn: "GAME MODE",
-        correctToast: "✅ Correct!",
+        submitGuessBtn: "GUESS",
+        backToMenuBtn: "BACK TO MENU",
+        
+        // Modales e interfaces fijas
+        statsTitle: "🏆 MY RECORDS",
+        totalPointsLabel: "TOTAL POINTS (ALL TIME)",
+        gameSettingsTitle: "⚙️ GAME SETTINGS",
+        gameModeHeading: "GAME MODE",
+        difficultyHeading: "DIFFICULTY",
+        infoTitle: "ℹ️ HOW TO PLAY?",
+        infoBody: `<p style="margin-bottom: 15px; text-align: center; font-weight: 600; color: #ff6a00;">Prove your sneakerhead culture knowledge by guessing the footwear in the picture!</p><hr style="border: 0; height: 1px; background: #333; margin-bottom: 15px;"><h3 style="color: #fff; font-size: 15px; margin-bottom: 5px;">🕹️ GAME MODES</h3><ul style="margin-left: 20px; margin-bottom: 15px; padding-left: 5px;"><li><strong>Classic:</strong> Choose the correct answer from 4 options using buttons.</li><li><strong>Expert:</strong> Test your memory by typing the exact answer.</li></ul><h3 style="color: #fff; font-size: 15px; margin-bottom: 5px;">🔥 DIFFICULTIES</h3><ul style="margin-left: 20px; padding-left: 5px;"><li><strong style="color: #2ecc71;">Normal:</strong> Only the <strong>Model name</strong> (e.g., <em>Nike Air Jordan 1</em>).</li><li><strong style="color: #f1c40f;">Hard:</strong> Requires <strong>Name + Colorway</strong> (e.g., <em>Nike Air Jordan 1 Chicago</em>).</li><li><strong style="color: #e74c3c;">Expert:</strong> Requires <strong>Name + Colorway + Year</strong> (e.g., <em>Nike Air Jordan 1 Chicago 1985</em>).</li></ul>`,
+        
+        // Componentes internos de partida
+        correctToast: (streak) => `✅ Correct! (Streak: ${streak})`,
         incorrectToast: "❌ Incorrect!",
-        streakText: "Streak",
+        exactAnswerWas: "The exact answer was:",
+        emptyJsonAlert: "The file zapatillas.json appears to be empty.",
+        criticalErrorAlert: "Critical error loading zapatillas.json. Open index.html using 'Live Server'.",
+        
+        // Compartir en redes
         shareMessage: (streak, points) => `I'm on a streak of ${streak} correct answers and ${points} points on SneakerGuessr! Can you beat me? 👟🔥 Play for free here: https://sneakerguessr.com`,
         copiedAlert: "📋 Sharing text copied to clipboard!"
     }
@@ -469,17 +523,49 @@ const dictionary = {
 // Variable de estado global para el idioma (por defecto comprueba localStorage o usa español)
 let currentLang = localStorage.getItem("sneaker_lang") || "es";
 
-// Función para aplicar la traducción en la interfaz de usuario
+// Función para aplicar la traducción en la interfaz de usuario por completo
 function applyLanguage(lang) {
     const texts = dictionary[lang];
     
-    // Traducir elementos principales si existen en el HTML
+    // Traducir elementos principales e inputs dinámicos de juego
     if (document.getElementById("score-text")) document.getElementById("score-text").innerText = texts.scoreText;
     if (document.getElementById("play-btn")) document.getElementById("play-btn").innerText = texts.playBtn;
     if (document.getElementById("game-mode-setup-btn")) document.getElementById("game-mode-setup-btn").innerText = texts.gameModeBtn;
+    if (document.getElementById("submit-guess")) document.getElementById("submit-guess").innerText = texts.submitGuessBtn;
+    if (document.getElementById("back-to-menu-btn")) document.getElementById("back-to-menu-btn").innerText = texts.backToMenuBtn;
     
-    // Cambiar el icono visual del botón indicador de idioma si lo deseas (opcional)
-    document.getElementById("lang-btn").innerText = lang === "es" ? "🇪🇸" : "🇬🇧";
+    // Traducir contenido estático dentro del Modal de Estadísticas
+    const statsTitle = document.querySelector("#stats-modal h2");
+    if (statsTitle) statsTitle.innerText = texts.statsTitle;
+    
+    const totalPointsLabel = document.querySelector("#stats-modal .stat-box.full-width .stat-label");
+    if (totalPointsLabel) totalPointsLabel.innerText = texts.totalPointsLabel;
+    
+    // Traducir contenido estático del Modal de Ajustes de Partida
+    const gameSettingsTitle = document.querySelector("#game-mode-modal h2");
+    if (gameSettingsTitle) gameSettingsTitle.innerText = texts.gameSettingsTitle;
+    
+    const gameModeHeadings = document.querySelectorAll("#game-mode-modal h3");
+    if (gameModeHeadings.length >= 2) {
+        gameModeHeadings[0].innerText = texts.gameModeHeading;
+        gameModeHeadings[1].innerText = texts.difficultyHeading;
+    }
+    
+    // Traducir contenido estático del Modal Informativo (Cómo Jugar)
+    const infoTitle = document.querySelector("#info-modal h2");
+    if (infoTitle) infoTitle.innerText = texts.infoTitle;
+    
+    const infoBody = document.querySelector("#info-modal .modal-content > div");
+    if (infoBody) infoBody.innerHTML = texts.infoBody;
+    
+    // Cambiar el icono visual del botón indicador de idioma
+    const langBtn = document.getElementById("lang-btn");
+    if (langBtn) langBtn.innerText = lang === "es" ? "🇪🇸" : "🇬🇧";
+
+    // Actualizar instrucciones dinámicas en tiempo real si el usuario cambia el idioma en partida
+    if (!gameScreen.classList.contains("hidden") && gameMode === 'expert') {
+        updateExpertInstructions();
+    }
 }
 
 // Evento para cambiar de idioma al pulsar el botón del globo 🌐
