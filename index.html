@@ -1,24 +1,21 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-
     <meta property="og:title" content="Sneakerguessr" />
-<meta property="og:description" content="¿Cuánto sabes de zapatillas? Pon a prueba tus conocimientos en este juego web." />
-<meta property="og:image" content="./imagen-de-muestra.jpg" />
+    <meta property="og:description" content="¿Cuánto sabes de zapatillas? Pon a prueba tus conocimientos en este juego web." />
+    <meta property="og:image" content="./imagen-de-muestra.jpg" />
 
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Sneakerguessr",
+      "alternateName": "Sneaker Guessr",
+      "url": "https://sneakerguessr.com"
+    }
+    </script>
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "Sneakerguessr",
-  "alternateName": "Sneaker Guessr",
-  "url": "https://sneakerguessr.com"
-}
-</script>
-
-<link rel="icon" href="sneakerguessrfavicon.png" type="image/png" sizes="48x48">
-
+    <link rel="icon" href="sneakerguessrfavicon.png" type="image/png" sizes="48x48">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SneakerGuessr</title>
@@ -30,11 +27,12 @@
     <header class="header">
         <div class="logo">SneakerGuessr</div>
         <div class="score-display"><span id="score-text">SCORE</span>: <span id="score-val">0</span></div>
-        <div style="display: flex; gap: 18px; align-items: center;">
-            <div class="settings" id="lang-btn" title="Cambiar Idioma" style="font-size: 24px;">🌐</div>
-            <div class="settings" id="share-btn" title="Compartir racha" style="font-size: 24px;">🔗</div>
-            <div class="settings" id="info-btn" style="font-size: 26px;">ℹ️</div>
-            <div class="settings" id="stats-btn" style="font-size: 28px;">🏆</div>
+        <div class="header-controls">
+            <div class="settings" id="lang-btn" title="Cambiar Idioma">🌐</div>
+            <div class="settings" id="share-btn" title="Compartir racha">🔗</div>
+            <div class="settings" id="info-btn" title="Cómo jugar">ℹ️</div>
+            <div class="settings" id="stats-btn" title="Mis récords">📊</div>
+            <div class="settings" id="leaderboard-btn" title="Clasificaciones">🏆</div>
         </div>
     </header>
 
@@ -44,6 +42,7 @@
             <h1 class="menu-title">SneakerGuessr</h1>
             <button class="btn play-btn" id="play-btn">PLAY</button>
             <button class="btn secondary-btn" id="game-mode-setup-btn">GAME MODE</button>
+            <button class="btn auth-btn" id="auth-btn">🔐 INICIAR SESIÓN</button>
         </div>
 
         <div id="game-screen" class="hidden">
@@ -70,10 +69,76 @@
 
     </main>
 
+    <div id="auth-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="close-btn" id="close-auth-btn">&times;</span>
+            <div class="auth-modal-tabs">
+                <button class="auth-tab-btn active" id="tab-login-btn">INICIAR SESIÓN</button>
+                <button class="auth-tab-btn" id="tab-register-btn">REGISTRARSE</button>
+            </div>
+            
+            <form id="login-form" class="auth-form">
+                <div class="form-group">
+                    <label id="lbl-login-user" for="login-username">Usuario</label>
+                    <input type="text" id="login-username" required placeholder="Tu nombre de usuario">
+                </div>
+                <div class="form-group">
+                    <label id="lbl-login-pass" for="login-password">Contraseña</label>
+                    <input type="password" id="login-password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn play-btn auth-submit-btn" id="btn-submit-login">ENTRAR</button>
+            </form>
+
+            <form id="register-form" class="auth-form hidden">
+                <div class="form-group">
+                    <label id="lbl-reg-user" for="reg-username">Usuario</label>
+                    <input type="text" id="reg-username" required placeholder="Crea tu usuario">
+                </div>
+                <div class="form-group">
+                    <label id="lbl-reg-country" for="reg-country">País (Código ej: ES, US, MX)</label>
+                    <input type="text" id="reg-country" required maxlength="2" placeholder="ES" style="text-transform: uppercase;">
+                </div>
+                <div class="form-group">
+                    <label id="lbl-reg-pass" for="reg-password">Contraseña</label>
+                    <input type="password" id="reg-password" required placeholder="Mínimo 4 caracteres">
+                </div>
+                <button type="submit" class="btn play-btn auth-submit-btn" id="btn-submit-reg">CREAR CUENTA</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="leaderboard-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 550px;">
+            <span class="close-btn" id="close-leaderboard-btn">&times;</span>
+            <h2>🏆 CLASIFICACIONES</h2>
+            
+            <div class="leaderboard-tabs">
+                <button class="tab-btn active" data-view="daily">Top 10 Hoy</button>
+                <button class="tab-btn" data-view="streaks">Rachas</button>
+                <button class="tab-btn" data-view="scores">Puntuación Máxima</button>
+            </div>
+
+            <div class="leaderboard-table-wrapper">
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>Pos</th>
+                            <th>Jugador</th>
+                            <th>Local (País)</th>
+                            <th>Global</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <div id="stats-modal" class="modal hidden">
         <div class="modal-content" style="max-width: 500px;">
             <span class="close-btn" id="close-stats-btn">&times;</span>
-            <h2>🏆 MIS RÉCORDS</h2>
+            <h2>📊 MIS RÉCORDS</h2>
             <div class="stats-grid">
                 <div class="stat-box full-width">
                     <span class="stat-label">PUNTOS TOTALES (DE SIEMPRE)</span>
@@ -160,10 +225,7 @@
     </div>
 
     <script src="script.js"></script>
-
-<script defer src="/_vercel/insights/script.js"></script>
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
+    <script defer src="/_vercel/insights/script.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 </body>
 </html>
