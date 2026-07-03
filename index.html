@@ -112,10 +112,22 @@
             <span class="close-btn" id="close-leaderboard-btn">&times;</span>
             <h2>🏆 CLASIFICACIONES</h2>
             
-            <div class="leaderboard-tabs">
-                <button class="tab-btn active" data-view="daily">Top 10 Hoy</button>
-                <button class="tab-btn" data-view="streaks">Rachas</button>
-                <button class="tab-btn" data-view="scores">Puntuación Máxima</button>
+            <div class="leaderboard-filters">
+                <div class="filter-group">
+                    <span class="filter-label">MODO</span>
+                    <div class="filter-buttons" id="filter-mode-container">
+                        <button class="btn-filter-opt active" data-filter-mode="classic">CLASSIC</button>
+                        <button class="btn-filter-opt" data-filter-mode="expert">EXPERT</button>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <span class="filter-label">DIFICULTAD</span>
+                    <div class="filter-buttons" id="filter-diff-container">
+                        <button class="btn-filter-opt active" data-filter-diff="normal">NORMAL</button>
+                        <button class="btn-filter-opt" data-filter-diff="hard">HARD</button>
+                        <button class="btn-filter-opt" data-filter-diff="expert">EXPERT</button>
+                    </div>
+                </div>
             </div>
 
             <div class="leaderboard-table-wrapper">
@@ -124,8 +136,8 @@
                         <tr>
                             <th>Pos</th>
                             <th>Jugador</th>
-                            <th>Local (País)</th>
-                            <th>Global</th>
+                            <th>País</th>
+                            <th>Racha Máxima</th>
                         </tr>
                     </thead>
                     <tbody id="leaderboard-body">

@@ -19,8 +19,15 @@ const leaderboardBtn = document.getElementById("leaderboard-btn");
 const leaderboardModal = document.getElementById("leaderboard-modal");
 const closeLeaderboardBtn = document.getElementById("close-leaderboard-btn");
 const leaderboardBody = document.getElementById("leaderboard-body");
-const leaderboardTabs = document.querySelectorAll(".leaderboard-tabs .tab-btn");
 const authBtn = document.getElementById("auth-btn");
+
+// NUEVO: Selectores de Filtros en la Clasificación
+const filterModeContainer = document.getElementById("filter-mode-container");
+const filterDiffContainer = document.getElementById("filter-diff-container");
+
+// ESTADO EXCLUSIVO DE LOS FILTROS DE CLASIFICACIÓN
+let selectedFilterMode = "classic";
+let selectedFilterDiff = "normal";
 
 // ELEMENTOS DEL MODAL DE AUTENTICACIÓN
 const authModal = document.getElementById("auth-modal");
@@ -62,7 +69,6 @@ let currentStreak = 0;
 const difficulties = ['normal', 'hard', 'expert'];
 let difficultyIndex = 0; 
 
-// Mecanismos de control de tiempos
 let feedbackTimeout = null;
 let isProcessingAnswer = false; 
 
@@ -92,21 +98,32 @@ closeInfoBtn.addEventListener("click", () => infoModal.classList.add("hidden"));
 
 // CONTROL MODAL CLASIFICACIONES
 leaderboardBtn.addEventListener("click", () => {
-    renderLeaderboard("daily");
+    renderLeaderboard();
     leaderboardModal.classList.remove("hidden");
 });
 closeLeaderboardBtn.addEventListener("click", () => leaderboardModal.classList.add("hidden"));
 
-leaderboardTabs.forEach(tab => {
-    tab.addEventListener("click", (e) => {
-        leaderboardTabs.forEach(t => t.classList.remove("active"));
+// Asignación de clics a los filtros de Modo (Classic / Expert)
+filterModeContainer.querySelectorAll(".btn-filter-opt").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+        filterModeContainer.querySelectorAll(".btn-filter-opt").forEach(b => b.classList.remove("active"));
         e.target.classList.add("active");
-        const view = e.target.getAttribute("data-view");
-        renderLeaderboard(view);
+        selectedFilterMode = e.target.getAttribute("data-filter-mode");
+        renderLeaderboard();
     });
 });
 
-// CONTROL LOGUIN / LOGOUT DESDE EL MENÚ
+// Asignación de clics a los filtros de Dificultad (Normal / Hard / Expert)
+filterDiffContainer.querySelectorAll(".btn-filter-opt").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+        filterDiffContainer.querySelectorAll(".btn-filter-opt").forEach(b => b.classList.remove("active"));
+        e.target.classList.add("active");
+        selectedFilterDiff = e.target.getAttribute("data-filter-diff");
+        renderLeaderboard();
+    });
+});
+
+// CONTROL LOGIN / LOGOUT DESDE EL MENÚ
 authBtn.addEventListener("click", () => {
     if (currentUser) {
         if(confirm(currentLang === 'es' ? "¿Quieres cerrar sesión?" : "Do you want to log out?")) {
@@ -120,7 +137,7 @@ authBtn.addEventListener("click", () => {
 });
 closeAuthBtn.addEventListener("click", () => authModal.classList.add("hidden"));
 
-// INTERCAMBIO DE PESTAÑAS (LOGIN vs REGISTRO)
+// INTERCAMBIO DE PESTAÑAS
 tabLoginBtn.addEventListener("click", () => {
     tabLoginBtn.classList.add("active");
     tabRegisterBtn.classList.remove("active");
@@ -135,7 +152,7 @@ tabRegisterBtn.addEventListener("click", () => {
     loginForm.classList.add("hidden");
 });
 
-// ENVIAR FORMULARIO DE REGISTRO
+// REGISTRO
 registerForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const userVal = document.getElementById("reg-username").value.trim();
@@ -157,8 +174,7 @@ registerForm.addEventListener("submit", (e) => {
         username: userVal,
         country: countryVal,
         password: passVal,
-        maxScore: 0,
-        maxStreak: 0
+        streaks_record: {} // Guardará dinámicamente registros por clave de modo: ej: {"classic_normal": 12}
     };
 
     localUsers.push(newUser);
@@ -173,7 +189,7 @@ registerForm.addEventListener("submit", (e) => {
     alert(currentLang === 'es' ? `¡Cuenta creada! Bienvenido, ${userVal}` : `Account created! Welcome, ${userVal}`);
 });
 
-// ENVIAR FORMULARIO DE LOGIN
+// LOGIN
 loginForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const userVal = document.getElementById("login-username").value.trim();
@@ -205,7 +221,6 @@ function updateAuthButton() {
     }
 }
 
-// Ventanas y cierres globales al pulsar fuera de ellas
 window.addEventListener("click", (e) => {
     if (e.target === statsModal) statsModal.classList.add("hidden");
     if (e.target === gameModeModal) gameModeModal.classList.add("hidden");
@@ -299,82 +314,69 @@ function updateModalUI() {
     else if (difficultyIndex === 2) optDiffExpert.classList.add("active");
 }
 
-// MOTOR DE RENDERIZADO 100% REAL PARA CLASIFICACIONES
-function renderLeaderboard(type) {
+// MOTOR FILTRADO DE CLASIFICACIONES 100% DINÁMICO POR MODO Y DIFICULTAD
+function renderLeaderboard() {
     leaderboardBody.innerHTML = "";
     
-    // 1. Cargar usuarios reales registrados en el localStorage de la app
+    // Filtro activo combinado: ej "classic_normal", "expert_hard"
+    const targetFilterKey = `${selectedFilterMode}_${selectedFilterDiff}`;
+    
     let localUsers = JSON.parse(localStorage.getItem("sneaker_sim_users")) || [];
     
-    // Formatear y preparar los campos de ordenación unificando récords
     let usersToShow = localUsers.map(u => {
         let isMe = currentUser && u.username === currentUser.username;
-        let totalPointsSaved = isMe ? parseInt(localStorage.getItem("sneaker_total_points") || "0") : (u.maxScore || 0);
         
-        let maxStreakCalculated = u.maxStreak || 0;
+        // Extraer la racha de este modo concreto
+        let streakForThisMode = 0;
         if (isMe) {
-            const modes = ['classic_normal', 'classic_hard', 'classic_expert', 'expert_normal', 'expert_hard', 'expert_expert'];
-            modes.forEach(m => {
-                let s = parseInt(localStorage.getItem(`sneaker_streak_${m}`) || "0");
-                if (s > maxStreakCalculated) maxStreakCalculated = s;
-            });
+            streakForThisMode = parseInt(localStorage.getItem(`sneaker_streak_${targetFilterKey}`) || "0");
+        } else {
+            if (u.streaks_record && u.streaks_record[targetFilterKey]) {
+                streakForThisMode = parseInt(u.streaks_record[targetFilterKey] || "0");
+            }
         }
 
         return {
             username: u.username,
             country: u.country || "??",
-            currentStreak: isMe ? currentStreak : 0,
-            maxStreak: maxStreakCalculated,
-            totalPoints: totalPointsSaved,
+            targetStreak: streakForThisMode,
             isCurrent: isMe
         };
     });
 
-    // 2. Ejecutar algoritmo de ordenamiento según la pestaña pulsada
-    if (type === 'daily') {
-        usersToShow.sort((a, b) => b.currentStreak - a.currentStreak);
-    } else if (type === 'streaks') {
-        usersToShow.sort((a, b) => b.maxStreak - a.maxStreak);
-    } else if (type === 'scores') {
-        usersToShow.sort((a, b) => b.totalPoints - a.totalPoints);
-    }
+    // Ordenar de mayor a menor racha en el filtro seleccionado
+    usersToShow.sort((a, b) => b.targetStreak - a.targetStreak);
 
-    // 3. Imprimir filas de forma estricta hasta cubrir el Top 10
+    // Pintar los resultados reales o rellenar con guiones
     for (let i = 0; i < 10; i++) {
         const row = document.createElement("tr");
         const user = usersToShow[i];
         let positionMarker = `${i + 1}º`;
         
-        if (user) {
+        if (user && user.targetStreak > 0) {
             let displayName = user.username;
-            let displayLocal = "-";
-            let displayGlobal = "-";
-
             if (user.isCurrent) {
                 row.style.background = "rgba(255, 106, 0, 0.1)";
                 row.style.borderLeft = "3px solid #ff6a00";
                 displayName = `⭐ ${user.username} (${currentLang === 'es' ? 'Tú' : 'You'})`;
             }
 
-            if (type === 'daily') {
-                displayLocal = `${user.currentStreak} (${user.country})`;
-                displayGlobal = `${user.currentStreak}`;
-            } else if (type === 'streaks') {
-                displayLocal = `${user.maxStreak} (${user.country})`;
-                displayGlobal = `${user.maxStreak}`;
-            } else if (type === 'scores') {
-                displayLocal = `${user.totalPoints} (${user.country})`;
-                displayGlobal = `${user.totalPoints}`;
-            }
-
             row.innerHTML = `
                 <td><strong>${positionMarker}</strong></td>
                 <td>${displayName}</td>
-                <td>${displayLocal}</td>
-                <td><strong>${displayGlobal}</strong></td>
+                <td>${user.country}</td>
+                <td><strong>${user.targetStreak} 🔥</strong></td>
+            `;
+        } else if (user && user.isCurrent) {
+            // Caso especial si eres tú pero aún no tienes récord en esta dificultad concreta
+            row.style.background = "rgba(255, 106, 0, 0.05)";
+            row.innerHTML = `
+                <td><strong>${positionMarker}</strong></td>
+                <td>⭐ ${user.username} (${currentLang === 'es' ? 'Tú' : 'You'})</td>
+                <td>${user.country}</td>
+                <td><span style="color: #666;">0</span></td>
             `;
         } else {
-            // Relleno limpio e inerte si no hay suficientes perfiles reales guardados
             row.innerHTML = `
                 <td><span style="color: #444;">${positionMarker}</span></td>
                 <td><span style="color: #444;">-</span></td>
@@ -540,11 +542,6 @@ submitBtn.addEventListener("click", () => {
 function openStatsModal() {
     statsModal.classList.remove("hidden");
     
-    const recordLabels = document.querySelectorAll("#stats-modal .stat-box:not(.full-width) .stat-label");
-    if (recordLabels.length >= 6) {
-        recordLabels[0].innerText = "Classic (Normal)";
-    }
-
     document.getElementById("total-points-val").innerText = localStorage.getItem("sneaker_total_points") || "0";
     
     document.getElementById("streak-classic-normal-val").innerText = localStorage.getItem("sneaker_streak_classic_normal") || "0";
@@ -617,6 +614,7 @@ function checkAnswer(guess) {
 
         let keyModo = `${gameMode}_${diff}`;
         let recordRachaGuardada = parseInt(localStorage.getItem(`sneaker_streak_${keyModo}`) || "0");
+        
         if (currentStreak > recordRachaGuardada) {
             localStorage.setItem(`sneaker_streak_${keyModo}`, currentStreak);
             
@@ -624,8 +622,8 @@ function checkAnswer(guess) {
                 let localUsers = JSON.parse(localStorage.getItem("sneaker_sim_users")) || [];
                 let uIndex = localUsers.findIndex(u => u.username === currentUser.username);
                 if (uIndex !== -1) {
-                    localUsers[uIndex].maxStreak = Math.max(localUsers[uIndex].maxStreak, currentStreak);
-                    localUsers[uIndex].maxScore = totalPointsSaved;
+                    if(!localUsers[uIndex].streaks_record) localUsers[uIndex].streaks_record = {};
+                    localUsers[uIndex].streaks_record[keyModo] = currentStreak;
                     localStorage.setItem("sneaker_sim_users", JSON.stringify(localUsers));
                 }
             }
@@ -655,7 +653,7 @@ function checkAnswer(guess) {
     }, 2000);
 }
 
-// TRADUCCIONES E IDIOMAS (MODIFICACIÓN: Textos ajustados a "Iniciar sesión")
+// DICCIONARIOS TRADUCCIONES
 const dictionary = {
     es: {
         scoreText: "PUNTOS",
@@ -666,7 +664,6 @@ const dictionary = {
         backToMenuBtn: "VOLVER AL MENÚ",
         helloText: "HOLA",
         logoutText: "SALIR",
-        
         statsTitle: "📊 MIS RÉCORDS",
         totalPointsLabel: "PUNTOS TOTALES (DE SIEMPRE)",
         gameSettingsTitle: "⚙️ AJUSTES DE PARTIDA",
@@ -674,13 +671,11 @@ const dictionary = {
         difficultyHeading: "DIFICULTAD",
         infoTitle: "ℹ️ ¿CÓMO JUGAR?",
         infoBody: `<p style="margin-bottom: 15px; text-align: center; font-weight: 600; color: #ff6a00;">¡Demuestra tus conocimientos de cultura sneakerhead adivinando el calzado de la imagen!</p><hr style="border: 0; height: 1px; background: #333; margin-bottom: 15px;"><h3 style="color: #fff; font-size: 15px; margin-bottom: 5px;">🕹️ MODOS DE JUEGO</h3><ul style="margin-left: 20px; margin-bottom: 15px; padding-left: 5px;"><li><strong>Classic:</strong> Elige la respuesta correcta entre 4 opciones con botones.</li><li><strong>Expert:</strong> Pon a prueba tu memoria escribiendo la respuesta exacta.</li></ul><h3 style="color: #fff; font-size: 15px; margin-bottom: 5px;">🔥 DIFICULTADES</h3><ul style="margin-left: 20px; padding-left: 5px;"><li><strong style="color: #2ecc71;">Normal:</strong> Solo el <strong>Nombre del modelo</strong> (Ej: <em>Nike Air Jordan 1</em>).</li><li><strong style="color: #f1c40f;">Hard:</strong> Requiere <strong>Nombre + Colorway</strong> (Ej: <em>Nike Air Jordan 1 Chicago</em>).</li><li><strong style="color: #e74c3c;">Expert:</strong> Requiere <strong>Nombre + Colorway + Año</strong> (Ej: <em>Nike Air Jordan 1 Chicago 1985</em>).</li></ul>`,
-        
         correctToast: (streak) => `✅ ¡Correcto! (Racha: ${streak})`,
         incorrectToast: "❌ ¡Fallaste!",
         exactAnswerWas: "La respuesta exacta era:",
         emptyJsonAlert: "El archivo zapatillas.json parece estar vacío.",
         criticalErrorAlert: "Error crítico al cargar zapatillas.json. Abre index.html usando 'Live Server'.",
-        
         shareMessage: (streak, points) => `¡Llevo una racha de ${streak} aciertos y ${points} puntos en SneakerGuessr! ¿Podrás superarme? 👟🔥 Juega gratis aquí: https://sneakerguessr.com`,
         copiedAlert: "📋 ¡Texto de compartir copiado al portapapeles!"
     },
@@ -693,7 +688,6 @@ const dictionary = {
         backToMenuBtn: "BACK TO MENU",
         helloText: "HELLO",
         logoutText: "LOGOUT",
-        
         statsTitle: "📊 MY RECORDS",
         totalPointsLabel: "TOTAL POINTS (ALL TIME)",
         gameSettingsTitle: "⚙️ GAME SETTINGS",
@@ -701,13 +695,11 @@ const dictionary = {
         difficultyHeading: "DIFFICULTY",
         infoTitle: "ℹ️ HOW TO PLAY?",
         infoBody: `<p style="margin-bottom: 15px; text-align: center; font-weight: 600; color: #ff6a00;">Prove your sneakerhead culture knowledge by guessing the footwear in the picture!</p><hr style="border: 0; height: 1px; background: #333; margin-bottom: 15px;"><h3 style="color: #fff; font-size: 15px; margin-bottom: 5px;">🕹️ GAME MODES</h3><ul style="margin-left: 20px; margin-bottom: 15px; padding-left: 5px;"><li><strong>Classic:</strong> Choose the correct answer from 4 options using buttons.</li><li><strong>Expert:</strong> Test your memory by typing the exact answer.</li></ul><h3 style="color: #fff; font-size: 15px; margin-bottom: 5px;">🔥 DIFFICULTY LEVELS</h3><ul style="margin-left: 20px; padding-left: 5px;"><li><strong style="color: #2ecc71;">Normal:</strong> Only the <strong>Model name</strong> (e.g., <em>Nike Air Jordan 1</em>).</li><li><strong style="color: #f1c40f;">Hard:</strong> Requires <strong>Name + Colorway</strong> (e.g., <em>Nike Air Jordan 1 Chicago</em>).</li><li><strong style="color: #e74c3c;">Expert:</strong> Requires <strong>Name + Colorway + Year</strong> (e.g., <em>Nike Air Jordan 1 Chicago 1985</em>).</li></ul>`,
-        
         correctToast: (streak) => `✅ Correct! (Streak: ${streak})`,
         incorrectToast: "❌ Incorrect!",
         exactAnswerWas: "The exact answer was:",
         emptyJsonAlert: "The file zapatillas.json appears to be empty.",
         criticalErrorAlert: "Critical error loading zapatillas.json. Open index.html using 'Live Server'.",
-        
         shareMessage: (streak, points) => `I'm on a streak of ${streak} correct answers and ${points} points on SneakerGuessr! Can you beat me? 👟🔥 Play for free here: https://sneakerguessr.com`,
         copiedAlert: "📋 Sharing text copied to clipboard!"
     }
@@ -726,14 +718,7 @@ function applyLanguage(lang) {
     
     if (document.getElementById("tab-login-btn")) document.getElementById("tab-login-btn").innerText = lang === 'es' ? "INICIAR SESIÓN" : "LOG IN";
     if (document.getElementById("tab-register-btn")) document.getElementById("tab-register-btn").innerText = lang === 'es' ? "REGISTRARSE" : "SIGN UP";
-    if (document.getElementById("lbl-login-user")) document.getElementById("lbl-login-user").innerText = lang === 'es' ? "Usuario" : "Username";
-    if (document.getElementById("lbl-login-pass")) document.getElementById("lbl-login-pass").innerText = lang === 'es' ? "Contraseña" : "Password";
-    if (document.getElementById("lbl-reg-user")) document.getElementById("lbl-reg-user").innerText = lang === 'es' ? "Usuario" : "Username";
-    if (document.getElementById("lbl-reg-country")) document.getElementById("lbl-reg-country").innerText = lang === 'es' ? "País (Código ej: ES, US)" : "Country (Code ex: US, UK)";
-    if (document.getElementById("lbl-reg-pass")) document.getElementById("lbl-reg-pass").innerText = lang === 'es' ? "Contraseña" : "Password";
-    if (document.getElementById("btn-submit-login")) document.getElementById("btn-submit-login").innerText = lang === 'es' ? "ENTRAR" : "SIGN IN";
-    if (document.getElementById("btn-submit-reg")) document.getElementById("btn-submit-reg").innerText = lang === 'es' ? "CREAR CUENTA" : "CREATE ACCOUNT";
-
+    
     updateAuthButton();
 
     const statsTitle = document.querySelector("#stats-modal h2");
@@ -753,9 +738,6 @@ function applyLanguage(lang) {
     
     const infoTitle = document.querySelector("#info-modal h2");
     if (infoTitle) infoTitle.innerText = texts.infoTitle;
-    
-    const infoBody = document.querySelector("#info-modal .modal-content > div");
-    if (infoBody) infoBody.innerHTML = texts.infoBody;
     
     const langBtn = document.getElementById("lang-btn");
     if (langBtn) langBtn.innerText = lang === "es" ? "🇪🇸" : "🇬🇧";

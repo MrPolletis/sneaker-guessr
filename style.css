@@ -16,12 +16,13 @@ body {
     overflow: hidden;
 }
 
-/* HEADER */
+/* HEADER GENERAL (PC) */
 .header {
     width: 100%;
     padding: 20px 40px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     position: relative;
 }
 
@@ -31,7 +32,6 @@ body {
     font-weight: 800;
     letter-spacing: 1px;
     color: #ffffff;
-    margin-right: 40px; /* MODIFICACIÓN: Separa el Logo del Marcador de Puntos */
 }
 
 /* MARCADOR DE PUNTOS */
@@ -42,15 +42,14 @@ body {
     letter-spacing: 1px;
 }
 
-/* Contenedor alineado a la derecha */
+/* CONTENEDOR DE ICONOS ALINEADO A LA DERECHA */
 .header-controls {
     display: flex;
     gap: 16px;
     align-items: center;
-    margin-left: auto;
 }
 
-/* SETTINGS (ARRIBA DERECHA) */
+/* SETTINGS (ICONOS SUPERIORES) */
 .settings {
     font-size: 24px;
     cursor: pointer;
@@ -61,25 +60,42 @@ body {
     transform: rotate(10deg) scale(1.15);
 }
 
-/* CONTENIDO PRINCIPAL */
+/* CONTENIDO PRINCIPAL CENTRADO */
 .main {
     flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 20px;
+    width: 100%;
 }
 
-/* CONTENEDOR MENÚ */
+/* CONTENEDOR MENÚ (PANTALLA DE INICIO) - AHORA AL 100% PARA PERMITIR CENTRADO REAL */
 .menu-container {
     display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
     gap: 16px;
-    width: 320px;
-    transition: all 0.3s ease;
+    width: 100%;
+    text-align: center;
 }
 
-/* BOTONES GENERALES */
+/* TÍTULO PRINCIPAL DEL MENÚ - CENTRADO ABSOLUTO E INQUEBRANTABLE */
+.menu-title {
+    font-size: 46px;
+    font-weight: 800;
+    color: #ffffff;
+    text-align: center !important;
+    margin: 0 auto 20px auto;
+    width: 100%;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    display: block;
+}
+
+/* BOTONES GENERALES - EL ANCHO MÁXIMO SE CONTROLA AQUÍ INDIVIDUALMENTE */
 .btn {
     padding: 15px 30px;
     border-radius: 10px;
@@ -89,6 +105,9 @@ body {
     cursor: pointer;
     transition: transform 0.2s, filter 0.2s;
     text-align: center;
+    width: 100%;
+    max-width: 340px; /* Mantiene el menú compacto */
+    margin: 0 auto;   /* Asegura alineación perfecta */
 }
 
 .btn:hover {
@@ -119,8 +138,10 @@ body {
     letter-spacing: 0.5px;
     border: none;
     box-shadow: 0 4px 15px rgba(255, 106, 0, 0.3);
-    margin-top: 5px;
+    margin: 5px auto 0 auto;
     text-transform: uppercase;
+    max-width: 340px;
+    width: 100%;
 }
 
 /* PANTALLA DE JUEGO */
@@ -204,7 +225,7 @@ body {
     border-color: #ff6a00;
 }
 
-/* CLASE GLOBAL PARA OCULTAR SCREEN */
+/* CLASE GLOBAL PARA OCULTAR ELEMENTOS */
 .hidden {
     display: none !important;
 }
@@ -262,117 +283,66 @@ body {
     font-size: 24px;
 }
 
-/* FORMULARIOS DE AUTENTICACIÓN */
-.auth-modal-tabs {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 25px;
-    border-bottom: 2px solid #222;
-}
-
-.auth-tab-btn {
-    background: none;
-    border: none;
-    color: #666;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 800;
-    font-size: 14px;
-    padding: 10px;
-    cursor: pointer;
-    flex: 1;
-    text-align: center;
-    transition: color 0.2s;
-}
-
-.auth-tab-btn.active {
-    color: #ff6a00;
-    border-bottom: 2px solid #ff6a00;
-    margin-bottom: -2px;
-}
-
-.auth-form {
+/* FILTROS EN CLASIFICACIÓN */
+.leaderboard-filters {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    text-align: left;
-}
-
-.form-group label {
-    font-size: 11px;
-    font-weight: 600;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.form-group input {
+    gap: 12px;
+    margin-bottom: 20px;
+    background-color: #1a1a1a;
     padding: 12px;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 8px;
-    color: white;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 14px;
-    width: 100%;
+    border-radius: 10px;
+    border: 1px solid #252525;
 }
 
-.form-group input:focus {
-    outline: none;
+.filter-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.filter-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #888;
+    letter-spacing: 1px;
+    min-width: 90px;
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 6px;
+    flex: 1;
+}
+
+.btn-filter-opt {
+    flex: 1;
+    padding: 6px 10px;
+    background: #111;
+    border: 1px solid #333;
+    color: #aaa;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.btn-filter-opt:hover {
+    background: #222;
+    color: #fff;
+}
+
+.btn-filter-opt.active {
+    background: #ff6a00;
+    color: #fff;
     border-color: #ff6a00;
 }
 
-.auth-submit-btn {
-    width: 100%;
-    margin-top: 10px;
-    font-size: 16px;
-    padding: 12px;
-}
-
-/* CLASIFICACIONES */
-.leaderboard-tabs {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #222;
-    padding-bottom: 8px;
-}
-
-.tab-btn {
-    flex: 1;
-    background: none;
-    border: none;
-    color: #777;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 700;
-    font-size: 13px;
-    padding: 8px 4px;
-    cursor: pointer;
-    transition: color 0.2s;
-    text-align: center;
-}
-
-.tab-btn.active {
-    color: #ff6a00;
-    position: relative;
-}
-
-.tab-btn.active::after {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background-color: #ff6a00;
-}
-
+/* SECCIÓN CLASIFICACIÓN TABLA */
 .leaderboard-table-wrapper {
     max-height: 280px;
     overflow-y: auto;
@@ -439,19 +409,9 @@ body {
     letter-spacing: 0.5px;
 }
 
-.stat-box.full-width .stat-label {
-    color: #ff6a00;
-}
-
-.stat-val {
-    font-size: 22px;
-    font-weight: 800;
-    color: white;
-}
-
-.stat-box.full-width .stat-val {
-    font-size: 36px;
-}
+.stat-box.full-width .stat-label { color: #ff6a00; }
+.stat-val { font-size: 22px; font-weight: 800; color: white; }
+.stat-box.full-width .stat-val { font-size: 36px; }
 
 /* BANNER DE RETROALIMENTACIÓN */
 .feedback-banner {
@@ -493,41 +453,9 @@ body {
     text-align: center;
     color: #e0e0e0;
     line-height: 1.5;
-    animation: fadeIn 0.3s ease-in;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-.feedback-correction strong {
-    color: #ffffff;
-    font-size: 15px;
-    display: inline-block;
-    margin-top: 4px;
-}
-
-.menu-title {
-    font-size: 48px;
-    font-weight: 800;
-    color: #ffffff;
-    text-align: center;
-    margin-bottom: 10px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    white-space: nowrap;
-    width: max-content;
-    align-self: center;
-}
-
-body:has(#menu-screen:not(.hidden)) .header .logo {
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease;
-}
-
+/* OPCIONES DEL PANEL DE CONFIGURACIÓN */
 .btn-opt {
     flex: 1;
     padding: 14px;
@@ -551,42 +479,75 @@ body:has(#menu-screen:not(.hidden)) .header .logo {
 .btn-opt.diff-hard   { color: #f1c40f; border-color: rgba(241, 196, 15, 0.3); }
 .btn-opt.diff-expert { color: #e74c3c; border-color: rgba(231, 76, 60, 0.3); }
 
-.btn-opt.active {
-    background-color: #ffffff !important;
-    color: #0d0d0d !important;
-    border-color: #ffffff !important;
-}
-
+.btn-opt.active { background-color: #ffffff !important; color: #0d0d0d !important; border-color: #ffffff !important; }
 .btn-opt.diff-normal.active { background-color: #2ecc71 !important; color: #0d0d0d !important; border-color: #2ecc71 !important; }
 .btn-opt.diff-hard.active { background-color: #f1c40f !important; color: #0d0d0d !important; border-color: #f1c40f !important; }
 .btn-opt.diff-expert.active { background-color: #e74c3c !important; color: #0d0d0d !important; border-color: #e74c3c !important; }
 
-/* REGLAS MÓVILES (EVITAR APELOTONAMIENTO) */
+/* PESTAÑAS Y GRUPOS DEL MODAL AUTH */
+.auth-modal-tabs { display: flex; justify-content: space-around; margin-bottom: 25px; border-bottom: 2px solid #222; }
+.auth-tab-btn { background: none; border: none; color: #666; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 14px; padding: 10px; cursor: pointer; flex: 1; text-align: center; }
+.auth-tab-btn.active { color: #ff6a00; border-bottom: 2px solid #ff6a00; margin-bottom: -2px; }
+.auth-form { display: flex; flex-direction: column; gap: 15px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.form-group label { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; }
+.form-group input { padding: 12px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white; font-family: 'Montserrat', sans-serif; width: 100%; }
+.form-group input:focus { outline: none; border-color: #ff6a00; }
+.auth-submit-btn { width: 100%; margin-top: 10px; font-size: 16px; padding: 12px; }
+
+
+/* ==========================================
+   REGLAS DE RESPONSIVIDAD PARA MÓVILES (CRÍTICO)
+   ========================================== */
 @media (max-width: 768px) {
+    
+    /* CABECERA EN MÓVIL: Grid perfecto de dos filas a la izquierda, botones agrupados a la derecha */
     .header {
-        padding: 12px 15px;
+        padding: 12px 20px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto;
+        row-gap: 4px;
+        column-gap: 15px;
+        align-items: center;
     }
 
-    /* MODIFICACIÓN: En móviles reducimos el tamaño y mantenemos un margen controlado */
+    /* Título superior de la app arriba a la izquierda */
     .logo {
-        font-size: 16px;
-        margin-right: 15px; 
+        grid-column: 1;
+        grid-row: 1;
+        font-size: 18px;
+        text-align: left;
+        margin: 0;
     }
 
+    /* Marcador de puntos justo debajo de "SneakerGuessr" */
     .score-display {
-        font-size: 14px;
-        white-space: nowrap;
+        grid-column: 1;
+        grid-row: 2;
+        font-size: 13px;
+        text-align: left;
+        margin: 0;
     }
 
+    /* Iconos superiores agrupados de forma compacta a la derecha ocupando el alto de la cuadrícula */
     .header-controls {
-        gap: 8px !important;
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px !important;
+        max-width: 130px;
+        justify-content: flex-end;
+        margin: 0;
     }
 
     .settings {
-        font-size: 18px !important;
-        padding: 4px;
+        font-size: 20px !important;
+        padding: 2px;
     }
 
+    /* CENTRADO IMPECABLE DEL MENÚ DE INICIO EN MÓVIL */
     .menu-container {
         width: 100% !important;
         max-width: 100% !important;
@@ -594,21 +555,27 @@ body:has(#menu-screen:not(.hidden)) .header .logo {
         gap: 12px !important;
     }
 
+    /* Título del juego fluido y centrado perfectamente en pantallas pequeñas */
     .menu-title {
-        font-size: 8.5vw;
+        font-size: 34px !important; /* Escalado para evitar desbordamientos y asegurar centrado */
         width: 100% !important;
-        margin-bottom: 10px;
+        text-align: center !important;
+        margin: 0 auto 15px auto !important;
     }
 
+    /* Botones adaptados y compactos en móviles */
     .menu-container .btn {
         width: 100% !important;
         max-width: 290px !important;
         font-size: 15px;
         padding: 14px;
+        margin: 0 auto;
     }
 
     .auth-btn {
-        font-size: 12px !important;
+        font-size: 11px !important;
         padding: 14px 10px !important;
+        max-width: 290px !important;
+        margin: 5px auto 0 auto !important;
     }
 }
