@@ -21,9 +21,6 @@
     <title>SneakerGuessr</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&display=swap" rel="stylesheet">
-
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -55,7 +52,7 @@
                 <div class="img-wrapper">
                     <img id="sneaker-img" src="" alt="Sneaker" class="sneaker-img">
                 </div>
-
+                
                 <div id="feedback-details" class="feedback-correction hidden"></div>
 
                 <div id="options-container" class="answers"></div>
@@ -72,20 +69,20 @@
 
     </main>
 
-    <!-- MODAL AUTENTICACIÓN -->
+    <!-- MODAL: INICIAR SESIÓN / REGISTRO -->
     <div id="auth-modal" class="modal hidden">
-        <div class="modal-content" style="max-width: 400px;">
-            <span class="close-btn" id="close-auth-btn">×</span>
+        <div class="modal-content" style="max-width: 400px; max-height: 90vh; overflow-y: auto;">
+            <span class="close-btn" id="close-auth-btn">&times;</span>
             <div class="auth-modal-tabs">
                 <button class="auth-tab-btn active" id="tab-login-btn">INICIAR SESIÓN</button>
                 <button class="auth-tab-btn" id="tab-register-btn">REGISTRARSE</button>
             </div>
-
+            
             <!-- FORMULARIO LOGIN -->
             <form id="login-form" class="auth-form">
                 <div class="form-group">
-                    <label for="login-email">Email</label>
-                    <input type="email" id="login-email" required placeholder="tu@email.com" autocomplete="email">
+                    <label for="login-username">Usuario (@)</label>
+                    <input type="text" id="login-username" required placeholder="Tu nombre de usuario" autocomplete="username">
                 </div>
                 <div class="form-group">
                     <label for="login-password">Contraseña</label>
@@ -98,20 +95,16 @@
             <!-- FORMULARIO REGISTRO -->
             <form id="register-form" class="auth-form hidden">
                 <div class="form-group">
-                    <label for="reg-email">Email</label>
-                    <input type="email" id="reg-email" required placeholder="tu@email.com" autocomplete="email">
+                    <label for="reg-username">Usuario (@) — mín. 3 caracteres</label>
+                    <input type="text" id="reg-username" required placeholder="Crea tu usuario" autocomplete="off">
                 </div>
                 <div class="form-group">
-                    <label for="reg-username">Usuario (@)</label>
-                    <input type="text" id="reg-username" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_]+" placeholder="@sneakerjuan" autocomplete="username">
+                    <label for="reg-country">País (código: ES, US, MX…)</label>
+                    <input type="text" id="reg-country" required maxlength="2" placeholder="ES" style="text-transform: uppercase;">
                 </div>
                 <div class="form-group">
-                    <label for="reg-country">País (código: ES, US, MX...)</label>
-                    <input type="text" id="reg-country" required maxlength="2" placeholder="ES" style="text-transform: uppercase;" autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <label for="reg-password">Contraseña (mín. 6 caracteres)</label>
-                    <input type="password" id="reg-password" required minlength="6" placeholder="••••••" autocomplete="new-password">
+                    <label for="reg-password">Contraseña — mín. 6 caracteres</label>
+                    <input type="password" id="reg-password" required placeholder="Mínimo 6 caracteres" autocomplete="new-password">
                 </div>
                 <div id="register-error" class="auth-error hidden"></div>
                 <button type="submit" class="btn play-btn auth-submit-btn" id="btn-submit-reg">CREAR CUENTA</button>
@@ -119,18 +112,12 @@
         </div>
     </div>
 
-    <!-- MODAL CLASIFICACIONES -->
+    <!-- MODAL: CLASIFICACIONES -->
     <div id="leaderboard-modal" class="modal hidden">
-        <div class="modal-content" style="max-width: 550px;">
-            <span class="close-btn" id="close-leaderboard-btn">×</span>
+        <div class="modal-content" style="max-width: 550px; max-height: 90vh; overflow-y: auto;">
+            <span class="close-btn" id="close-leaderboard-btn">&times;</span>
             <h2>🏆 CLASIFICACIONES</h2>
-
-            <!-- Pestañas Global / Mi País -->
-            <div class="leaderboard-scope-tabs">
-                <button class="scope-tab active" id="scope-global-btn">🌍 GLOBAL</button>
-                <button class="scope-tab" id="scope-country-btn">🏠 MI PAÍS</button>
-            </div>
-
+            
             <div class="leaderboard-filters">
                 <div class="filter-group">
                     <span class="filter-label">MODO</span>
@@ -149,8 +136,6 @@
                 </div>
             </div>
 
-            <div id="leaderboard-loading" class="leaderboard-loading hidden">Cargando...</div>
-
             <div class="leaderboard-table-wrapper">
                 <table class="leaderboard-table">
                     <thead>
@@ -158,7 +143,7 @@
                             <th>Pos</th>
                             <th>Jugador</th>
                             <th>País</th>
-                            <th>Racha Máxima</th>
+                            <th>Racha Máx.</th>
                         </tr>
                     </thead>
                     <tbody id="leaderboard-body"></tbody>
@@ -167,19 +152,17 @@
         </div>
     </div>
 
-    <!-- MODAL ESTADÍSTICAS -->
+    <!-- MODAL: MIS RÉCORDS -->
     <div id="stats-modal" class="modal hidden">
-        <div class="modal-content" style="max-width: 500px;">
-            <span class="close-btn" id="close-stats-btn">×</span>
+        <div class="modal-content" style="max-width: 500px; max-height: 90vh; overflow-y: auto;">
+            <span class="close-btn" id="close-stats-btn">&times;</span>
             <h2>📊 MIS RÉCORDS</h2>
-            <div id="stats-not-logged" class="stats-not-logged hidden">
-                <p>Inicia sesión para ver tus récords guardados en la nube ☁️</p>
-            </div>
-            <div class="stats-grid" id="stats-grid-content">
+            <div class="stats-grid">
                 <div class="stat-box full-width">
                     <span class="stat-label">PUNTOS TOTALES (DE SIEMPRE)</span>
                     <span class="stat-val" id="total-points-val">0</span>
                 </div>
+                
                 <div class="stat-box" style="border-color: #333;">
                     <span class="stat-label" style="color: #bbb;">Classic (Normal)</span>
                     <span class="stat-val" id="streak-classic-normal-val">0</span>
@@ -192,6 +175,7 @@
                     <span class="stat-label" style="color: #bbb;">Classic (Expert)</span>
                     <span class="stat-val" id="streak-classic-expert-val">0</span>
                 </div>
+
                 <div class="stat-box">
                     <span class="stat-label">Expert (Normal)</span>
                     <span class="stat-val" id="streak-expert-normal-val">0</span>
@@ -208,11 +192,12 @@
         </div>
     </div>
 
-    <!-- MODAL AJUSTES DE PARTIDA -->
+    <!-- MODAL: AJUSTES DE PARTIDA -->
     <div id="game-mode-modal" class="modal hidden">
         <div class="modal-content" style="max-width: 450px;">
-            <span class="close-btn" id="close-game-mode-btn">×</span>
+            <span class="close-btn" id="close-game-mode-btn">&times;</span>
             <h2 style="margin-bottom: 25px; text-align: center; font-weight: 800; letter-spacing: 1px;">⚙️ AJUSTES DE PARTIDA</h2>
+            
             <div style="margin-bottom: 30px;">
                 <h3 style="font-size: 13px; color: #888; margin-bottom: 12px; letter-spacing: 1px; font-weight: 600;">MODO DE JUEGO</h3>
                 <div style="display: flex; gap: 12px;">
@@ -220,6 +205,7 @@
                     <button class="btn-opt" id="opt-mode-expert">EXPERT (Escribir)</button>
                 </div>
             </div>
+            
             <div>
                 <h3 style="font-size: 13px; color: #888; margin-bottom: 12px; letter-spacing: 1px; font-weight: 600;">DIFICULTAD</h3>
                 <div style="display: flex; gap: 12px;">
@@ -231,21 +217,23 @@
         </div>
     </div>
 
-    <!-- MODAL CÓMO JUGAR -->
+    <!-- MODAL: CÓMO JUGAR -->
     <div id="info-modal" class="modal hidden">
-        <div class="modal-content" style="max-width: 480px;">
-            <span class="close-btn" id="close-info-btn">×</span>
+        <div class="modal-content" style="max-width: 480px; max-height: 90vh; overflow-y: auto;">
+            <span class="close-btn" id="close-info-btn">&times;</span>
             <h2>ℹ️ ¿CÓMO JUGAR?</h2>
             <div style="line-height: 1.6; font-size: 14px; color: #e0e0e0; text-align: left;">
                 <p style="margin-bottom: 15px; text-align: center; font-weight: 600; color: #ff6a00;">
                     ¡Demuestra tus conocimientos de cultura sneakerhead adivinando el calzado de la imagen!
                 </p>
                 <hr style="border: 0; height: 1px; background: #333; margin-bottom: 15px;">
+                
                 <h3 style="color: #fff; font-size: 15px; margin-bottom: 5px;">🕹️ MODOS DE JUEGO</h3>
                 <ul style="margin-left: 20px; margin-bottom: 15px; padding-left: 5px;">
                     <li><strong>Classic:</strong> Elige la respuesta correcta entre 4 opciones con botones.</li>
                     <li><strong>Expert:</strong> Pon a prueba tu memoria escribiendo la respuesta exacta.</li>
                 </ul>
+                
                 <h3 style="color: #fff; font-size: 15px; margin-bottom: 5px;">🔥 DIFICULTADES</h3>
                 <ul style="margin-left: 20px; padding-left: 5px;">
                     <li><strong style="color: #2ecc71;">Normal:</strong> Solo el <strong>Nombre del modelo</strong> (Ej: <em>Nike Air Jordan 1</em>).</li>
@@ -256,6 +244,8 @@
         </div>
     </div>
 
+    <!-- SDK SUPABASE — DEBE ir ANTES que script.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
     <script defer src="/_vercel/insights/script.js"></script>
 </body>
