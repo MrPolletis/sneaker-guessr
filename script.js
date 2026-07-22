@@ -331,6 +331,7 @@ registerForm.addEventListener("submit", async (e) => {
     }
 
     // Crear fila en la tabla 'profiles'
+    // Crear fila en la tabla 'profiles'
     if (data && data.user) {
         const { error: profileError } = await supabaseClient
             .from('profiles')
@@ -343,6 +344,11 @@ registerForm.addEventListener("submit", async (e) => {
         if (profileError) {
             console.warn("Perfil ya existe o error al crearlo:", profileError.message);
         }
+
+        // Forzar actualización inmediata del botón sin esperar a onAuthStateChange
+        currentUser  = data.user;
+        profileData  = { username: usernameVal, country: countryVal };
+        updateAuthButton();
     }
 
     registerForm.reset();
@@ -353,7 +359,6 @@ registerForm.addEventListener("submit", async (e) => {
     alert(currentLang === 'es'
         ? `¡Cuenta creada! Bienvenido, @${usernameVal} 🎉`
         : `Account created! Welcome, @${usernameVal} 🎉`);
-});
 
 // ============================================================
 // LOGIN — SUPABASE
@@ -389,13 +394,19 @@ loginForm.addEventListener("submit", async (e) => {
         return;
     }
 
-    // Si todo fue bien, onAuthStateChange actualizará el estado automáticamente
+   // Forzar carga del perfil y actualización del botón inmediatamente
+    const { data: { session: newSession } } = await supabaseClient.auth.getSession();
+    if (newSession && newSession.user) {
+        currentUser = newSession.user;
+        await loadProfileData();
+        updateAuthButton();
+    }
+
     loginForm.reset();
     authModal.classList.add("hidden");
     submitLoginBtn.disabled = false;
     submitLoginBtn.textContent = currentLang === 'es' ? "ENTRAR" : "LOG IN";
-});
-
+    
 // ============================================================
 // CIERRE DE MODALES AL CLICAR FUERA
 // ============================================================
