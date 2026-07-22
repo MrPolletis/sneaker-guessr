@@ -1,18 +1,18 @@
-// ============================================================
+// ====
 // CONFIGURACIÓN SUPABASE
 // IMPORTANTE: En Supabase > Authentication > Email > desactiva
 // "Enable email confirmations" para que el registro funcione
 // con los correos internos @sneakerguessr.app
-// ============================================================
+// ====
 const SUPABASE_URL = "https://gaedfzothousntkdszwi.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_idxoK1zSmo_oFVMg_oG6LA_VIkJiB4b";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const FAKE_EMAIL_DOMAIN = "@sneakerguessr.app";
 
-// ============================================================
+// ====
 // REFERENCIAS A ELEMENTOS DEL HTML
-// ============================================================
+// ====
 const playBtn               = document.getElementById("play-btn");
 const gameModeSetupBtn      = document.getElementById("game-mode-setup-btn");
 const statsBtn              = document.getElementById("stats-btn");
@@ -61,9 +61,9 @@ const backToMenuBtn         = document.getElementById("back-to-menu-btn");
 const feedbackToast         = document.getElementById("feedback-toast");
 const feedbackDetails       = document.getElementById("feedback-details");
 
-// ============================================================
+// ====
 // VARIABLES DE ESTADO
-// ============================================================
+// ====
 let sneakers        = [];
 let gamePool        = [];
 let currentSneaker  = {};
@@ -84,9 +84,9 @@ let selectedFilterDiff = "normal";
 let currentUser  = null;
 let profileData  = null;
 
-// ============================================================
+// ====
 // AUTENTICACIÓN — SUPABASE
-// ============================================================
+// ====
 
 /**
  * Inicializa el listener de sesión. Se llama en DOMContentLoaded.
@@ -178,9 +178,9 @@ async function saveStatToSupabase(gm, diff, newStreak) {
     }
 }
 
-// ============================================================
+// ====
 // EVENTOS — MENÚ PRINCIPAL
-// ============================================================
+// ====
 
 playBtn.addEventListener("click", () => {
     menuScreen.classList.add("hidden");
@@ -263,9 +263,9 @@ tabRegisterBtn.addEventListener("click", () => {
     loginForm.classList.add("hidden");
 });
 
-// ============================================================
+// ====
 // REGISTRO — SUPABASE
-// ============================================================
+// ====
 registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -331,7 +331,6 @@ registerForm.addEventListener("submit", async (e) => {
     }
 
     // Crear fila en la tabla 'profiles'
-    // Crear fila en la tabla 'profiles'
     if (data && data.user) {
         const { error: profileError } = await supabaseClient
             .from('profiles')
@@ -359,10 +358,11 @@ registerForm.addEventListener("submit", async (e) => {
     alert(currentLang === 'es'
         ? `¡Cuenta creada! Bienvenido, @${usernameVal} 🎉`
         : `Account created! Welcome, @${usernameVal} 🎉`);
+});
 
-// ============================================================
+// ====
 // LOGIN — SUPABASE
-// ============================================================
+// ====
 loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -394,7 +394,7 @@ loginForm.addEventListener("submit", async (e) => {
         return;
     }
 
-   // Forzar carga del perfil y actualización del botón inmediatamente
+    // Forzar carga del perfil y actualización del botón inmediatamente
     const { data: { session: newSession } } = await supabaseClient.auth.getSession();
     if (newSession && newSession.user) {
         currentUser = newSession.user;
@@ -406,10 +406,11 @@ loginForm.addEventListener("submit", async (e) => {
     authModal.classList.add("hidden");
     submitLoginBtn.disabled = false;
     submitLoginBtn.textContent = currentLang === 'es' ? "ENTRAR" : "LOG IN";
-    
-// ============================================================
+});
+
+// ====
 // CIERRE DE MODALES AL CLICAR FUERA
-// ============================================================
+// ====
 window.addEventListener("click", (e) => {
     if (e.target === statsModal)      statsModal.classList.add("hidden");
     if (e.target === gameModeModal)   gameModeModal.classList.add("hidden");
@@ -427,9 +428,9 @@ backToMenuBtn.addEventListener("click", () => {
     menuScreen.classList.remove("hidden");
 });
 
-// ============================================================
+// ====
 // AJUSTES DE PARTIDA
-// ============================================================
+// ====
 optModeClassic.addEventListener("click", () => {
     if (gameMode !== 'classic') {
         gameMode = 'classic';
@@ -480,16 +481,16 @@ function updateModalUI() {
         .forEach(b => b.classList.remove("active"));
 
     if (gameMode === 'classic') optModeClassic.classList.add("active");
-    else                        optModeExpert.classList.add("active");
+    else                    optModeExpert.classList.add("active");
 
     if      (difficultyIndex === 0) optDiffNormal.classList.add("active");
     else if (difficultyIndex === 1) optDiffHard.classList.add("active");
     else if (difficultyIndex === 2) optDiffExpert.classList.add("active");
 }
 
-// ============================================================
+// ====
 // LEADERBOARD — SUPABASE (GLOBAL)
-// ============================================================
+// ====
 async function renderLeaderboard() {
     leaderboardBody.innerHTML = `
         <tr>
@@ -563,9 +564,9 @@ async function renderLeaderboard() {
     }
 }
 
-// ============================================================
+// ====
 // MOTOR DE JUEGO
-// ============================================================
+// ====
 async function startGame() {
     try {
         const response = await fetch('zapatillas.json');
@@ -710,9 +711,9 @@ if (submitBtn) {
     submitBtn.addEventListener("click", () => checkAnswer(sneakerInput.value));
 }
 
-// ============================================================
+// ====
 // ESTADÍSTICAS (MODAL)
-// ============================================================
+// ====
 async function openStatsModal() {
     statsModal.classList.remove("hidden");
 
@@ -750,9 +751,9 @@ async function openStatsModal() {
     }
 }
 
-// ============================================================
+// ====
 // LÓGICA DE RESPUESTA
-// ============================================================
+// ====
 function checkAnswer(guess) {
     if (isProcessingAnswer) return;
     isProcessingAnswer = true;
@@ -850,9 +851,9 @@ function checkAnswer(guess) {
     }, 2000);
 }
 
-// ============================================================
+// ====
 // DICCIONARIOS DE TRADUCCIÓN
-// ============================================================
+// ====
 const dictionary = {
     es: {
         scoreText:          "PUNTOS",
@@ -906,9 +907,9 @@ const dictionary = {
 
 let currentLang = localStorage.getItem("sneaker_lang") || "es";
 
-// ============================================================
+// ====
 // IDIOMA
-// ============================================================
+// ====
 function applyLanguage(lang) {
     const texts = dictionary[lang];
 
@@ -978,9 +979,9 @@ document.getElementById("share-btn").addEventListener("click", async () => {
     }
 });
 
-// ============================================================
+// ====
 // INICIALIZACIÓN (esperar a que el DOM esté listo)
-// ============================================================
+// ====
 document.addEventListener("DOMContentLoaded", () => {
     applyLanguage(currentLang);
     initAuth(); // Arrancar el sistema de autenticación Supabase
