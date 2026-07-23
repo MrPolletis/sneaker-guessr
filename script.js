@@ -1,14 +1,22 @@
 // ====
 // CONFIGURACIÓN SUPABASE
-// IMPORTANTE: En Supabase > Authentication > Email > desactiva
-// "Enable email confirmations" para que el registro funcione
-// con los correos internos @sneakerguessr.app
+// IMPORTANTE: En Supabase > Authentication > Providers > Email,
+// deja desactivada la confirmación por correo.
 // ====
 const SUPABASE_URL = "https://gaedfzothousntkdszwi.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_idxoK1zSmo_oFVMg_oG6LA_VIkJiB4b";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const FAKE_EMAIL_DOMAIN = "@sneakerguessr.app";
+// El email es solo un identificador interno de Supabase: el jugador nunca lo ve.
+const AUTH_EMAIL_DOMAIN = "@sneakerguessr.com";
+
+function normalizeUsername(value) {
+    return value.trim().replace(/^@+/, "");
+}
+
+function usernameToAuthEmail(username) {
+    return `${username.toLowerCase()}${AUTH_EMAIL_DOMAIN}`;
+}
 
 // ====
 // REFERENCIAS A ELEMENTOS DEL HTML
@@ -273,15 +281,24 @@ registerForm.addEventListener("submit", async (e) => {
     errorEl.classList.add("hidden");
     errorEl.textContent = "";
 
-    const usernameVal = document.getElementById("reg-username").value.trim().toLowerCase();
+    // El @ es solo visual: @Juanitopro67 y Juanitopro67 son la misma cuenta.
+    const usernameVal = normalizeUsername(document.getElementById("reg-username").value);
+    const usernameKey = usernameVal.toLowerCase();
     const countryVal  = document.getElementById("reg-country").value.trim().toUpperCase();
     const passVal     = document.getElementById("reg-password").value;
 
     // Validaciones locales
-    if (usernameVal.length < 3) {
+    if (usernameVal.length < 3 || usernameVal.length > 20) {
         errorEl.textContent = currentLang === 'es'
-            ? "El usuario debe tener al menos 3 caracteres."
-            : "Username must be at least 3 characters.";
+            ? "El usuario debe tener entre 3 y 20 caracteres."
+            : "Username must have between 3 and 20 characters.";
+        errorEl.classList.remove("hidden");
+        return;
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(usernameVal)) {
+        errorEl.textContent = currentLang === 'es'
+            ? "El usuario solo puede usar letras, números y guion bajo (_)."
+            : "Username can only use letters, numbers and underscores (_).";
         errorEl.classList.remove("hidden");
         return;
     }
@@ -304,14 +321,14 @@ registerForm.addEventListener("submit", async (e) => {
     submitRegBtn.disabled = true;
     submitRegBtn.textContent = currentLang === 'es' ? "Creando cuenta..." : "Creating account...";
 
-    const fakeEmail = usernameVal + FAKE_EMAIL_DOMAIN;
+    const authEmail = usernameToAuthEmail(usernameVal);
 
-    // Crear usuario en Supabase Auth
+    // Supabase usa este identificador interno y guarda la contraseña de forma segura.
     const { data, error } = await supabaseClient.auth.signUp({
-        email: fakeEmail,
+        email: authEmail,
         password: passVal,
         options: {
-            data: { username: usernameVal, country: countryVal }
+            data: { username: usernameVal, username_key: usernameKey, country: countryVal }
         }
     });
 
@@ -343,11 +360,6 @@ registerForm.addEventListener("submit", async (e) => {
         if (profileError) {
             console.warn("Perfil ya existe o error al crearlo:", profileError.message);
         }
-
-        // Forzar actualización inmediata del botón sin esperar a onAuthStateChange
-        currentUser  = data.user;
-        profileData  = { username: usernameVal, country: countryVal };
-        updateAuthButton();
     }
 
     registerForm.reset();
@@ -394,14 +406,7 @@ loginForm.addEventListener("submit", async (e) => {
         return;
     }
 
-    // Forzar carga del perfil y actualización del botón inmediatamente
-    const { data: { session: newSession } } = await supabaseClient.auth.getSession();
-    if (newSession && newSession.user) {
-        currentUser = newSession.user;
-        await loadProfileData();
-        updateAuthButton();
-    }
-
+    // Si todo fue bien, onAuthStateChange actualizará el estado automáticamente
     loginForm.reset();
     authModal.classList.add("hidden");
     submitLoginBtn.disabled = false;
