@@ -40,8 +40,14 @@ const closeLeaderboardBtn   = document.getElementById("close-leaderboard-btn");
 const leaderboardBody       = document.getElementById("leaderboard-body");
 const authBtn               = document.getElementById("auth-btn");
 
+const filterScopeContainer  = document.getElementById("filter-scope-container");
+const filterTypeContainer   = document.getElementById("filter-type-container");
+const filterModeGroup       = document.getElementById("filter-mode-group");
+const filterDiffGroup       = document.getElementById("filter-diff-group");
 const filterModeContainer   = document.getElementById("filter-mode-container");
 const filterDiffContainer   = document.getElementById("filter-diff-container");
+const scopeLocalBtn         = document.getElementById("scope-local-btn");
+const thScore               = document.getElementById("th-score");
 
 const authModal             = document.getElementById("auth-modal");
 const closeAuthBtn          = document.getElementById("close-auth-btn");
@@ -85,8 +91,10 @@ let feedbackTimeout     = null;
 let isProcessingAnswer  = false;
 
 // Estado de los filtros del leaderboard
-let selectedFilterMode = "classic";
-let selectedFilterDiff = "normal";
+let selectedFilterScope = "global"; // 'global' | 'local'
+let selectedFilterType  = "points"; // 'points' | 'streak'
+let selectedFilterMode  = "classic";
+let selectedFilterDiff  = "normal";
 
 // Estado de autenticación Supabase
 let currentUser  = null;
@@ -122,31 +130,77 @@ async function initAuth() {
 }
 
 /**
- * Carga los datos del perfil (username, country) desde la tabla 'profiles'.
+ * Carga los datos del perfil (username, country, total_points) desde la tabla 'profiles'.
+ * Sincroniza los puntos entre la nube y el dispositivo local.
  */
 async function loadProfileData() {
     if (!currentUser) return;
-    const { data, error } = await supabaseClient
-        .from('profiles')
-        .select('*')
-        .eq('id', currentUser.id)
-        .maybeSingle();
+    try {
+        const { data, error } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .maybeSingle();
 
-    if (!error && data) {
-        profileData = data;
+        if (!error && data) {
+            profileData = data;
+
+            // Sincronizar puntos totales: si la nube tiene más puntos, actualizar local.
+            // Si el dispositivo acumuló puntos jugando como invitado, actualizar la nube con el máximo.
+            const cloudPoints = Number(data.total_points) || 0;
+            const localPoints = Number(localStorage.getItem("sneaker_total_points")) || 0;
+            const finalPoints = Math.max(cloudPoints, localPoints);
+
+            localStorage.setItem("sneaker_total_points", finalPoints);
+            profileData.total_points = finalPoints;
+
+            if (finalPoints > cloudPoints) {
+                await supabaseClient
+                    .from('profiles')
+                    .update({ total_points: finalPoints })
+                    .eq('id', currentUser.id);
+            }
+        }
+    } catch (err) {
+        console.error("Error al cargar perfil de Supabase:", err);
     }
 }
 
 /**
- * Actualiza el botón de autenticación del menú según el estado de sesión.
+ * Guarda los puntos totales permanentemente en Supabase.
+ */
+async function savePointsToSupabase(points) {
+    if (!currentUser) return;
+    try {
+        await supabaseClient
+            .from('profiles')
+            .update({ total_points: points })
+            .eq('id', currentUser.id);
+        if (profileData) {
+            profileData.total_points = points;
+        }
+    } catch (err) {
+        console.error("Error al guardar puntos en Supabase:", err);
+    }
+}
+
+/**
+ * Actualiza el botón de autenticación del menú según el estado de sesión
+ * y adapta el botón de clasificación LOCAL al país del jugador.
  */
 function updateAuthButton() {
     if (currentUser && profileData) {
         authBtn.innerText = `👤 @${profileData.username} (${currentLang === 'es' ? 'Salir' : 'Logout'})`;
         authBtn.style.background = "linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)";
+        if (scopeLocalBtn) {
+            scopeLocalBtn.innerText = `📍 LOCAL (${profileData.country || 'ES'})`;
+        }
     } else {
         authBtn.innerText = dictionary[currentLang] ? dictionary[currentLang].authBtn : "🔐 INICIAR SESIÓN";
         authBtn.style.background = "linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)";
+        if (scopeLocalBtn) {
+            scopeLocalBtn.innerText = `📍 LOCAL`;
+        }
     }
 }
 
@@ -218,13 +272,46 @@ leaderboardBtn.addEventListener("click", () => {
 });
 closeLeaderboardBtn.addEventListener("click", () => leaderboardModal.classList.add("hidden"));
 
+// Filtros de Ámbito (Global / Local)
+if (filterScopeContainer) {
+    filterScopeContainer.querySelectorAll(".btn-filter-opt").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            filterScopeContainer.querySelectorAll(".btn-filter-opt").forEach(b => b.classList.remove("active"));
+            e.currentTarget.classList.add("active");
+            selectedFilterScope = e.currentTarget.getAttribute("data-filter-scope");
+            renderLeaderboard();
+        });
+    });
+}
+
+// Filtros de Tipo (Puntos / Racha)
+if (filterTypeContainer) {
+    filterTypeContainer.querySelectorAll(".btn-filter-opt").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            filterTypeContainer.querySelectorAll(".btn-filter-opt").forEach(b => b.classList.remove("active"));
+            e.currentTarget.classList.add("active");
+            selectedFilterType = e.currentTarget.getAttribute("data-filter-type");
+
+            if (selectedFilterType === 'points') {
+                if (filterModeGroup) filterModeGroup.classList.add("hidden");
+                if (filterDiffGroup) filterDiffGroup.classList.add("hidden");
+            } else {
+                if (filterModeGroup) filterModeGroup.classList.remove("hidden");
+                if (filterDiffGroup) filterDiffGroup.classList.remove("hidden");
+            }
+
+            renderLeaderboard();
+        });
+    });
+}
+
 // Filtros de modo (Classic / Expert)
 if (filterModeContainer) {
     filterModeContainer.querySelectorAll(".btn-filter-opt").forEach(btn => {
         btn.addEventListener("click", (e) => {
             filterModeContainer.querySelectorAll(".btn-filter-opt").forEach(b => b.classList.remove("active"));
-            e.target.classList.add("active");
-            selectedFilterMode = e.target.getAttribute("data-filter-mode");
+            e.currentTarget.classList.add("active");
+            selectedFilterMode = e.currentTarget.getAttribute("data-filter-mode");
             renderLeaderboard();
         });
     });
@@ -235,8 +322,8 @@ if (filterDiffContainer) {
     filterDiffContainer.querySelectorAll(".btn-filter-opt").forEach(btn => {
         btn.addEventListener("click", (e) => {
             filterDiffContainer.querySelectorAll(".btn-filter-opt").forEach(b => b.classList.remove("active"));
-            e.target.classList.add("active");
-            selectedFilterDiff = e.target.getAttribute("data-filter-diff");
+            e.currentTarget.classList.add("active");
+            selectedFilterDiff = e.currentTarget.getAttribute("data-filter-diff");
             renderLeaderboard();
         });
     });
@@ -282,8 +369,8 @@ registerForm.addEventListener("submit", async (e) => {
     errorEl.textContent = "";
 
     // El @ es solo visual: @Juanitopro67 y Juanitopro67 son la misma cuenta.
-    const usernameVal = normalizeUsername(document.getElementById("reg-username").value);
-    const usernameKey = usernameVal.toLowerCase();
+    const rawUsername = document.getElementById("reg-username").value;
+    const usernameVal = normalizeUsername(rawUsername);
     const countryVal  = document.getElementById("reg-country").value.trim().toUpperCase();
     const passVal     = document.getElementById("reg-password").value;
 
@@ -328,12 +415,11 @@ registerForm.addEventListener("submit", async (e) => {
         email: authEmail,
         password: passVal,
         options: {
-            data: { username: usernameVal, username_key: usernameKey, country: countryVal }
+            data: { username: usernameVal, country: countryVal }
         }
     });
 
     if (error) {
-        // Mensaje de error personalizado
         let msg = error.message;
         if (msg.includes("already registered") || msg.includes("User already registered")) {
             msg = currentLang === 'es'
@@ -347,19 +433,25 @@ registerForm.addEventListener("submit", async (e) => {
         return;
     }
 
-    // Crear fila en la tabla 'profiles'
+    // Crear fila en la tabla 'profiles' conservando los puntos acumulados como invitado
     if (data && data.user) {
+        currentUser = data.user;
+        const initialPoints = parseInt(localStorage.getItem("sneaker_total_points") || "0");
         const { error: profileError } = await supabaseClient
             .from('profiles')
-            .insert({
-                id:       data.user.id,
-                username: usernameVal,
-                country:  countryVal
-            });
+            .upsert({
+                id:           data.user.id,
+                username:     usernameVal,
+                country:      countryVal,
+                total_points: initialPoints
+            }, { onConflict: 'id' });
 
         if (profileError) {
             console.warn("Perfil ya existe o error al crearlo:", profileError.message);
+        } else {
+            profileData = { id: data.user.id, username: usernameVal, country: countryVal, total_points: initialPoints };
         }
+        updateAuthButton();
     }
 
     registerForm.reset();
@@ -382,17 +474,24 @@ loginForm.addEventListener("submit", async (e) => {
     errorEl.classList.add("hidden");
     errorEl.textContent = "";
 
-    const usernameVal = document.getElementById("login-username").value.trim().toLowerCase();
+    const rawUsername = document.getElementById("login-username").value;
+    const usernameVal = normalizeUsername(rawUsername);
     const passVal     = document.getElementById("login-password").value;
+
+    if (!usernameVal || !passVal) {
+        errorEl.textContent = currentLang === 'es' ? "Rellena todos los campos." : "Fill in all fields.";
+        errorEl.classList.remove("hidden");
+        return;
+    }
 
     const submitLoginBtn = document.getElementById("btn-submit-login");
     submitLoginBtn.disabled = true;
     submitLoginBtn.textContent = currentLang === 'es' ? "Entrando..." : "Logging in...";
 
-    const fakeEmail = usernameVal + FAKE_EMAIL_DOMAIN;
+    const authEmail = usernameToAuthEmail(usernameVal);
 
-    const { error } = await supabaseClient.auth.signInWithPassword({
-        email:    fakeEmail,
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email:    authEmail,
         password: passVal
     });
 
@@ -406,7 +505,12 @@ loginForm.addEventListener("submit", async (e) => {
         return;
     }
 
-    // Si todo fue bien, onAuthStateChange actualizará el estado automáticamente
+    if (data && data.user) {
+        currentUser = data.user;
+        await loadProfileData();
+        updateAuthButton();
+    }
+
     loginForm.reset();
     authModal.classList.add("hidden");
     submitLoginBtn.disabled = false;
@@ -494,7 +598,7 @@ function updateModalUI() {
 }
 
 // ====
-// LEADERBOARD — SUPABASE (GLOBAL)
+// LEADERBOARD — SUPABASE (GLOBAL Y LOCAL)
 // ====
 async function renderLeaderboard() {
     leaderboardBody.innerHTML = `
@@ -504,29 +608,93 @@ async function renderLeaderboard() {
             </td>
         </tr>`;
 
+    // Actualizar texto de la columna de resultado
+    if (thScore) {
+        if (selectedFilterType === 'points') {
+            thScore.innerText = currentLang === 'es' ? "Puntos" : "Points";
+        } else {
+            thScore.innerText = currentLang === 'es' ? "Racha Máx." : "Max Streak";
+        }
+    }
+
     try {
-        const { data, error } = await supabaseClient
-            .from('player_stats')
-            .select('best_streak, user_id, profiles(username, country)')
-            .eq('game_mode', selectedFilterMode)
-            .eq('difficulty', selectedFilterDiff)
-            .order('best_streak', { ascending: false })
-            .limit(10);
+        let entries = [];
+        const userCountry = (profileData && profileData.country) ? profileData.country : "ES";
+
+        if (selectedFilterType === 'points') {
+            // CLASIFICACIÓN POR PUNTOS TOTALES (tabla 'profiles')
+            let query = supabaseClient
+                .from('profiles')
+                .select('id, username, country, total_points')
+                .gt('total_points', 0)
+                .order('total_points', { ascending: false })
+                .limit(10);
+
+            if (selectedFilterScope === 'local') {
+                query = query.eq('country', userCountry);
+            }
+
+            const { data, error } = await query;
+            if (error) throw error;
+
+            entries = (data || []).map(item => ({
+                id: item.id,
+                username: item.username,
+                country: item.country,
+                scoreDisplay: `${Number(item.total_points).toLocaleString()} ⭐`
+            }));
+
+        } else {
+            // CLASIFICACIÓN POR RACHAS (tabla 'player_stats' unida a 'profiles')
+            let query = supabaseClient
+                .from('player_stats')
+                .select('best_streak, user_id, profiles!inner(username, country)')
+                .eq('game_mode', selectedFilterMode)
+                .eq('difficulty', selectedFilterDiff)
+                .gt('best_streak', 0)
+                .order('best_streak', { ascending: false })
+                .limit(10);
+
+            if (selectedFilterScope === 'local') {
+                query = query.eq('profiles.country', userCountry);
+            }
+
+            const { data, error } = await query;
+            if (error) throw error;
+
+            entries = (data || []).map(item => ({
+                id: item.user_id,
+                username: item.profiles ? item.profiles.username : '???',
+                country: item.profiles ? item.profiles.country : '??',
+                scoreDisplay: `${item.best_streak} 🔥`
+            }));
+        }
 
         leaderboardBody.innerHTML = "";
 
+        if (entries.length === 0) {
+            const noDataMsg = selectedFilterScope === 'local'
+                ? (currentLang === 'es' ? `Aún no hay récords para ${userCountry}. ¡Sé el primero!` : `No records for ${userCountry} yet. Be the first!`)
+                : (currentLang === 'es' ? "Aún no hay puntuaciones registradas." : "No scores recorded yet.");
+            leaderboardBody.innerHTML = `
+                <tr>
+                    <td colspan="4" style="text-align:center; padding:20px; color:#888;">
+                        ${noDataMsg}
+                    </td>
+                </tr>`;
+            return;
+        }
+
         for (let i = 0; i < 10; i++) {
             const row   = document.createElement("tr");
-            const entry = data && data[i];
+            const entry = entries[i];
 
-            if (entry && entry.best_streak > 0) {
-                const isMe     = currentUser && entry.user_id === currentUser.id;
-                const username = (entry.profiles && entry.profiles.username) ? entry.profiles.username : "???";
-                const country  = (entry.profiles && entry.profiles.country)  ? entry.profiles.country  : "??";
+            if (entry) {
+                const isMe = currentUser && (entry.id === currentUser.id);
 
                 if (isMe) {
-                    row.style.background   = "rgba(255, 106, 0, 0.1)";
-                    row.style.borderLeft   = "3px solid #ff6a00";
+                    row.style.background = "rgba(255, 106, 0, 0.15)";
+                    row.style.borderLeft = "3px solid #ff6a00";
                 }
 
                 const posCell = document.createElement("td");
@@ -534,19 +702,19 @@ async function renderLeaderboard() {
 
                 const nameCell = document.createElement("td");
                 nameCell.textContent = isMe
-                    ? `⭐ @${username} (${currentLang === 'es' ? 'Tú' : 'You'})`
-                    : `@${username}`;
+                    ? `⭐ @${entry.username} (${currentLang === 'es' ? 'Tú' : 'You'})`
+                    : `@${entry.username}`;
 
                 const countryCell = document.createElement("td");
-                countryCell.textContent = country;
+                countryCell.textContent = entry.country || "??";
 
-                const streakCell = document.createElement("td");
-                streakCell.innerHTML = `<strong>${entry.best_streak} 🔥</strong>`;
+                const scoreCell = document.createElement("td");
+                scoreCell.innerHTML = `<strong>${entry.scoreDisplay}</strong>`;
 
                 row.appendChild(posCell);
                 row.appendChild(nameCell);
                 row.appendChild(countryCell);
-                row.appendChild(streakCell);
+                row.appendChild(scoreCell);
             } else {
                 row.innerHTML = `
                     <td><span style="color:#444;">${i + 1}º</span></td>
@@ -563,7 +731,7 @@ async function renderLeaderboard() {
         leaderboardBody.innerHTML = `
             <tr>
                 <td colspan="4" style="text-align:center; padding:20px; color:#e74c3c;">
-                    ❌ Error al cargar el ranking
+                    ❌ ${currentLang === 'es' ? 'Error al cargar el ranking' : 'Error loading ranking'}
                 </td>
             </tr>`;
     }
@@ -736,7 +904,11 @@ async function openStatsModal() {
             });
         }
 
-        document.getElementById("total-points-val").innerText            = localStorage.getItem("sneaker_total_points") || "0";
+        const totalPts = (profileData && profileData.total_points != null)
+            ? profileData.total_points
+            : (localStorage.getItem("sneaker_total_points") || "0");
+
+        document.getElementById("total-points-val").innerText            = Number(totalPts).toLocaleString();
         document.getElementById("streak-classic-normal-val").innerText   = statsMap["classic_normal"]  ?? "0";
         document.getElementById("streak-classic-hard-val").innerText     = statsMap["classic_hard"]    ?? "0";
         document.getElementById("streak-classic-expert-val").innerText   = statsMap["classic_expert"]  ?? "0";
@@ -746,7 +918,8 @@ async function openStatsModal() {
 
     } else {
         // Invitado: cargar desde localStorage
-        document.getElementById("total-points-val").innerText            = localStorage.getItem("sneaker_total_points")          || "0";
+        const totalPts = localStorage.getItem("sneaker_total_points") || "0";
+        document.getElementById("total-points-val").innerText            = Number(totalPts).toLocaleString();
         document.getElementById("streak-classic-normal-val").innerText   = localStorage.getItem("sneaker_streak_classic_normal")  || "0";
         document.getElementById("streak-classic-hard-val").innerText     = localStorage.getItem("sneaker_streak_classic_hard")    || "0";
         document.getElementById("streak-classic-expert-val").innerText   = localStorage.getItem("sneaker_streak_classic_expert")  || "0";
@@ -818,6 +991,11 @@ function checkAnswer(guess) {
         totalPointsSaved += 10;
         localStorage.setItem("sneaker_total_points", totalPointsSaved);
 
+        // Si hay sesión activa, sincronizar puntos acumulados con Supabase
+        if (currentUser) {
+            savePointsToSupabase(totalPointsSaved);
+        }
+
         // Comprobar si es un nuevo récord local
         const keyModo             = `${gameMode}_${diff}`;
         const recordRachaGuardada = parseInt(localStorage.getItem(`sneaker_streak_${keyModo}`) || "0");
@@ -876,6 +1054,20 @@ const dictionary = {
         difficultyHeading:  "DIFICULTAD",
         infoTitle:          "ℹ️ ¿CÓMO JUGAR?",
         infoBody:           `<p style="margin-bottom:15px;text-align:center;font-weight:600;color:#ff6a00;">¡Demuestra tus conocimientos de cultura sneakerhead adivinando el calzado de la imagen!</p><hr style="border:0;height:1px;background:#333;margin-bottom:15px;"><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🕹️ MODOS DE JUEGO</h3><ul style="margin-left:20px;margin-bottom:15px;padding-left:5px;"><li><strong>Classic:</strong> Elige la respuesta correcta entre 4 opciones.</li><li><strong>Expert:</strong> Escribe la respuesta exacta.</li></ul><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🔥 DIFICULTADES</h3><ul style="margin-left:20px;padding-left:5px;"><li><strong style="color:#2ecc71;">Normal:</strong> Solo el nombre del modelo.</li><li><strong style="color:#f1c40f;">Hard:</strong> Nombre + Colorway.</li><li><strong style="color:#e74c3c;">Expert:</strong> Nombre + Colorway + Año.</li></ul>`,
+        leaderboardTitle:   "🏆 CLASIFICACIONES",
+        filterScopeLabel:   "ÁMBITO",
+        scopeGlobal:        "🌍 GLOBAL",
+        scopeLocal:         "📍 LOCAL",
+        filterTypeLabel:    "TIPO",
+        typePoints:         "⭐ PUNTOS",
+        typeStreak:         "🔥 RACHA",
+        filterModeLabel:    "MODO",
+        filterDiffLabel:    "DIFICULTAD",
+        thPos:              "Pos",
+        thPlayer:           "Jugador",
+        thCountry:          "País",
+        thPoints:           "Puntos",
+        thStreak:           "Racha Máx.",
         correctToast:       (streak) => `✅ ¡Correcto! (Racha: ${streak})`,
         incorrectToast:     "❌ ¡Fallaste!",
         exactAnswerWas:     "La respuesta exacta era:",
@@ -900,6 +1092,20 @@ const dictionary = {
         difficultyHeading:  "DIFFICULTY",
         infoTitle:          "ℹ️ HOW TO PLAY?",
         infoBody:           `<p style="margin-bottom:15px;text-align:center;font-weight:600;color:#ff6a00;">Prove your sneakerhead culture knowledge by guessing the footwear in the picture!</p><hr style="border:0;height:1px;background:#333;margin-bottom:15px;"><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🕹️ GAME MODES</h3><ul style="margin-left:20px;margin-bottom:15px;padding-left:5px;"><li><strong>Classic:</strong> Choose the correct answer from 4 options.</li><li><strong>Expert:</strong> Type the exact answer.</li></ul><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🔥 DIFFICULTY LEVELS</h3><ul style="margin-left:20px;padding-left:5px;"><li><strong style="color:#2ecc71;">Normal:</strong> Model name only.</li><li><strong style="color:#f1c40f;">Hard:</strong> Name + Colorway.</li><li><strong style="color:#e74c3c;">Expert:</strong> Name + Colorway + Year.</li></ul>`,
+        leaderboardTitle:   "🏆 LEADERBOARD",
+        filterScopeLabel:   "SCOPE",
+        scopeGlobal:        "🌍 GLOBAL",
+        scopeLocal:         "📍 LOCAL",
+        filterTypeLabel:    "TYPE",
+        typePoints:         "⭐ POINTS",
+        typeStreak:         "🔥 STREAK",
+        filterModeLabel:    "MODE",
+        filterDiffLabel:    "DIFFICULTY",
+        thPos:              "Rank",
+        thPlayer:           "Player",
+        thCountry:          "Country",
+        thPoints:           "Points",
+        thStreak:           "Max Streak",
         correctToast:       (streak) => `✅ Correct! (Streak: ${streak})`,
         incorrectToast:     "❌ Incorrect!",
         exactAnswerWas:     "The exact answer was:",
@@ -920,14 +1126,30 @@ function applyLanguage(lang) {
 
     const el = (id) => document.getElementById(id);
 
-    if (el("score-text"))         el("score-text").innerText         = texts.scoreText;
-    if (el("play-btn"))           el("play-btn").innerText           = texts.playBtn;
-    if (el("game-mode-setup-btn")) el("game-mode-setup-btn").innerText = texts.gameModeBtn;
-    if (el("submit-guess"))       el("submit-guess").innerText       = texts.submitGuessBtn;
-    if (el("back-to-menu-btn"))   el("back-to-menu-btn").innerText   = texts.backToMenuBtn;
+    if (el("score-text"))          el("score-text").innerText          = texts.scoreText;
+    if (el("play-btn"))            el("play-btn").innerText            = texts.playBtn;
+    if (el("game-mode-setup-btn"))  el("game-mode-setup-btn").innerText  = texts.gameModeBtn;
+    if (el("submit-guess"))        el("submit-guess").innerText        = texts.submitGuessBtn;
+    if (el("back-to-menu-btn"))    el("back-to-menu-btn").innerText    = texts.backToMenuBtn;
 
-    if (el("tab-login-btn"))    el("tab-login-btn").innerText    = lang === 'es' ? "INICIAR SESIÓN" : "LOG IN";
-    if (el("tab-register-btn")) el("tab-register-btn").innerText = lang === 'es' ? "REGISTRARSE"    : "SIGN UP";
+    if (el("tab-login-btn"))     el("tab-login-btn").innerText     = lang === 'es' ? "INICIAR SESIÓN" : "LOG IN";
+    if (el("tab-register-btn"))  el("tab-register-btn").innerText  = lang === 'es' ? "REGISTRARSE"    : "SIGN UP";
+
+    if (el("leaderboard-title"))   el("leaderboard-title").innerText   = texts.leaderboardTitle;
+    if (el("filter-scope-label"))  el("filter-scope-label").innerText  = texts.filterScopeLabel;
+    if (el("scope-global-btn"))    el("scope-global-btn").innerText    = texts.scopeGlobal;
+    if (el("filter-type-label"))   el("filter-type-label").innerText   = texts.filterTypeLabel;
+    if (el("type-points-btn"))     el("type-points-btn").innerText     = texts.typePoints;
+    if (el("type-streak-btn"))     el("type-streak-btn").innerText     = texts.typeStreak;
+    if (el("filter-mode-label"))   el("filter-mode-label").innerText   = texts.filterModeLabel;
+    if (el("filter-diff-label"))   el("filter-diff-label").innerText   = texts.filterDiffLabel;
+
+    if (el("th-pos"))     el("th-pos").innerText     = texts.thPos;
+    if (el("th-player"))  el("th-player").innerText  = texts.thPlayer;
+    if (el("th-country")) el("th-country").innerText = texts.thCountry;
+    if (el("th-score")) {
+        el("th-score").innerText = selectedFilterType === 'points' ? texts.thPoints : texts.thStreak;
+    }
 
     updateAuthButton();
 

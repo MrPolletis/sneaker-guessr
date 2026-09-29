@@ -119,22 +119,39 @@
     <div id="leaderboard-modal" class="modal hidden">
         <div class="modal-content" style="max-width: 550px; max-height: 90vh; overflow-y: auto;">
             <span class="close-btn" id="close-leaderboard-btn">&times;</span>
-            <h2>🏆 CLASIFICACIONES</h2>
+            <h2 id="leaderboard-title">🏆 CLASIFICACIONES</h2>
             
             <div class="leaderboard-filters">
                 <div class="filter-group">
-                    <span class="filter-label">MODO</span>
-                    <div class="filter-buttons" id="filter-mode-container">
-                    <button class="btn-filter-opt active" data-filter-mode="classic">CLASSIC</button>
-                    <button class="btn-filter-opt" data-filter-mode="expert">EXPERT</button>
+                    <span class="filter-label" id="filter-scope-label">ÁMBITO</span>
+                    <div class="filter-buttons" id="filter-scope-container">
+                        <button class="btn-filter-opt active" data-filter-scope="global" id="scope-global-btn">🌍 GLOBAL</button>
+                        <button class="btn-filter-opt" data-filter-scope="local" id="scope-local-btn">📍 LOCAL</button>
                     </div>
                 </div>
+
                 <div class="filter-group">
-                    <span class="filter-label">DIFICULTAD</span>
+                    <span class="filter-label" id="filter-type-label">TIPO</span>
+                    <div class="filter-buttons" id="filter-type-container">
+                        <button class="btn-filter-opt active" data-filter-type="points" id="type-points-btn">⭐ PUNTOS</button>
+                        <button class="btn-filter-opt" data-filter-type="streak" id="type-streak-btn">🔥 RACHA</button>
+                    </div>
+                </div>
+
+                <div class="filter-group hidden" id="filter-mode-group">
+                    <span class="filter-label" id="filter-mode-label">MODO</span>
+                    <div class="filter-buttons" id="filter-mode-container">
+                        <button class="btn-filter-opt active" data-filter-mode="classic">CLASSIC</button>
+                        <button class="btn-filter-opt" data-filter-mode="expert">EXPERT</button>
+                    </div>
+                </div>
+
+                <div class="filter-group hidden" id="filter-diff-group">
+                    <span class="filter-label" id="filter-diff-label">DIFICULTAD</span>
                     <div class="filter-buttons" id="filter-diff-container">
-                    <button class="btn-filter-opt active" data-filter-diff="normal">NORMAL</button>
-                    <button class="btn-filter-opt" data-filter-diff="hard">HARD</button>
-                    <button class="btn-filter-opt" data-filter-diff="expert">EXPERT</button>
+                        <button class="btn-filter-opt active" data-filter-diff="normal">NORMAL</button>
+                        <button class="btn-filter-opt" data-filter-diff="hard">HARD</button>
+                        <button class="btn-filter-opt" data-filter-diff="expert">EXPERT</button>
                     </div>
                 </div>
             </div>
@@ -143,10 +160,10 @@
                 <table class="leaderboard-table">
                     <thead>
                     <tr>
-                    <th>Pos</th>
-                    <th>Jugador</th>
-                    <th>País</th>
-                    <th>Racha Máx.</th>
+                    <th id="th-pos">Pos</th>
+                    <th id="th-player">Jugador</th>
+                    <th id="th-country">País</th>
+                    <th id="th-score">Puntos</th>
                     </tr>
                     </thead>
                     <tbody id="leaderboard-body"></tbody>
