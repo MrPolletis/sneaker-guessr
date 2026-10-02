@@ -132,6 +132,7 @@ async function initAuth() {
 /**
  * Carga los datos del perfil (username, country, total_points) desde la tabla 'profiles'.
  * Sincroniza los puntos entre la nube y el dispositivo local.
+ * Si el usuario se registró antes y no tenía fila en 'profiles', la crea automáticamente.
  */
 async function loadProfileData() {
     if (!currentUser) return;
@@ -142,7 +143,11 @@ async function loadProfileData() {
             .eq('id', currentUser.id)
             .maybeSingle();
 
-        if (!error && data) {
+        if (error) {
+            console.error("Error al consultar profiles:", error);
+        }
+
+        if (data) {
             profileData = data;
 
             // Sincronizar puntos totales: si la nube tiene más puntos, actualizar local.
@@ -160,27 +165,94 @@ async function loadProfileData() {
                     .update({ total_points: finalPoints })
                     .eq('id', currentUser.id);
             }
+        } else {
+            // AUTORREPARACIÓN: Usuario autenticado pero sin fila en 'profiles'
+            const meta = currentUser.user_metadata || {};
+            const cleanUser = meta.username
+                || (currentUser.email ? currentUser.email.replace(AUTH_EMAIL_DOMAIN, '') : "SneakerPlayer");
+            const cleanCountry = meta.country || "ES";
+            const localPoints = Number(localStorage.getItem("sneaker_total_points")) || 0;
+
+            const { data: newProfile, error: upsertErr } = await supabaseClient
+                .from('profiles')
+                .upsert({
+                    id:           currentUser.id,
+                    username:     cleanUser,
+                    country:      cleanCountry,
+                    total_points: localPoints
+                }, { onConflict: 'id' })
+                .select()
+                .maybeSingle();
+
+            if (!upsertErr && newProfile) {
+                profileData = newProfile;
+            } else {
+                profileData = {
+                    id:           currentUser.id,
+                    username:     cleanUser,
+                    country:      cleanCountry,
+                    total_points: localPoints
+                };
+            }
         }
+
+        updateHeaderScore();
+        updateAuthButton();
     } catch (err) {
         console.error("Error al cargar perfil de Supabase:", err);
     }
 }
 
 /**
- * Guarda los puntos totales permanentemente en Supabase.
+ * Guarda los puntos totales permanentemente en Supabase (usando upsert para garantizar persistencia).
  */
 async function savePointsToSupabase(points) {
     if (!currentUser) return;
     try {
+        const meta = currentUser.user_metadata || {};
+        const username = (profileData && profileData.username)
+            || meta.username
+            || (currentUser.email ? currentUser.email.replace(AUTH_EMAIL_DOMAIN, '') : "SneakerPlayer");
+        const country = (profileData && profileData.country)
+            || meta.country
+            || "ES";
+
         await supabaseClient
             .from('profiles')
-            .update({ total_points: points })
-            .eq('id', currentUser.id);
+            .upsert({
+                id:           currentUser.id,
+                username:     username,
+                country:      country,
+                total_points: points
+            }, { onConflict: 'id' });
+
         if (profileData) {
             profileData.total_points = points;
         }
     } catch (err) {
         console.error("Error al guardar puntos en Supabase:", err);
+    }
+}
+
+/**
+ * Actualiza el indicador de puntuación superior (Header)
+ * - En partida activa: Puntos de la partida actual (SCORE: X)
+ * - En menú principal: Puntos totales acumulados (TOTAL: X,XXX)
+ */
+function updateHeaderScore() {
+    const scoreTextEl = document.getElementById("score-text");
+    const scoreValEl  = document.getElementById("score-val");
+    if (!scoreTextEl || !scoreValEl) return;
+
+    if (gameScreen && !gameScreen.classList.contains("hidden")) {
+        scoreTextEl.innerText = dictionary[currentLang] ? dictionary[currentLang].scoreText : "SCORE";
+        scoreValEl.innerText  = score;
+    } else {
+        scoreTextEl.innerText = dictionary[currentLang] && dictionary[currentLang].totalText ? dictionary[currentLang].totalText : "TOTAL";
+        const totalPts = (profileData && profileData.total_points != null)
+            ? profileData.total_points
+            : (Number(localStorage.getItem("sneaker_total_points")) || 0);
+        scoreValEl.innerText  = Number(totalPts).toLocaleString();
     }
 }
 
@@ -330,11 +402,15 @@ if (filterDiffContainer) {
 }
 
 // Botón de autenticación del menú
-authBtn.addEventListener("click", () => {
+authBtn.addEventListener("click", async () => {
     if (currentUser) {
         const msg = currentLang === 'es' ? "¿Quieres cerrar sesión?" : "Do you want to log out?";
         if (confirm(msg)) {
-            supabaseClient.auth.signOut();
+            await supabaseClient.auth.signOut();
+            currentUser = null;
+            profileData = null;
+            updateAuthButton();
+            updateHeaderScore();
         }
     } else {
         authModal.classList.remove("hidden");
@@ -535,6 +611,7 @@ backToMenuBtn.addEventListener("click", () => {
     feedbackDetails.classList.add("hidden");
     gameScreen.classList.add("hidden");
     menuScreen.classList.remove("hidden");
+    updateHeaderScore();
 });
 
 // ====
@@ -752,7 +829,7 @@ async function startGame() {
 
         score         = 0;
         currentStreak = 0;
-        scoreVal.innerText = score;
+        updateHeaderScore();
 
         feedbackToast.classList.add("hidden");
         feedbackDetails.classList.add("hidden");
@@ -1040,6 +1117,7 @@ function checkAnswer(guess) {
 const dictionary = {
     es: {
         scoreText:          "PUNTOS",
+        totalText:          "TOTAL",
         playBtn:            "JUGAR",
         gameModeBtn:        "MODO DE JUEGO",
         authBtn:            "🔐 INICIAR SESIÓN",
@@ -1078,6 +1156,7 @@ const dictionary = {
     },
     en: {
         scoreText:          "SCORE",
+        totalText:          "TOTAL",
         playBtn:            "PLAY",
         gameModeBtn:        "GAME MODE",
         authBtn:            "🔐 LOG IN",
@@ -1126,7 +1205,6 @@ function applyLanguage(lang) {
 
     const el = (id) => document.getElementById(id);
 
-    if (el("score-text"))          el("score-text").innerText          = texts.scoreText;
     if (el("play-btn"))            el("play-btn").innerText            = texts.playBtn;
     if (el("game-mode-setup-btn"))  el("game-mode-setup-btn").innerText  = texts.gameModeBtn;
     if (el("submit-guess"))        el("submit-guess").innerText        = texts.submitGuessBtn;
@@ -1151,6 +1229,7 @@ function applyLanguage(lang) {
         el("th-score").innerText = selectedFilterType === 'points' ? texts.thPoints : texts.thStreak;
     }
 
+    updateHeaderScore();
     updateAuthButton();
 
     const statsTitle = document.querySelector("#stats-modal h2");
