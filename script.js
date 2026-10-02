@@ -51,10 +51,19 @@ const thScore               = document.getElementById("th-score");
 
 const authModal             = document.getElementById("auth-modal");
 const closeAuthBtn          = document.getElementById("close-auth-btn");
+const authLoggedView        = document.getElementById("auth-logged-view");
+const authGuestView         = document.getElementById("auth-guest-view");
+const loggedUsernameDisplay = document.getElementById("logged-username-display");
+const loggedStatsDisplay    = document.getElementById("logged-stats-display");
+const btnModalLogout        = document.getElementById("btn-modal-logout");
+const btnModalDeleteLogged  = document.getElementById("btn-modal-delete-logged");
+
 const tabLoginBtn           = document.getElementById("tab-login-btn");
 const tabRegisterBtn        = document.getElementById("tab-register-btn");
+const tabDeleteBtn          = document.getElementById("tab-delete-btn");
 const loginForm             = document.getElementById("login-form");
 const registerForm          = document.getElementById("register-form");
+const deleteForm            = document.getElementById("delete-form");
 
 const optModeClassic        = document.getElementById("opt-mode-classic");
 const optModeExpert         = document.getElementById("opt-mode-expert");
@@ -262,13 +271,15 @@ function updateHeaderScore() {
  */
 function updateAuthButton() {
     if (currentUser && profileData) {
-        authBtn.innerText = `👤 @${profileData.username} (${currentLang === 'es' ? 'Salir' : 'Logout'})`;
-        authBtn.style.background = "linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)";
+        authBtn.innerText = `👤 @${profileData.username}`;
+        authBtn.classList.add("logged-in");
+        authBtn.style.background = "";
         if (scopeLocalBtn) {
             scopeLocalBtn.innerText = `📍 LOCAL (${profileData.country || 'ES'})`;
         }
     } else {
         authBtn.innerText = dictionary[currentLang] ? dictionary[currentLang].authBtn : "🔐 INICIAR SESIÓN";
+        authBtn.classList.remove("logged-in");
         authBtn.style.background = "linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)";
         if (scopeLocalBtn) {
             scopeLocalBtn.innerText = `📍 LOCAL`;
@@ -401,38 +412,199 @@ if (filterDiffContainer) {
     });
 }
 
-// Botón de autenticación del menú
-authBtn.addEventListener("click", async () => {
-    if (currentUser) {
-        const msg = currentLang === 'es' ? "¿Quieres cerrar sesión?" : "Do you want to log out?";
-        if (confirm(msg)) {
-            await supabaseClient.auth.signOut();
-            currentUser = null;
-            profileData = null;
-            updateAuthButton();
-            updateHeaderScore();
+// Abre el modal de autenticación adaptado al estado del usuario (sesión activa o invitado)
+function openAuthModal() {
+    resetAuthFormErrors();
+    if (currentUser && profileData) {
+        if (authLoggedView) authLoggedView.classList.remove("hidden");
+        if (authGuestView)  authGuestView.classList.add("hidden");
+        if (loggedUsernameDisplay) loggedUsernameDisplay.textContent = `@${profileData.username}`;
+        if (loggedStatsDisplay) {
+            loggedStatsDisplay.textContent = currentLang === 'es'
+                ? `País: ${profileData.country || 'ES'} | Puntos totales: ${Number(profileData.total_points || 0).toLocaleString()} ⭐`
+                : `Country: ${profileData.country || 'ES'} | Total points: ${Number(profileData.total_points || 0).toLocaleString()} ⭐`;
         }
     } else {
-        authModal.classList.remove("hidden");
+        if (authLoggedView) authLoggedView.classList.add("hidden");
+        if (authGuestView)  authGuestView.classList.remove("hidden");
+        if (tabLoginBtn)    tabLoginBtn.click();
     }
-});
+    authModal.classList.remove("hidden");
+}
 
+authBtn.addEventListener("click", openAuthModal);
 closeAuthBtn.addEventListener("click", () => authModal.classList.add("hidden"));
 
-// Pestañas Login / Registro
-tabLoginBtn.addEventListener("click", () => {
-    tabLoginBtn.classList.add("active");
-    tabRegisterBtn.classList.remove("active");
-    loginForm.classList.remove("hidden");
-    registerForm.classList.add("hidden");
-});
+function resetAuthFormErrors() {
+    const loginErr = document.getElementById("login-error");
+    const regErr   = document.getElementById("register-error");
+    const delErr   = document.getElementById("delete-error");
+    if (loginErr) { loginErr.classList.add("hidden"); loginErr.textContent = ""; }
+    if (regErr)   { regErr.classList.add("hidden");   regErr.textContent = ""; }
+    if (delErr)   { delErr.classList.add("hidden");   delErr.textContent = ""; }
+}
 
-tabRegisterBtn.addEventListener("click", () => {
-    tabRegisterBtn.classList.add("active");
-    tabLoginBtn.classList.remove("active");
-    registerForm.classList.remove("hidden");
-    loginForm.classList.add("hidden");
-});
+// Pestañas Login / Registro / Eliminar
+if (tabLoginBtn) {
+    tabLoginBtn.addEventListener("click", () => {
+        tabLoginBtn.classList.add("active");
+        if (tabRegisterBtn) tabRegisterBtn.classList.remove("active");
+        if (tabDeleteBtn)   tabDeleteBtn.classList.remove("active");
+        if (loginForm)      loginForm.classList.remove("hidden");
+        if (registerForm)   registerForm.classList.add("hidden");
+        if (deleteForm)     deleteForm.classList.add("hidden");
+        resetAuthFormErrors();
+    });
+}
+
+if (tabRegisterBtn) {
+    tabRegisterBtn.addEventListener("click", () => {
+        tabRegisterBtn.classList.add("active");
+        if (tabLoginBtn)    tabLoginBtn.classList.remove("active");
+        if (tabDeleteBtn)   tabDeleteBtn.classList.remove("active");
+        if (registerForm)   registerForm.classList.remove("hidden");
+        if (loginForm)      loginForm.classList.add("hidden");
+        if (deleteForm)     deleteForm.classList.add("hidden");
+        resetAuthFormErrors();
+    });
+}
+
+if (tabDeleteBtn) {
+    tabDeleteBtn.addEventListener("click", () => {
+        tabDeleteBtn.classList.add("active");
+        if (tabLoginBtn)    tabLoginBtn.classList.remove("active");
+        if (tabRegisterBtn) tabRegisterBtn.classList.remove("active");
+        if (deleteForm)     deleteForm.classList.remove("hidden");
+        if (loginForm)      loginForm.classList.add("hidden");
+        if (registerForm)   registerForm.classList.add("hidden");
+        resetAuthFormErrors();
+    });
+}
+
+// Salir de la cuenta desde la vista de usuario identificado
+if (btnModalLogout) {
+    btnModalLogout.addEventListener("click", async () => {
+        await supabaseClient.auth.signOut();
+        currentUser = null;
+        profileData = null;
+        updateAuthButton();
+        updateHeaderScore();
+        authModal.classList.add("hidden");
+    });
+}
+
+/**
+ * Elimina la cuenta del usuario en Supabase y limpia el almacenamiento local.
+ */
+async function performAccountDeletion(userId) {
+    try {
+        // 1. Invocar función RPC para eliminar completamente en auth.users si existe
+        try {
+            await supabaseClient.rpc('delete_user_account');
+        } catch (rpcErr) {
+            console.log("Nota sobre rpc delete_user_account:", rpcErr);
+        }
+
+        // 2. Borrar datos de player_stats y profiles en Supabase
+        await supabaseClient.from('player_stats').delete().eq('user_id', userId);
+        await supabaseClient.from('profiles').delete().eq('id', userId);
+
+        // 3. Cerrar sesión
+        await supabaseClient.auth.signOut();
+
+        // 4. Limpiar almacenamiento local
+        localStorage.removeItem("sneaker_total_points");
+        localStorage.setItem("sneaker_total_points", "0");
+
+        // 5. Limpiar estado en memoria
+        currentUser = null;
+        profileData = null;
+        score = 0;
+
+        // 6. Actualizar UI
+        updateAuthButton();
+        updateHeaderScore();
+        authModal.classList.add("hidden");
+
+        // 7. Notificar al usuario
+        alert(dictionary[currentLang].delSuccess);
+    } catch (err) {
+        console.error("Error al eliminar la cuenta:", err);
+        alert(dictionary[currentLang].delError);
+    }
+}
+
+// Eliminar cuenta para usuario con sesión activa
+if (btnModalDeleteLogged) {
+    btnModalDeleteLogged.addEventListener("click", async () => {
+        if (!currentUser) return;
+        const confirmed = confirm(dictionary[currentLang].delConfirm);
+        if (!confirmed) return;
+
+        btnModalDeleteLogged.disabled = true;
+        btnModalDeleteLogged.textContent = currentLang === 'es' ? "Eliminando..." : "Deleting...";
+
+        await performAccountDeletion(currentUser.id);
+
+        btnModalDeleteLogged.disabled = false;
+        btnModalDeleteLogged.textContent = dictionary[currentLang].delLoggedBtn;
+    });
+}
+
+// Eliminar cuenta desde el formulario (cuando no hay sesión activa o se ingresan credenciales)
+if (deleteForm) {
+    deleteForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const errorEl = document.getElementById("delete-error");
+        errorEl.classList.add("hidden");
+        errorEl.textContent = "";
+
+        const rawUsername = document.getElementById("del-username").value;
+        const usernameVal = normalizeUsername(rawUsername);
+        const passVal     = document.getElementById("del-password").value;
+
+        if (!usernameVal || !passVal) {
+            errorEl.textContent = currentLang === 'es' ? "Rellena todos los campos." : "Fill in all fields.";
+            errorEl.classList.remove("hidden");
+            return;
+        }
+
+        const submitDelBtn = document.getElementById("btn-submit-del");
+        submitDelBtn.disabled = true;
+        submitDelBtn.textContent = currentLang === 'es' ? "Verificando..." : "Verifying...";
+
+        const authEmail = usernameToAuthEmail(usernameVal);
+
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email:    authEmail,
+            password: passVal
+        });
+
+        if (error || !data || !data.user) {
+            errorEl.textContent = dictionary[currentLang].delWrongCreds;
+            errorEl.classList.remove("hidden");
+            submitDelBtn.disabled = false;
+            submitDelBtn.textContent = currentLang === 'es' ? "ELIMINAR DEFINITIVAMENTE" : "DELETE PERMANENTLY";
+            return;
+        }
+
+        const confirmed = confirm(dictionary[currentLang].delConfirm);
+        if (!confirmed) {
+            await supabaseClient.auth.signOut();
+            submitDelBtn.disabled = false;
+            submitDelBtn.textContent = currentLang === 'es' ? "ELIMINAR DEFINITIVAMENTE" : "DELETE PERMANENTLY";
+            return;
+        }
+
+        submitDelBtn.textContent = currentLang === 'es' ? "Eliminando..." : "Deleting...";
+        await performAccountDeletion(data.user.id);
+
+        deleteForm.reset();
+        submitDelBtn.disabled = false;
+        submitDelBtn.textContent = currentLang === 'es' ? "ELIMINAR DEFINITIVAMENTE" : "DELETE PERMANENTLY";
+    });
+}
 
 // ====
 // REGISTRO — SUPABASE
@@ -1146,6 +1318,15 @@ const dictionary = {
         thCountry:          "País",
         thPoints:           "Puntos",
         thStreak:           "Racha Máx.",
+        tabLogin:           "INICIAR SESIÓN",
+        tabRegister:        "REGISTRARSE",
+        tabDelete:          "ELIMINAR",
+        logoutModalBtn:     "SALIR DE LA CUENTA",
+        delLoggedBtn:       "🗑️ ELIMINAR MI CUENTA",
+        delConfirm:         "¿Estás seguro de que quieres eliminar tu cuenta permanentemente? Se perderán todos tus puntos y posiciones en la clasificación.",
+        delSuccess:         "Tu cuenta y tus datos han sido eliminados con éxito.",
+        delError:           "Ocurrió un error al intentar eliminar la cuenta. Por favor, inténtalo de nuevo.",
+        delWrongCreds:      "Usuario o contraseña incorrectos.",
         correctToast:       (streak) => `✅ ¡Correcto! (Racha: ${streak})`,
         incorrectToast:     "❌ ¡Fallaste!",
         exactAnswerWas:     "La respuesta exacta era:",
@@ -1185,6 +1366,15 @@ const dictionary = {
         thCountry:          "Country",
         thPoints:           "Points",
         thStreak:           "Max Streak",
+        tabLogin:           "LOG IN",
+        tabRegister:        "SIGN UP",
+        tabDelete:          "DELETE",
+        logoutModalBtn:     "LOG OUT",
+        delLoggedBtn:       "🗑️ DELETE MY ACCOUNT",
+        delConfirm:         "Are you sure you want to permanently delete your account? All your points and leaderboard entries will be lost.",
+        delSuccess:         "Your account and data have been deleted successfully.",
+        delError:           "An error occurred while deleting your account. Please try again.",
+        delWrongCreds:      "Incorrect username or password.",
         correctToast:       (streak) => `✅ Correct! (Streak: ${streak})`,
         incorrectToast:     "❌ Incorrect!",
         exactAnswerWas:     "The exact answer was:",
@@ -1210,8 +1400,12 @@ function applyLanguage(lang) {
     if (el("submit-guess"))        el("submit-guess").innerText        = texts.submitGuessBtn;
     if (el("back-to-menu-btn"))    el("back-to-menu-btn").innerText    = texts.backToMenuBtn;
 
-    if (el("tab-login-btn"))     el("tab-login-btn").innerText     = lang === 'es' ? "INICIAR SESIÓN" : "LOG IN";
-    if (el("tab-register-btn"))  el("tab-register-btn").innerText  = lang === 'es' ? "REGISTRARSE"    : "SIGN UP";
+    if (el("tab-login-btn"))          el("tab-login-btn").innerText          = texts.tabLogin;
+    if (el("tab-register-btn"))       el("tab-register-btn").innerText       = texts.tabRegister;
+    if (el("tab-delete-btn"))         el("tab-delete-btn").innerText         = texts.tabDelete;
+    if (el("btn-modal-logout"))       el("btn-modal-logout").innerText       = texts.logoutModalBtn;
+    if (el("btn-modal-delete-logged")) el("btn-modal-delete-logged").innerText = texts.delLoggedBtn;
+    if (el("logged-title"))           el("logged-title").innerText           = lang === 'es' ? "👤 MI CUENTA" : "👤 MY ACCOUNT";
 
     if (el("leaderboard-title"))   el("leaderboard-title").innerText   = texts.leaderboardTitle;
     if (el("filter-scope-label"))  el("filter-scope-label").innerText  = texts.filterScopeLabel;
@@ -1291,4 +1485,15 @@ document.getElementById("share-btn").addEventListener("click", async () => {
 document.addEventListener("DOMContentLoaded", () => {
     applyLanguage(currentLang);
     initAuth(); // Arrancar el sistema de autenticación Supabase
+
+    // Mostrar tutorial automáticamente la primera vez que se abre la web
+    const hasSeenTutorial = localStorage.getItem("sneaker_tutorial_seen");
+    if (!hasSeenTutorial) {
+        setTimeout(() => {
+            if (infoModal) {
+                infoModal.classList.remove("hidden");
+                localStorage.setItem("sneaker_tutorial_seen", "true");
+            }
+        }, 600);
+    }
 });

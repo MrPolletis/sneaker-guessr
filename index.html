@@ -69,49 +69,81 @@
 
     </main>
 
-    <!-- MODAL: INICIAR SESIÓN / REGISTRO -->
+    <!-- MODAL: INICIAR SESIÓN / REGISTRO / ELIMINAR CUENTA -->
     <div id="auth-modal" class="modal hidden">
-        <div class="modal-content" style="max-width: 400px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-content" style="max-width: 420px; max-height: 90vh; overflow-y: auto;">
             <span class="close-btn" id="close-auth-btn">&times;</span>
-            <div class="auth-modal-tabs">
-                <button class="auth-tab-btn active" id="tab-login-btn">INICIAR SESIÓN</button>
-                <button class="auth-tab-btn" id="tab-register-btn">REGISTRARSE</button>
-            </div>
             
-            <!-- FORMULARIO LOGIN -->
-            <form id="login-form" class="auth-form">
-                <div class="form-group">
-                    <label for="login-username">Usuario (@)</label>
-                    <input type="text" id="login-username" required placeholder="Tu nombre de usuario" autocomplete="username">
-                </div>
-                <div class="form-group">
-                    <label for="login-password">Contraseña</label>
-                    <input type="password" id="login-password" required placeholder="••••" autocomplete="current-password">
-                </div>
-                <div id="login-error" class="auth-error hidden"></div>
-                <button type="submit" class="btn play-btn auth-submit-btn" id="btn-submit-login">ENTRAR</button>
-            </form>
+            <!-- VISTA USUARIO LOGUEADO -->
+            <div id="auth-logged-view" class="hidden" style="text-align: center; padding: 10px 0;">
+                <h2 id="logged-title" style="margin-bottom: 12px; font-weight: 800;">👤 MI CUENTA</h2>
+                <p id="logged-username-display" style="font-size: 20px; font-weight: 800; color: #2ecc71; margin-bottom: 6px;">@usuario</p>
+                <p id="logged-stats-display" style="font-size: 13px; color: #888; margin-bottom: 25px;">País: ES | Puntos totales: 0 ⭐</p>
+                
+                <button class="btn secondary-btn" id="btn-modal-logout" style="width: 100%; margin-bottom: 15px; border-color: #444;">SALIR DE LA CUENTA</button>
+                <button class="btn" id="btn-modal-delete-logged" style="width: 100%; background: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; color: #e74c3c; font-size: 14px;">🗑️ ELIMINAR MI CUENTA</button>
+            </div>
 
-            <!-- FORMULARIO REGISTRO -->
-            <form id="register-form" class="auth-form hidden">
-                <div class="form-group">
-                    <label for="reg-username">Usuario (@) — mín. 3 caracteres</label>
-                    <input type="text" id="reg-username" required placeholder="Crea tu usuario" autocomplete="off">
+            <!-- VISTA INVITADO / PESTAÑAS -->
+            <div id="auth-guest-view">
+                <div class="auth-modal-tabs">
+                    <button class="auth-tab-btn active" id="tab-login-btn">INICIAR SESIÓN</button>
+                    <button class="auth-tab-btn" id="tab-register-btn">REGISTRARSE</button>
+                    <button class="auth-tab-btn delete-tab" id="tab-delete-btn" style="color: #e74c3c;">ELIMINAR</button>
                 </div>
-                <div class="form-group">
-                    <label for="reg-country">País (código: ES, US, MX…)</label>
-                    <input type="text" id="reg-country" required maxlength="2" placeholder="ES" style="text-transform: uppercase;">
-                </div>
-                <div class="form-group">
-                    <label for="reg-password">Contraseña — mín. 6 caracteres</label>
-                    <input type="password" id="reg-password" required placeholder="Mínimo 6 caracteres" autocomplete="new-password">
-                    <p style="margin-top: 8px; font-size: 11px; color: #f39c12; font-weight: 600; line-height: 1.4;">
-                        ⚠️ No hay recuperación de contraseña por email. ¡Apúntala en un lugar seguro!
+                
+                <!-- FORMULARIO LOGIN -->
+                <form id="login-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="login-username">Usuario (@)</label>
+                        <input type="text" id="login-username" required placeholder="Tu nombre de usuario" autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Contraseña</label>
+                        <input type="password" id="login-password" required placeholder="••••" autocomplete="current-password">
+                    </div>
+                    <div id="login-error" class="auth-error hidden"></div>
+                    <button type="submit" class="btn play-btn auth-submit-btn" id="btn-submit-login">ENTRAR</button>
+                </form>
+
+                <!-- FORMULARIO REGISTRO -->
+                <form id="register-form" class="auth-form hidden">
+                    <div class="form-group">
+                        <label for="reg-username">Usuario (@) — mín. 3 caracteres</label>
+                        <input type="text" id="reg-username" required placeholder="Crea tu usuario" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-country">País (código: ES, US, MX…)</label>
+                        <input type="text" id="reg-country" required maxlength="2" placeholder="ES" style="text-transform: uppercase;">
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-password">Contraseña — mín. 6 caracteres</label>
+                        <input type="password" id="reg-password" required placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+                        <p style="margin-top: 8px; font-size: 11px; color: #f39c12; font-weight: 600; line-height: 1.4;">
+                            ⚠️ No hay recuperación de contraseña por email. ¡Apúntala en un lugar seguro!
+                        </p>
+                    </div>
+                    <div id="register-error" class="auth-error hidden"></div>
+                    <button type="submit" class="btn play-btn auth-submit-btn" id="btn-submit-reg">CREAR CUENTA</button>
+                </form>
+
+                <!-- FORMULARIO ELIMINAR CUENTA (SIN SESIÓN ACTIVA) -->
+                <form id="delete-form" class="auth-form hidden">
+                    <p style="font-size: 12px; color: #e74c3c; line-height: 1.5; text-align: center;">
+                        ⚠️ Esta acción es permanente. Se eliminará tu usuario, tus puntos acumulados y tus marcas en la clasificación.
                     </p>
-                </div>
-                <div id="register-error" class="auth-error hidden"></div>
-                <button type="submit" class="btn play-btn auth-submit-btn" id="btn-submit-reg">CREAR CUENTA</button>
-            </form>
+                    <div class="form-group">
+                        <label for="del-username">Usuario (@) a eliminar</label>
+                        <input type="text" id="del-username" required placeholder="Tu usuario" autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="del-password">Contraseña de confirmación</label>
+                        <input type="password" id="del-password" required placeholder="••••" autocomplete="current-password">
+                    </div>
+                    <div id="delete-error" class="auth-error hidden"></div>
+                    <button type="submit" class="btn play-btn auth-submit-btn" id="btn-submit-del" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">ELIMINAR DEFINITIVAMENTE</button>
+                </form>
+            </div>
         </div>
     </div>
 
