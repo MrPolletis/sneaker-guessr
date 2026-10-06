@@ -610,3 +610,254 @@ body {
     transform: none !important;
     filter: none !important;
 }
+
+/* ============================================================
+   ESTILOS DE AFILIADOS Y TIENDAS (STOCKX, GOAT, KLEKT, EBAY)
+   ============================================================ */
+
+/* Tarjeta de compra que aparece tras responder (sin spoilers) */
+.affiliate-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    animation: slideDown 0.25s ease-out;
+}
+
+.affiliate-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 8px;
+}
+
+.affiliate-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffaa40;
+    letter-spacing: 0.3px;
+}
+
+.affiliate-next-btn {
+    background: #252525;
+    border: 1px solid #444;
+    color: #ffffff;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.affiliate-next-btn:hover {
+    background: #ff6a00;
+    border-color: #ff6a00;
+    transform: translateX(2px);
+}
+
+.affiliate-links {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.affiliate-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.affiliate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Colores específicos de marca de tiendas */
+.stockx-btn {
+    background: #006340;
+    color: #ffffff;
+    border-color: #007a4f;
+}
+.stockx-btn:hover {
+    background: #008756;
+}
+
+.goat-btn {
+    background: #181818;
+    color: #ffffff;
+    border-color: #444444;
+}
+.goat-btn:hover {
+    background: #262626;
+    border-color: #888888;
+}
+
+.klekt-btn {
+    background: #e65100;
+    color: #ffffff;
+    border-color: #ff6d00;
+}
+.klekt-btn:hover {
+    background: #f57c00;
+}
+
+.ebay-btn {
+    background: #0064d2;
+    color: #ffffff;
+    border-color: #1976d2;
+}
+.ebay-btn:hover {
+    background: #1e88e5;
+}
+
+/* FOOTER AVISO DE AFILIACIÓN */
+.footer-affiliate {
+    width: 100%;
+    padding: 8px 16px;
+    text-align: center;
+    background: transparent;
+    margin-top: auto;
+}
+
+.footer-affiliate p {
+    font-size: 11px;
+    color: #666;
+    line-height: 1.4;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* ============================================================
+   ESTILOS DEL MODAL CATÁLOGO (SNEAKERDEX)
+   ============================================================ */
+.catalog-filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    max-height: 58vh;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.catalog-card {
+    background: #161616;
+    border: 1px solid #282828;
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.catalog-card:hover {
+    transform: translateY(-2px);
+    border-color: #ff6a00;
+}
+
+.catalog-img-wrapper {
+    width: 100%;
+    height: 130px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0e0e0e;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.catalog-img-wrapper img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.catalog-card:hover .catalog-img-wrapper img {
+    transform: scale(1.05);
+}
+
+.catalog-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.catalog-badge {
+    background: rgba(255, 106, 0, 0.15);
+    color: #ff6a00;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.catalog-year {
+    font-size: 11px;
+    color: #777;
+    font-weight: 600;
+}
+
+.catalog-name {
+    font-size: 13px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 3px;
+    line-height: 1.3;
+}
+
+.catalog-colorway {
+    font-size: 11px;
+    color: #aaa;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.catalog-shop-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: auto;
+}
+
+.catalog-shop-btns .affiliate-btn {
+    padding: 6px 4px;
+    font-size: 11px;
+}
+
+/* RESPONSIVIDAD PARA MÓVILES (AFILIADOS Y CATÁLOGO) */
+@media (max-width: 768px) {
+    .catalog-grid {
+        grid-template-columns: 1fr;
+    }
+    .catalog-filters {
+        flex-direction: column;
+    }
+    .affiliate-links {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+}

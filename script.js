@@ -18,6 +18,59 @@ function usernameToAuthEmail(username) {
     return `${username.toLowerCase()}${AUTH_EMAIL_DOMAIN}`;
 }
 
+// ==========================================
+// CONFIGURACIÓN DE PROGRAMAS DE AFILIADOS
+// Para activar comisiones reales, introduce tu ID en cada plataforma:
+// ==========================================
+const AFFILIATE_CONFIG = {
+    // Impact.com (StockX)
+    stockx: {
+        partnerId: "",
+        campaignId: "",
+        buildUrl: (sneaker) => {
+            const query = encodeURIComponent(`${sneaker.nombre} ${sneaker.colorway}`.trim());
+            return `https://stockx.com/search?s=${query}`;
+        }
+    },
+    // GOAT (CJ Affiliate / Directo)
+    goat: {
+        affiliateId: "",
+        buildUrl: (sneaker) => {
+            const query = encodeURIComponent(`${sneaker.nombre} ${sneaker.colorway}`.trim());
+            return `https://www.goat.com/search?query=${query}`;
+        }
+    },
+    // KLEKT (Awin / Directo)
+    klekt: {
+        awinId: "",
+        buildUrl: (sneaker) => {
+            const query = encodeURIComponent(`${sneaker.nombre} ${sneaker.colorway}`.trim());
+            return `https://www.klekt.com/search?q=${query}`;
+        }
+    },
+    // eBay Sneakers Authenticity Guarantee (eBay Partner Network - EPN)
+    ebay: {
+        campId: "",
+        buildUrl: (sneaker) => {
+            const query = encodeURIComponent(`${sneaker.nombre} ${sneaker.colorway}`.trim());
+            return `https://www.ebay.com/sch/i.html?_nkw=${query}&_sacat=15709`;
+        }
+    }
+};
+
+/**
+ * Devuelve un objeto con las URLs de compra para la zapatilla dada.
+ */
+function getAffiliateUrls(sneaker) {
+    if (!sneaker) return { stockx: "#", goat: "#", klekt: "#", ebay: "#" };
+    return {
+        stockx: AFFILIATE_CONFIG.stockx.buildUrl(sneaker),
+        goat:   AFFILIATE_CONFIG.goat.buildUrl(sneaker),
+        klekt:  AFFILIATE_CONFIG.klekt.buildUrl(sneaker),
+        ebay:   AFFILIATE_CONFIG.ebay.buildUrl(sneaker)
+    };
+}
+
 // ====
 // REFERENCIAS A ELEMENTOS DEL HTML
 // ====
@@ -39,6 +92,25 @@ const leaderboardModal      = document.getElementById("leaderboard-modal");
 const closeLeaderboardBtn   = document.getElementById("close-leaderboard-btn");
 const leaderboardBody       = document.getElementById("leaderboard-body");
 const authBtn               = document.getElementById("auth-btn");
+
+// CATÁLOGO SNEAKERDEX
+const catalogBtn            = document.getElementById("catalog-btn");
+const catalogModal          = document.getElementById("catalog-modal");
+const closeCatalogBtn       = document.getElementById("close-catalog-btn");
+const catalogSearch         = document.getElementById("catalog-search");
+const catalogBrandFilter    = document.getElementById("catalog-brand-filter");
+const catalogCount          = document.getElementById("catalog-count");
+const catalogGrid           = document.getElementById("catalog-grid");
+
+// TARJETA DE AFILIADOS TRAS RESPONDER
+const affiliateCard         = document.getElementById("affiliate-card");
+const affiliateLabel        = document.getElementById("affiliate-label");
+const affiliateNextBtn      = document.getElementById("affiliate-next-btn");
+const linkStockx            = document.getElementById("link-stockx");
+const linkGoat              = document.getElementById("link-goat");
+const linkKlekt             = document.getElementById("link-klekt");
+const linkEbay              = document.getElementById("link-ebay");
+const affiliateDisclosure   = document.getElementById("affiliate-disclosure");
 
 const filterScopeContainer  = document.getElementById("filter-scope-container");
 const filterTypeContainer   = document.getElementById("filter-type-container");
@@ -769,11 +841,12 @@ loginForm.addEventListener("submit", async (e) => {
 // CIERRE DE MODALES AL CLICAR FUERA
 // ====
 window.addEventListener("click", (e) => {
-    if (e.target === statsModal)      statsModal.classList.add("hidden");
-    if (e.target === gameModeModal)   gameModeModal.classList.add("hidden");
-    if (e.target === infoModal)       infoModal.classList.add("hidden");
-    if (e.target === leaderboardModal) leaderboardModal.classList.add("hidden");
-    if (e.target === authModal)       authModal.classList.add("hidden");
+    if (e.target === statsModal)       statsModal.classList.add("hidden");
+    if (e.target === gameModeModal)    gameModeModal.classList.add("hidden");
+    if (e.target === infoModal)        infoModal.classList.add("hidden");
+    if (e.target === leaderboardModal)  leaderboardModal.classList.add("hidden");
+    if (e.target === authModal)        authModal.classList.add("hidden");
+    if (e.target === catalogModal)     catalogModal.classList.add("hidden");
 });
 
 backToMenuBtn.addEventListener("click", () => {
@@ -781,6 +854,7 @@ backToMenuBtn.addEventListener("click", () => {
     isProcessingAnswer = false;
     feedbackToast.classList.add("hidden");
     feedbackDetails.classList.add("hidden");
+    if (affiliateCard) affiliateCard.classList.add("hidden");
     gameScreen.classList.add("hidden");
     menuScreen.classList.remove("hidden");
     updateHeaderScore();
@@ -986,13 +1060,25 @@ async function renderLeaderboard() {
     }
 }
 
+// Carga de la base de datos de zapatillas si no se ha cargado todavía
+async function ensureSneakersLoaded() {
+    if (sneakers && sneakers.length > 0) return sneakers;
+    try {
+        const response = await fetch('zapatillas.json');
+        sneakers = await response.json();
+        return sneakers;
+    } catch (error) {
+        console.error("Error al cargar zapatillas.json:", error);
+        return [];
+    }
+}
+
 // ====
 // MOTOR DE JUEGO
 // ====
 async function startGame() {
     try {
-        const response = await fetch('zapatillas.json');
-        sneakers = await response.json();
+        await ensureSneakersLoaded();
 
         if (!sneakers || sneakers.length === 0) {
             alert(dictionary[currentLang].emptyJsonAlert);
@@ -1005,6 +1091,7 @@ async function startGame() {
 
         feedbackToast.classList.add("hidden");
         feedbackDetails.classList.add("hidden");
+        if (affiliateCard) affiliateCard.classList.add("hidden");
         isProcessingAnswer = false;
 
         prepareGamePool();
@@ -1042,6 +1129,7 @@ function formatSneakerText(sneaker, diff) {
 }
 
 function nextQuestion() {
+    if (affiliateCard) affiliateCard.classList.add("hidden");
     if (gamePool.length === 0) prepareGamePool();
 
     const randomIndex  = Math.floor(Math.random() * gamePool.length);
@@ -1275,13 +1363,135 @@ function checkAnswer(guess) {
 
     scoreVal.innerText = score;
 
+    // Mostrar enlaces de compra para el par revelado (sin spoilers antes de responder)
+    if (affiliateCard && currentSneaker) {
+        const urls = getAffiliateUrls(currentSneaker);
+        if (linkStockx) linkStockx.href = urls.stockx;
+        if (linkGoat)   linkGoat.href   = urls.goat;
+        if (linkKlekt)  linkKlekt.href  = urls.klekt;
+        if (linkEbay)   linkEbay.href   = urls.ebay;
+        if (affiliateLabel)   affiliateLabel.innerText   = dictionary[currentLang].affiliateLabel;
+        if (affiliateNextBtn) affiliateNextBtn.innerText = dictionary[currentLang].affiliateNextBtn;
+        affiliateCard.classList.remove("hidden");
+    }
+
     feedbackTimeout = setTimeout(() => {
         feedbackToast.classList.add("hidden");
         feedbackDetails.classList.add("hidden");
+        if (affiliateCard) affiliateCard.classList.add("hidden");
         isProcessingAnswer = false;
         nextQuestion();
-    }, 2000);
+    }, 3200);
 }
+
+// Pausar temporizador si el jugador interactúa con la tarjeta de afiliados
+if (affiliateCard) {
+    affiliateCard.addEventListener("mouseenter", () => {
+        if (feedbackTimeout) clearTimeout(feedbackTimeout);
+    });
+    affiliateCard.addEventListener("click", (e) => {
+        if (e.target.tagName === 'A' || e.target.closest('a')) {
+            if (feedbackTimeout) clearTimeout(feedbackTimeout);
+        }
+    });
+}
+
+// Botón "Siguiente" manual en la tarjeta de afiliados
+if (affiliateNextBtn) {
+    affiliateNextBtn.addEventListener("click", () => {
+        if (feedbackTimeout) clearTimeout(feedbackTimeout);
+        feedbackToast.classList.add("hidden");
+        feedbackDetails.classList.add("hidden");
+        if (affiliateCard) affiliateCard.classList.add("hidden");
+        isProcessingAnswer = false;
+        nextQuestion();
+    });
+}
+
+// ==========================================
+// CATÁLOGO SNEAKERDEX
+// ==========================================
+let catalogSneakersList = [];
+
+async function openCatalogModal() {
+    await ensureSneakersLoaded();
+    catalogSneakersList = [...sneakers];
+
+    // Rellenar marcas si el select solo tiene la opción "Todas las marcas"
+    if (catalogBrandFilter && catalogBrandFilter.options.length <= 1) {
+        const brands = [...new Set(sneakers.map(s => (s.marca || '').trim()).filter(Boolean))].sort();
+        brands.forEach(brand => {
+            const opt = document.createElement("option");
+            opt.value = brand.toLowerCase();
+            opt.textContent = brand;
+            catalogBrandFilter.appendChild(opt);
+        });
+    }
+
+    if (catalogSearch) catalogSearch.value = "";
+    if (catalogBrandFilter) catalogBrandFilter.value = "all";
+
+    renderCatalog();
+    if (catalogModal) catalogModal.classList.remove("hidden");
+}
+
+function renderCatalog() {
+    if (!catalogGrid) return;
+    catalogGrid.innerHTML = "";
+
+    const query = (catalogSearch ? catalogSearch.value.trim().toLowerCase() : "");
+    const selectedBrand = (catalogBrandFilter ? catalogBrandFilter.value.toLowerCase() : "all");
+
+    const filtered = catalogSneakersList.filter(s => {
+        const marca = (s.marca || '').toLowerCase();
+        const matchBrand = (selectedBrand === "all" || marca === selectedBrand);
+        const textToSearch = `${s.nombre || ''} ${s.colorway || ''} ${s.marca || ''} ${s.año || ''}`.toLowerCase();
+        const matchQuery = !query || textToSearch.includes(query);
+        return matchBrand && matchQuery;
+    });
+
+    if (catalogCount) {
+        catalogCount.textContent = dictionary[currentLang].showingSneakers(filtered.length, catalogSneakersList.length);
+    }
+
+    if (filtered.length === 0) {
+        catalogGrid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 40px 10px; color: #888;">
+                👟 ${currentLang === 'es' ? 'No se encontraron zapatillas con ese filtro.' : 'No sneakers found matching your search.'}
+            </div>
+        `;
+        return;
+    }
+
+    filtered.forEach(s => {
+        const urls = getAffiliateUrls(s);
+        const card = document.createElement("div");
+        card.className = "catalog-card";
+        card.innerHTML = `
+            <div class="catalog-card-header">
+                <span class="catalog-badge">${s.marca || 'SNEAKER'}</span>
+                <span class="catalog-year">${s.año || ''}</span>
+            </div>
+            <div class="catalog-img-wrapper">
+                <img loading="lazy" src="${s.imagen}" alt="${s.nombre}">
+            </div>
+            <strong class="catalog-name">${s.nombre}</strong>
+            <span class="catalog-colorway">${s.colorway || ''}</span>
+            <div class="catalog-shop-btns">
+                <a href="${urls.stockx}" target="_blank" rel="noopener noreferrer nofollow sponsored" class="affiliate-btn stockx-btn">StockX</a>
+                <a href="${urls.goat}" target="_blank" rel="noopener noreferrer nofollow sponsored" class="affiliate-btn goat-btn">GOAT</a>
+                <a href="${urls.klekt}" target="_blank" rel="noopener noreferrer nofollow sponsored" class="affiliate-btn klekt-btn">KLEKT</a>
+                <a href="${urls.ebay}" target="_blank" rel="noopener noreferrer nofollow sponsored" class="affiliate-btn ebay-btn">eBay</a>
+            </div>
+        `;
+        catalogGrid.appendChild(card);
+    });
+}
+
+if (catalogBtn)        catalogBtn.addEventListener("click", openCatalogModal);
+if (closeCatalogBtn)   closeCatalogBtn.addEventListener("click", () => catalogModal.classList.add("hidden"));
+if (catalogSearch)     catalogSearch.addEventListener("input", renderCatalog);
+if (catalogBrandFilter) catalogBrandFilter.addEventListener("change", renderCatalog);
 
 // ====
 // DICCIONARIOS DE TRADUCCIÓN
@@ -1327,6 +1537,15 @@ const dictionary = {
         delSuccess:         "Tu cuenta y tus datos han sido eliminados con éxito.",
         delError:           "Ocurrió un error al intentar eliminar la cuenta. Por favor, inténtalo de nuevo.",
         delWrongCreds:      "Usuario o contraseña incorrectos.",
+        catalogBtn:         "👟 CATÁLOGO",
+        catalogTitle:       "👟 CATÁLOGO SNEAKERDEX",
+        catalogSubtitle:    "Explora todos los modelos de la base de datos y encuéntralos en tus tiendas favoritas.",
+        catalogSearchPlaceholder: "Buscar por modelo o colorway...",
+        allBrands:          "Todas las marcas",
+        showingSneakers:    (count, total) => `Mostrando ${count} de ${total} zapatillas`,
+        affiliateLabel:     "🛒 ¿Te mola este par? Cómpralo en:",
+        affiliateNextBtn:   "Siguiente ⏩",
+        affiliateDisclosure:"⚠️ SneakerGuessr participa en programas de afiliación. Si compras a través de nuestros enlaces, podemos recibir una comisión sin coste adicional para ti.",
         correctToast:       (streak) => `✅ ¡Correcto! (Racha: ${streak})`,
         incorrectToast:     "❌ ¡Fallaste!",
         exactAnswerWas:     "La respuesta exacta era:",
@@ -1375,6 +1594,15 @@ const dictionary = {
         delSuccess:         "Your account and data have been deleted successfully.",
         delError:           "An error occurred while deleting your account. Please try again.",
         delWrongCreds:      "Incorrect username or password.",
+        catalogBtn:         "👟 CATALOG",
+        catalogTitle:       "👟 SNEAKERDEX CATALOG",
+        catalogSubtitle:    "Browse all sneaker models and find them on your favorite stores.",
+        catalogSearchPlaceholder: "Search by model or colorway...",
+        allBrands:          "All brands",
+        showingSneakers:    (count, total) => `Showing ${count} of ${total} sneakers`,
+        affiliateLabel:     "🛒 Like this pair? Buy on:",
+        affiliateNextBtn:   "Next ⏩",
+        affiliateDisclosure:"⚠️ SneakerGuessr participates in affiliate programs. If you purchase through our links, we may earn a commission at no additional cost to you.",
         correctToast:       (streak) => `✅ Correct! (Streak: ${streak})`,
         incorrectToast:     "❌ Incorrect!",
         exactAnswerWas:     "The exact answer was:",
@@ -1399,6 +1627,17 @@ function applyLanguage(lang) {
     if (el("game-mode-setup-btn"))  el("game-mode-setup-btn").innerText  = texts.gameModeBtn;
     if (el("submit-guess"))        el("submit-guess").innerText        = texts.submitGuessBtn;
     if (el("back-to-menu-btn"))    el("back-to-menu-btn").innerText    = texts.backToMenuBtn;
+
+    if (el("catalog-btn"))            el("catalog-btn").innerText            = texts.catalogBtn;
+    if (el("catalog-title"))          el("catalog-title").innerText          = texts.catalogTitle;
+    if (el("catalog-subtitle"))       el("catalog-subtitle").innerText       = texts.catalogSubtitle;
+    if (el("catalog-search"))         el("catalog-search").placeholder       = texts.catalogSearchPlaceholder;
+    if (el("affiliate-label"))        el("affiliate-label").innerText        = texts.affiliateLabel;
+    if (el("affiliate-next-btn"))     el("affiliate-next-btn").innerText     = texts.affiliateNextBtn;
+    if (el("affiliate-disclosure"))   el("affiliate-disclosure").innerText   = texts.affiliateDisclosure;
+    if (catalogBrandFilter && catalogBrandFilter.options[0]) {
+        catalogBrandFilter.options[0].text = texts.allBrands;
+    }
 
     if (el("tab-login-btn"))          el("tab-login-btn").innerText          = texts.tabLogin;
     if (el("tab-register-btn"))       el("tab-register-btn").innerText       = texts.tabRegister;
