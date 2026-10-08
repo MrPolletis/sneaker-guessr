@@ -75,6 +75,7 @@ function getAffiliateUrls(sneaker) {
 // REFERENCIAS A ELEMENTOS DEL HTML
 // ====
 const playBtn               = document.getElementById("play-btn");
+const startSoloGameBtn      = document.getElementById("start-solo-game-btn");
 const gameModeSetupBtn      = document.getElementById("game-mode-setup-btn");
 const statsBtn              = document.getElementById("stats-btn");
 
@@ -463,15 +464,25 @@ async function saveStatToSupabase(gm, diff, newStreak) {
 // ====
 
 playBtn.addEventListener("click", () => {
-    menuScreen.classList.add("hidden");
-    gameScreen.classList.remove("hidden");
-    startGame();
-});
-
-gameModeSetupBtn.addEventListener("click", () => {
     updateModalUI();
     gameModeModal.classList.remove("hidden");
 });
+
+if (startSoloGameBtn) {
+    startSoloGameBtn.addEventListener("click", () => {
+        gameModeModal.classList.add("hidden");
+        menuScreen.classList.add("hidden");
+        gameScreen.classList.remove("hidden");
+        startGame();
+    });
+}
+
+if (gameModeSetupBtn) {
+    gameModeSetupBtn.addEventListener("click", () => {
+        updateModalUI();
+        gameModeModal.classList.remove("hidden");
+    });
+}
 
 closeGameModeBtn.addEventListener("click", () => {
     gameModeModal.classList.add("hidden");
@@ -1661,7 +1672,15 @@ const dictionary = {
         mpLeaveBtn:         "🚪 ABANDONAR PARTIDA",
         mpLeaveConfirm:     "¿Seguro que quieres abandonar la partida? Contará como una retirada.",
         mpDiffImpossible:   "IMPOSIBLE",
-        roundText:          (r) => `RONDA ${r}`
+        roundText:          (r) => `RONDA ${r}`,
+        startSoloGameBtn:   "¡A JUGAR! ▶",
+        soloModeTitle:      "⚙️ SOLO PLAY",
+        mpFirstCorrect:     "🎯 ¡Primero en acertar! (+1 pt)",
+        mpFirstFailed:      "💥 ¡Te precipitaste! (-1 pt)",
+        mpStealCorrect:     "🎯 ¡Acierto! (+1 pt)",
+        mpRivalFirstCorrect:"❌ El rival acertó primero (+1 pt)",
+        mpWonRoundFeedback: "🎉 ¡Te llevas el punto! (+1 pt)",
+        mpLostRoundFeedback:"❌ El rival se llevó el punto (+1 pt)"
     },
     en: {
         scoreText:          "SCORE",
@@ -1679,7 +1698,7 @@ const dictionary = {
         gameModeHeading:    "GAME MODE",
         difficultyHeading:  "DIFFICULTY",
         infoTitle:          "ℹ️ HOW TO PLAY?",
-        infoBody:           `<p style="margin-bottom:15px;text-align:center;font-weight:600;color:#ff6a00;">Prove your sneakerhead culture knowledge by guessing the footwear in the picture!</p><hr style="border:0;height:1px;background:#333;margin-bottom:15px;"><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🕹️ GAME MODES</h3><ul style="margin-left:20px;margin-bottom:15px;padding-left:5px;"><li><strong>Classic:</strong> Choose the correct answer from 4 options.</li><li><strong>Expert:</strong> Type the exact answer.</li><li><strong>⚔️ 1 vs 1 Multiplayer:</strong> Real-time Kahoot-style battle! Same sneaker, 10 seconds per round. Faster answer = more points. First to 3,000 points wins!</li></ul><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🔥 DIFFICULTY (EXPERT MODE)</h3><ul style="margin-left:20px;padding-left:5px;"><li><strong style="color:#2ecc71;">Normal:</strong> Model name only.</li><li><strong style="color:#f1c40f;">Hard:</strong> Name + Colorway.</li><li><strong style="color:#e74c3c;">Impossible:</strong> Name + Colorway + Year.</li></ul>`,
+        infoBody:           `<p style="margin-bottom:15px;text-align:center;font-weight:600;color:#ff6a00;">Prove your sneakerhead culture knowledge by guessing the footwear in the picture!</p><hr style="border:0;height:1px;background:#333;margin-bottom:15px;"><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🕹️ GAME MODES</h3><ul style="margin-left:20px;margin-bottom:15px;padding-left:5px;"><li><strong>Classic:</strong> Choose the correct answer from 4 options.</li><li><strong>Expert:</strong> Type the exact answer.</li><li><strong>⚔️ 1 vs 1 Multiplayer:</strong> High intensity duel! Same sneaker, 10 seconds per round. First to guess gets 1 point. If you rush first and fail, -1 point penalty. First to 10 points wins!</li></ul><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🔥 DIFFICULTY (EXPERT MODE)</h3><ul style="margin-left:20px;padding-left:5px;"><li><strong style="color:#2ecc71;">Normal:</strong> Model name only.</li><li><strong style="color:#f1c40f;">Hard:</strong> Name + Colorway.</li><li><strong style="color:#e74c3c;">Impossible:</strong> Name + Colorway + Year.</li></ul>`,
         leaderboardTitle:   "🏆 LEADERBOARD",
         filterScopeLabel:   "SCOPE",
         scopeGlobal:        "🌍 GLOBAL",
@@ -1733,7 +1752,15 @@ const dictionary = {
         mpLeaveBtn:         "🚪 LEAVE MATCH",
         mpLeaveConfirm:     "Are you sure you want to leave the match? It will count as a forfeit.",
         mpDiffImpossible:   "IMPOSSIBLE",
-        roundText:          (r) => `ROUND ${r}`
+        roundText:          (r) => `ROUND ${r}`,
+        startSoloGameBtn:   "START PLAYING! ▶",
+        soloModeTitle:      "⚙️ SOLO PLAY",
+        mpFirstCorrect:     "🎯 First to guess! (+1 pt)",
+        mpFirstFailed:      "💥 Too rushed! (-1 pt)",
+        mpStealCorrect:     "🎯 Correct! (+1 pt)",
+        mpRivalFirstCorrect:"❌ Rival guessed first (+1 pt)",
+        mpWonRoundFeedback: "🎉 You won the point! (+1 pt)",
+        mpLostRoundFeedback:"❌ Rival won the point (+1 pt)"
     }
 };
 
@@ -1749,6 +1776,8 @@ function applyLanguage(lang) {
 
     if (el("play-btn"))            el("play-btn").innerText            = texts.playBtn;
     if (el("game-mode-setup-btn"))  el("game-mode-setup-btn").innerText  = texts.gameModeBtn;
+    if (el("start-solo-game-btn")) el("start-solo-game-btn").innerText = texts.startSoloGameBtn;
+    if (el("solo-mode-title"))     el("solo-mode-title").innerText     = texts.soloModeTitle;
     if (el("submit-guess"))        el("submit-guess").innerText        = texts.submitGuessBtn;
     if (el("back-to-menu-btn"))    el("back-to-menu-btn").innerText    = texts.backToMenuBtn;
 
@@ -2112,7 +2141,13 @@ if (btnJoinRoom) {
     });
 }
 
-// BUCLE DE PARTIDA MULTIJUGADOR
+// BUCLE DE PARTIDA MULTIJUGADOR COMPETITIVO 1 VS 1
+const MP_GOAL_POINTS = 10;
+let mpFirstAttemptMade = false;
+let mpRoundWinner = null;
+let mpLocalAttemptDone = false;
+let mpRivalAttemptDone = false;
+
 async function startMultiplayerMatch(isHost, rivalName, isBot, roomCode, sequence) {
     await ensureSneakersLoaded();
 
@@ -2124,10 +2159,14 @@ async function startMultiplayerMatch(isHost, rivalName, isBot, roomCode, sequenc
     mpRivalPoints = 0;
     mpRound = 0;
     mpCurrentIndex = 0;
+    mpFirstAttemptMade = false;
+    mpRoundWinner = null;
+    mpLocalAttemptDone = false;
+    mpRivalAttemptDone = false;
 
     if (!isBot && roomCode && isHost) {
         const seqIndices = [];
-        for (let i = 0; i < 35; i++) {
+        for (let i = 0; i < 40; i++) {
             seqIndices.push(Math.floor(Math.random() * sneakers.length));
         }
         mpSneakersList = seqIndices.map(idx => sneakers[idx]);
@@ -2142,15 +2181,15 @@ async function startMultiplayerMatch(isHost, rivalName, isBot, roomCode, sequenc
     } else if (!isBot && roomCode && !isHost && sequence && Array.isArray(sequence)) {
         mpSneakersList = sequence.map(idx => sneakers[idx] || sneakers[0]);
     } else {
-        mpSneakersList = [...sneakers].sort(() => Math.random() - 0.5).slice(0, 35);
+        mpSneakersList = [...sneakers].sort(() => Math.random() - 0.5).slice(0, 40);
     }
 
     if (!isBot && mpChannel) {
         mpChannel
-            .on('broadcast', { event: 'rival_answer' }, (payload) => {
+            .on('broadcast', { event: 'round_attempt' }, (payload) => {
                 const data = payload.payload;
                 if (data) {
-                    handleMpRivalAnswer(data.roundPts, data.isCorrect, data.totalPoints);
+                    handleMpRivalAttempt(data.isFirst, data.isCorrect, data.newPoints);
                 }
             })
             .on('broadcast', { event: 'player_left' }, () => {
@@ -2176,12 +2215,19 @@ async function startMultiplayerMatch(isHost, rivalName, isBot, roomCode, sequenc
     startMpRound();
 }
 
+function disableLocalButtons() {
+    if (mpOptionsContainer) {
+        const buttons = mpOptionsContainer.querySelectorAll(".mp-answer-btn");
+        buttons.forEach(b => { b.style.pointerEvents = "none"; });
+    }
+}
+
 function startMpRound() {
     if (mpTimerInterval) { clearInterval(mpTimerInterval); mpTimerInterval = null; }
     if (mpBotTimeout)    { clearTimeout(mpBotTimeout);    mpBotTimeout = null; }
 
     if (mpCurrentIndex >= mpSneakersList.length) {
-        mpSneakersList = [...sneakers].sort(() => Math.random() - 0.5).slice(0, 35);
+        mpSneakersList = [...sneakers].sort(() => Math.random() - 0.5).slice(0, 40);
         mpCurrentIndex = 0;
     }
 
@@ -2192,8 +2238,11 @@ function startMpRound() {
     if (mpLocalStatus) mpLocalStatus.innerText = currentLang === 'es' ? "Pensando..." : "Thinking...";
     if (mpRivalStatus) mpRivalStatus.innerText = currentLang === 'es' ? "Esperando..." : "Waiting...";
 
+    mpFirstAttemptMade = false;
+    mpRoundWinner = null;
+    mpLocalAttemptDone = false;
+    mpRivalAttemptDone = false;
     mpAnswerLocked = false;
-    mpRivalAnswered = false;
 
     const currentSneaker = mpSneakersList[mpCurrentIndex];
     if (mpSneakerImg) mpSneakerImg.src = currentSneaker.imagen;
@@ -2213,14 +2262,14 @@ function startMpRound() {
     const options = [correctText, distractors[0], distractors[1], distractors[2]];
     options.sort(() => Math.random() - 0.5);
 
-    // Botones estilo Kahoot con formas geométricas
-    const shapes = ["▲", "◆", "●", "■"];
+    // 4 Botones con la paleta de SneakerGuessr e insignias estilizadas (A, B, C, D)
+    const badges = ["A", "B", "C", "D"];
     if (mpOptionsContainer) {
         mpOptionsContainer.innerHTML = "";
         options.forEach((optText, idx) => {
             const btn = document.createElement("button");
             btn.className = `mp-answer-btn mp-btn-${idx}`;
-            btn.innerHTML = `<span class="mp-btn-icon">${shapes[idx]}</span> <span class="mp-btn-text">${optText}</span>`;
+            btn.innerHTML = `<span class="mp-btn-badge">${badges[idx]}</span> <span class="mp-btn-text">${optText}</span>`;
             btn.addEventListener("click", () => handleMpLocalAnswer(optText, correctText, btn));
             mpOptionsContainer.appendChild(btn);
         });
@@ -2242,74 +2291,187 @@ function startMpRound() {
         if (mpTimeLeft <= 0) {
             clearInterval(mpTimerInterval);
             mpTimerInterval = null;
-            if (!mpAnswerLocked) {
-                mpAnswerLocked = true;
+            if (!mpLocalAttemptDone) {
+                mpLocalAttemptDone = true;
                 if (mpLocalStatus) mpLocalStatus.innerText = currentLang === 'es' ? "⏰ Tiempo agotado" : "⏰ Time's up";
             }
             endMpRound(correctText);
         }
     }, 100);
 
-    // Simulación de respuesta del Bot
+    // Lógica del Bot rival (competitivo: intenta ser rápido; si falla primero, penalización de -1)
     if (mpIsBot) {
-        const botDelay = Math.random() * 3800 + 1800; // entre 1.8s y 5.6s
-        const botCorrect = Math.random() < 0.75;      // 75% precisión
+        const botDelay = Math.random() * 3200 + 1700; // 1.7s a 4.9s
 
         mpBotTimeout = setTimeout(() => {
-            const botPts = botCorrect ? Math.max(100, Math.round(1000 * ((10 - (botDelay / 1000)) / 10))) : 0;
-            mpRivalPoints += botPts;
-            if (mpRivalScore) mpRivalScore.innerText = mpRivalPoints;
-            if (mpRivalBar)   mpRivalBar.style.width = Math.min(100, (mpRivalPoints / 3000) * 100) + '%';
-            if (mpRivalStatus) mpRivalStatus.innerText = botCorrect ? `✅ +${botPts} pts` : "❌ 0 pts";
-            mpRivalAnswered = true;
+            if (mpRoundWinner !== null) return; // Si el local ya ganó la ronda
 
-            if (mpAnswerLocked) {
-                setTimeout(() => endMpRound(correctText), 700);
+            const isFirst = !mpFirstAttemptMade;
+            mpFirstAttemptMade = true;
+
+            if (isFirst) {
+                const botCorrect = Math.random() < 0.70;
+                if (botCorrect) {
+                    mpRoundWinner = 'rival';
+                    mpRivalPoints = Math.min(MP_GOAL_POINTS, mpRivalPoints + 1);
+                    if (mpRivalScore) mpRivalScore.innerText = mpRivalPoints;
+                    if (mpRivalBar)   mpRivalBar.style.width = Math.min(100, (mpRivalPoints / MP_GOAL_POINTS) * 100) + '%';
+                    if (mpRivalStatus) mpRivalStatus.innerText = dictionary[currentLang].mpFirstCorrect;
+                    if (mpLocalStatus) mpLocalStatus.innerText = dictionary[currentLang].mpRivalFirstCorrect;
+                    disableLocalButtons();
+                    endMpRound(correctText);
+                } else {
+                    // Bot se precipita y falla primero: -1 punto
+                    mpRivalPoints = Math.max(0, mpRivalPoints - 1);
+                    if (mpRivalScore) mpRivalScore.innerText = mpRivalPoints;
+                    if (mpRivalBar)   mpRivalBar.style.width = Math.min(100, (mpRivalPoints / MP_GOAL_POINTS) * 100) + '%';
+                    if (mpRivalStatus) mpRivalStatus.innerText = currentLang === 'es' ? "💥 ¡Rival se precipitó! (-1 pt)" : "💥 Rival rushed! (-1 pt)";
+                    if (mpLocalStatus && !mpLocalAttemptDone) {
+                        mpLocalStatus.innerText = currentLang === 'es' ? "⚡ ¡Rival falló! ¡Acierta para sumar +1!" : "⚡ Rival missed! Guess now for +1!";
+                    }
+                    if (mpLocalAttemptDone) {
+                        endMpRound(correctText);
+                    }
+                }
+            } else {
+                // Bot responde en segundo lugar (el jugador local falló primero)
+                const botCorrect = Math.random() < 0.80;
+                if (botCorrect) {
+                    mpRoundWinner = 'rival';
+                    mpRivalPoints = Math.min(MP_GOAL_POINTS, mpRivalPoints + 1);
+                    if (mpRivalScore) mpRivalScore.innerText = mpRivalPoints;
+                    if (mpRivalBar)   mpRivalBar.style.width = Math.min(100, (mpRivalPoints / MP_GOAL_POINTS) * 100) + '%';
+                    if (mpRivalStatus) mpRivalStatus.innerText = dictionary[currentLang].mpStealCorrect;
+                    endMpRound(correctText);
+                } else {
+                    if (mpRivalStatus) mpRivalStatus.innerText = currentLang === 'es' ? "❌ Rival también falló" : "❌ Rival also missed";
+                    endMpRound(correctText);
+                }
             }
         }, botDelay);
     }
 }
 
 function handleMpLocalAnswer(chosenText, correctText, btnElement) {
-    if (mpAnswerLocked) return;
-    mpAnswerLocked = true;
+    if (mpLocalAttemptDone || mpRoundWinner !== null) return;
+    mpLocalAttemptDone = true;
 
+    const isFirst = !mpFirstAttemptMade;
+    mpFirstAttemptMade = true;
     const isCorrect = (chosenText === correctText);
-    const roundPts = isCorrect ? Math.max(100, Math.round(1000 * (mpTimeLeft / 10))) : 0;
 
-    mpLocalPoints += roundPts;
-    if (mpLocalScore) mpLocalScore.innerText = mpLocalPoints;
-    if (mpLocalBar)   mpLocalBar.style.width = Math.min(100, (mpLocalPoints / 3000) * 100) + '%';
-    if (mpLocalStatus) mpLocalStatus.innerText = isCorrect ? `✅ +${roundPts} pts` : "❌ 0 pts";
+    if (isFirst) {
+        if (isCorrect) {
+            // Primero en acertar: +1 punto
+            mpRoundWinner = 'local';
+            mpLocalPoints = Math.min(MP_GOAL_POINTS, mpLocalPoints + 1);
+            if (mpLocalScore) mpLocalScore.innerText = mpLocalPoints;
+            if (mpLocalBar)   mpLocalBar.style.width = Math.min(100, (mpLocalPoints / MP_GOAL_POINTS) * 100) + '%';
+            if (mpLocalStatus) mpLocalStatus.innerText = dictionary[currentLang].mpFirstCorrect;
+            if (btnElement) btnElement.classList.add("mp-btn-correct");
+            disableLocalButtons();
 
-    if (btnElement) {
-        btnElement.classList.add(isCorrect ? "btn-correct" : "btn-incorrect");
-    }
+            if (mpChannel && !mpIsBot) {
+                mpChannel.send({
+                    type: 'broadcast',
+                    event: 'round_attempt',
+                    payload: { isFirst: true, isCorrect: true, newPoints: mpLocalPoints }
+                });
+            }
+            endMpRound(correctText);
+        } else {
+            // Se precipita y falla primero: PENALIZACIÓN -1 PUNTO
+            mpLocalPoints = Math.max(0, mpLocalPoints - 1);
+            if (mpLocalScore) mpLocalScore.innerText = mpLocalPoints;
+            if (mpLocalBar)   mpLocalBar.style.width = Math.min(100, (mpLocalPoints / MP_GOAL_POINTS) * 100) + '%';
+            if (mpLocalStatus) mpLocalStatus.innerText = dictionary[currentLang].mpFirstFailed;
+            if (btnElement) btnElement.classList.add("mp-btn-incorrect");
+            disableLocalButtons();
 
-    if (mpChannel && !mpIsBot) {
-        mpChannel.send({
-            type: 'broadcast',
-            event: 'rival_answer',
-            payload: { isCorrect, roundPts, totalPoints: mpLocalPoints }
-        });
-    }
+            if (mpChannel && !mpIsBot) {
+                mpChannel.send({
+                    type: 'broadcast',
+                    event: 'round_attempt',
+                    payload: { isFirst: true, isCorrect: false, newPoints: mpLocalPoints }
+                });
+            }
 
-    if (mpRivalAnswered) {
-        setTimeout(() => endMpRound(correctText), 700);
+            if (mpRivalAttemptDone) {
+                endMpRound(correctText);
+            }
+        }
+    } else {
+        // Responde segundo (el rival ya falló antes)
+        if (isCorrect) {
+            mpRoundWinner = 'local';
+            mpLocalPoints = Math.min(MP_GOAL_POINTS, mpLocalPoints + 1);
+            if (mpLocalScore) mpLocalScore.innerText = mpLocalPoints;
+            if (mpLocalBar)   mpLocalBar.style.width = Math.min(100, (mpLocalPoints / MP_GOAL_POINTS) * 100) + '%';
+            if (mpLocalStatus) mpLocalStatus.innerText = dictionary[currentLang].mpStealCorrect;
+            if (btnElement) btnElement.classList.add("mp-btn-correct");
+            disableLocalButtons();
+
+            if (mpChannel && !mpIsBot) {
+                mpChannel.send({
+                    type: 'broadcast',
+                    event: 'round_attempt',
+                    payload: { isFirst: false, isCorrect: true, newPoints: mpLocalPoints }
+                });
+            }
+            endMpRound(correctText);
+        } else {
+            if (mpLocalStatus) mpLocalStatus.innerText = currentLang === 'es' ? "❌ Fallaste" : "❌ Missed";
+            if (btnElement) btnElement.classList.add("mp-btn-incorrect");
+            disableLocalButtons();
+
+            if (mpChannel && !mpIsBot) {
+                mpChannel.send({
+                    type: 'broadcast',
+                    event: 'round_attempt',
+                    payload: { isFirst: false, isCorrect: false, newPoints: mpLocalPoints }
+                });
+            }
+            endMpRound(correctText);
+        }
     }
 }
 
-function handleMpRivalAnswer(roundPts, isCorrect, totalPoints) {
-    mpRivalPoints = totalPoints;
+function handleMpRivalAttempt(isFirst, isCorrect, newPoints) {
+    mpRivalAttemptDone = true;
+    mpRivalPoints = newPoints;
     if (mpRivalScore) mpRivalScore.innerText = mpRivalPoints;
-    if (mpRivalBar)   mpRivalBar.style.width = Math.min(100, (mpRivalPoints / 3000) * 100) + '%';
-    if (mpRivalStatus) mpRivalStatus.innerText = isCorrect ? `✅ +${roundPts} pts` : "❌ 0 pts";
-    mpRivalAnswered = true;
+    if (mpRivalBar)   mpRivalBar.style.width = Math.min(100, (mpRivalPoints / MP_GOAL_POINTS) * 100) + '%';
 
-    if (mpAnswerLocked) {
-        const currentSneaker = mpSneakersList[mpCurrentIndex];
-        const correctText = currentSneaker ? currentSneaker.nombre.trim() : "";
-        setTimeout(() => endMpRound(correctText), 700);
+    const currentSneaker = mpSneakersList[mpCurrentIndex];
+    const correctText = currentSneaker ? currentSneaker.nombre.trim() : "";
+
+    if (isFirst) {
+        mpFirstAttemptMade = true;
+        if (isCorrect) {
+            mpRoundWinner = 'rival';
+            if (mpRivalStatus) mpRivalStatus.innerText = dictionary[currentLang].mpFirstCorrect;
+            if (mpLocalStatus) mpLocalStatus.innerText = dictionary[currentLang].mpRivalFirstCorrect;
+            disableLocalButtons();
+            endMpRound(correctText);
+        } else {
+            if (mpRivalStatus) mpRivalStatus.innerText = currentLang === 'es' ? "💥 ¡Rival se precipitó! (-1 pt)" : "💥 Rival rushed! (-1 pt)";
+            if (mpLocalStatus && !mpLocalAttemptDone) {
+                mpLocalStatus.innerText = currentLang === 'es' ? "⚡ ¡Rival falló! ¡Acierta para sumar +1!" : "⚡ Rival missed! Guess now for +1!";
+            }
+            if (mpLocalAttemptDone) {
+                endMpRound(correctText);
+            }
+        }
+    } else {
+        if (isCorrect) {
+            mpRoundWinner = 'rival';
+            if (mpRivalStatus) mpRivalStatus.innerText = dictionary[currentLang].mpStealCorrect;
+            disableLocalButtons();
+            endMpRound(correctText);
+        } else {
+            if (mpRivalStatus) mpRivalStatus.innerText = currentLang === 'es' ? "❌ Rival también falló" : "❌ Rival also missed";
+            endMpRound(correctText);
+        }
     }
 }
 
@@ -2317,38 +2479,45 @@ function endMpRound(correctText) {
     if (mpTimerInterval) { clearInterval(mpTimerInterval); mpTimerInterval = null; }
     if (mpBotTimeout)    { clearTimeout(mpBotTimeout);    mpBotTimeout = null; }
 
-    // Revelar la respuesta correcta
+    disableLocalButtons();
+
+    // Revelar la respuesta correcta con estilo verde
     if (mpOptionsContainer) {
         const buttons = mpOptionsContainer.querySelectorAll(".mp-answer-btn");
         buttons.forEach(b => {
-            b.style.pointerEvents = "none";
             const textSpan = b.querySelector(".mp-btn-text");
             if (textSpan && textSpan.innerText.trim() === correctText) {
-                b.classList.add("btn-correct");
+                b.classList.add("mp-btn-correct");
             }
         });
     }
 
     if (mpRoundFeedback) {
-        mpRoundFeedback.innerHTML = `<strong>${correctText}</strong>`;
+        if (mpRoundWinner === 'local') {
+            mpRoundFeedback.innerHTML = `<span style="color:#2ecc71; font-size:14px;">${dictionary[currentLang].mpWonRoundFeedback}</span><br><span style="color:#aaa; font-size:11px;">${correctText}</span>`;
+        } else if (mpRoundWinner === 'rival') {
+            mpRoundFeedback.innerHTML = `<span style="color:#e74c3c; font-size:14px;">${dictionary[currentLang].mpLostRoundFeedback}</span><br><span style="color:#aaa; font-size:11px;">${correctText}</span>`;
+        } else {
+            mpRoundFeedback.innerHTML = `<span style="color:#f1c40f; font-size:14px;">${currentLang === 'es' ? 'Nadie puntuó en esta ronda' : 'No points awarded this round'}</span><br><span style="color:#aaa; font-size:11px;">${correctText}</span>`;
+        }
         mpRoundFeedback.classList.remove("hidden");
     }
 
     setTimeout(() => {
-        if (mpLocalPoints >= 3000 || mpRivalPoints >= 3000) {
+        if (mpLocalPoints >= MP_GOAL_POINTS || mpRivalPoints >= MP_GOAL_POINTS) {
             finishMpMatch(false);
         } else {
             mpCurrentIndex++;
             startMpRound();
         }
-    }, 2200);
+    }, 1900);
 }
 
 function finishMpMatch(forfeitLocalWin) {
     if (mpTimerInterval) { clearInterval(mpTimerInterval); mpTimerInterval = null; }
     if (mpBotTimeout)    { clearTimeout(mpBotTimeout);    mpBotTimeout = null; }
 
-    const localWon = forfeitLocalWin || (mpLocalPoints >= 3000 && mpLocalPoints >= mpRivalPoints) || (mpLocalPoints > mpRivalPoints);
+    const localWon = forfeitLocalWin || (mpLocalPoints >= MP_GOAL_POINTS && mpLocalPoints >= mpRivalPoints) || (mpLocalPoints > mpRivalPoints);
 
     const finalLocalScoreEl = document.getElementById("mp-final-local-score");
     const finalRivalScoreEl = document.getElementById("mp-final-rival-score");
@@ -2357,8 +2526,8 @@ function finishMpMatch(forfeitLocalWin) {
     const resultsSubEl      = document.getElementById("mp-results-subtitle");
     const rewardBadgeEl     = document.getElementById("mp-reward-badge");
 
-    if (finalLocalScoreEl) finalLocalScoreEl.innerText = Number(mpLocalPoints).toLocaleString();
-    if (finalRivalScoreEl) finalRivalScoreEl.innerText = Number(mpRivalPoints).toLocaleString();
+    if (finalLocalScoreEl) finalLocalScoreEl.innerText = `${mpLocalPoints} / ${MP_GOAL_POINTS}`;
+    if (finalRivalScoreEl) finalRivalScoreEl.innerText = `${mpRivalPoints} / ${MP_GOAL_POINTS}`;
 
     if (localWon) {
         if (resultsIconEl)  resultsIconEl.innerText  = "🏆";

@@ -45,7 +45,6 @@
                 <span>⚔️ 1 VS 1 MULTIJUGADOR</span>
                 <span class="badge-live">ONLINE</span>
             </button>
-            <button class="btn secondary-btn" id="game-mode-setup-btn">GAME MODE</button>
             <button class="btn secondary-btn" id="catalog-btn">👟 CATÁLOGO</button>
             <button class="btn auth-btn" id="auth-btn">🔐 INICIAR SESIÓN</button>
         </div>
@@ -105,7 +104,7 @@
                             <span class="mp-avatar">👟</span>
                             <div class="mp-name-box">
                                 <span class="mp-player-name" id="mp-local-name">TÚ</span>
-                                <span class="mp-player-score"><span id="mp-local-score">0</span> / 3.000</span>
+                                <span class="mp-player-score"><span id="mp-local-score">0</span> / 10</span>
                             </div>
                         </div>
                         <div class="mp-progress-bar-bg">
@@ -114,7 +113,7 @@
                         <span class="mp-player-status" id="mp-local-status">Pensando...</span>
                     </div>
 
-                    <!-- CRONÓMETRO CENTRAL KAHOOT -->
+                    <!-- CRONÓMETRO CENTRAL -->
                     <div class="mp-center-timer">
                         <div class="mp-timer-circle" id="mp-timer-circle">
                             <span id="mp-timer-val">10</span>
@@ -128,7 +127,7 @@
                             <span class="mp-avatar">🔥</span>
                             <div class="mp-name-box">
                                 <span class="mp-player-name" id="mp-rival-name">@Rival</span>
-                                <span class="mp-player-score"><span id="mp-rival-score">0</span> / 3.000</span>
+                                <span class="mp-player-score"><span id="mp-rival-score">0</span> / 10</span>
                             </div>
                         </div>
                         <div class="mp-progress-bar-bg">
@@ -327,11 +326,11 @@
         </div>
     </div>
 
-    <!-- MODAL: AJUSTES DE PARTIDA -->
+    <!-- MODAL: AJUSTES DE PARTIDA SOLO PLAY -->
     <div id="game-mode-modal" class="modal hidden">
         <div class="modal-content" style="max-width: 450px;">
             <span class="close-btn" id="close-game-mode-btn">&times;</span>
-            <h2 style="margin-bottom: 25px; text-align: center; font-weight: 800; letter-spacing: 1px;">⚙️ AJUSTES DE PARTIDA</h2>
+            <h2 id="solo-mode-title" style="margin-bottom: 25px; text-align: center; font-weight: 800; letter-spacing: 1px;">⚙️ SOLO PLAY</h2>
             
             <div style="margin-bottom: 25px;">
                 <h3 style="font-size: 13px; color: #888; margin-bottom: 12px; letter-spacing: 1px; font-weight: 600;">MODO DE JUEGO</h3>
@@ -353,6 +352,10 @@
             <p id="classic-mode-note" style="font-size: 12px; color: #888; text-align: center; margin-top: 15px; font-style: italic;">
                 ℹ️ En modo Classic siempre se adivina el modelo entre 4 opciones. La dificultad se aplica al modo Expert.
             </p>
+
+            <button class="btn play-btn" id="start-solo-game-btn" style="width: 100%; margin-top: 25px; padding: 15px; font-size: 16px; font-weight: 800; letter-spacing: 1px;">
+                ¡A JUGAR! ▶
+            </button>
         </div>
     </div>
 
@@ -371,7 +374,7 @@
                 <ul style="margin-left: 20px; margin-bottom: 15px; padding-left: 5px;">
                     <li><strong>Classic:</strong> Elige la respuesta correcta entre 4 opciones con botones.</li>
                     <li><strong>Expert:</strong> Pon a prueba tu memoria escribiendo la respuesta exacta.</li>
-                    <li><strong>⚔️ 1 vs 1 Multijugador:</strong> ¡Duelo en tiempo real estilo Kahoot! La misma zapatilla, 10 segundos por ronda. Cuanto antes aciertes, más puntos. ¡El primero a 3.000 puntos gana!</li>
+                    <li><strong>⚔️ 1 vs 1 Multijugador:</strong> ¡Duelo de alta tensión! Misma zapatilla, 10 segundos por ronda. El primero que acierte se lleva 1 punto. Si pruebas primero y fallas, -1 punto. ¡El primero a 10 puntos gana!</li>
                 </ul>
                 
                 <h3 style="color: #fff; font-size: 15px; margin-bottom: 5px;">🔥 DIFICULTADES (MODO EXPERT)</h3>
@@ -395,7 +398,7 @@
             <span class="close-btn" id="close-mp-lobby-btn">&times;</span>
             <h2 style="font-weight: 800; margin-bottom: 8px;">⚔️ 1 VS 1 MULTIJUGADOR</h2>
             <p style="font-size: 13px; color: #888; margin-bottom: 20px; line-height: 1.5;">
-                ¡Compite en tiempo real estilo Kahoot! Misma zapatilla, 10s por ronda. ¡El primero a 3.000 puntos gana!
+                ¡Duelo 1vs1 de alta intensidad! El primero en acertar se lleva 1 punto. Si pruebas primero y fallas, te resta -1 punto. ¡El primero a 10 puntos gana!
             </p>
 
             <div class="auth-modal-tabs" style="margin-bottom: 20px;">

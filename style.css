@@ -1088,22 +1088,55 @@ body {
     opacity: 0.65;
 }
 
-/* 4 Formas y Colores Kahoot */
-.mp-btn-0 { background: #e21b3c; } /* Rojo ▲ */
-.mp-btn-1 { background: #1368ce; } /* Azul ◆ */
-.mp-btn-2 { background: #d89e00; } /* Amarillo ● */
-.mp-btn-3 { background: #26890c; } /* Verde ■ */
+/* 4 Opciones estilizadas con la paleta de SneakerGuessr */
+.mp-btn-0 {
+    background: linear-gradient(135deg, #ff6a00 0%, #ff8c00 100%);
+    border: 1px solid rgba(255, 106, 0, 0.4);
+    box-shadow: 0 4px 15px rgba(255, 106, 0, 0.25);
+}
+.mp-btn-1 {
+    background: linear-gradient(135deg, #ee0979 0%, #ff2a6d 100%);
+    border: 1px solid rgba(238, 9, 121, 0.4);
+    box-shadow: 0 4px 15px rgba(238, 9, 121, 0.25);
+}
+.mp-btn-2 {
+    background: linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%);
+    border: 1px solid rgba(142, 45, 226, 0.4);
+    box-shadow: 0 4px 15px rgba(142, 45, 226, 0.25);
+}
+.mp-btn-3 {
+    background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+    border: 1px solid rgba(0, 180, 219, 0.4);
+    box-shadow: 0 4px 15px rgba(0, 180, 219, 0.25);
+}
+
+.mp-btn-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 800;
+    margin-right: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
+}
 
 .mp-btn-correct {
-    background: #2ecc71 !important;
-    border: 3px solid #ffffff !important;
-    box-shadow: 0 0 20px rgba(46, 204, 113, 0.8) !important;
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 0 25px rgba(56, 239, 125, 0.8) !important;
     transform: scale(1.02);
 }
 
 .mp-btn-incorrect {
-    background: #555555 !important;
-    opacity: 0.4 !important;
+    background: #222222 !important;
+    border: 1px solid #444444 !important;
+    opacity: 0.35 !important;
+    transform: scale(0.98);
 }
 
 /* Banner de feedback inter-ronda */
