@@ -153,6 +153,14 @@ const sneakerInput          = document.getElementById("sneaker-input");
 const submitBtn             = document.getElementById("submit-guess");
 const scoreVal              = document.getElementById("score-val");
 
+const FALLBACK_SNEAKER_SVG  = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 200' width='300' height='200'><rect width='100%' height='100%' fill='%23181818'/><text x='50%' y='46%' fill='%23666' font-size='42' text-anchor='middle'>👟</text><text x='50%' y='68%' fill='%23aaa' font-size='12' font-family='sans-serif' text-anchor='middle'>Imagen no disponible</text></svg>";
+
+if (sneakerImg) {
+    sneakerImg.addEventListener("error", function() {
+        if (this.src !== FALLBACK_SNEAKER_SVG) this.src = FALLBACK_SNEAKER_SVG;
+    });
+}
+
 const backToMenuBtn         = document.getElementById("back-to-menu-btn");
 const feedbackToast         = document.getElementById("feedback-toast");
 const feedbackDetails       = document.getElementById("feedback-details");
@@ -197,6 +205,12 @@ const mpRoundIndicator      = document.getElementById("mp-round-indicator");
 const mpSneakerImg          = document.getElementById("mp-sneaker-img");
 const mpRoundFeedback       = document.getElementById("mp-round-feedback");
 const mpOptionsContainer     = document.getElementById("mp-options-container");
+
+if (mpSneakerImg) {
+    mpSneakerImg.addEventListener("error", function() {
+        if (this.src !== FALLBACK_SNEAKER_SVG) this.src = FALLBACK_SNEAKER_SVG;
+    });
+}
 
 // ====
 // VARIABLES DE ESTADO
@@ -1202,17 +1216,32 @@ async function startGame() {
 }
 
 function prepareGamePool() {
-    const diff = difficulties[difficultyIndex];
-    if (diff === 'normal') {
-        const seenNames = new Set();
-        gamePool = sneakers.filter(sneaker => {
+    if (gameMode === 'classic') {
+        // En Classic, barajar primero y filtrar para que NUNCA se repita el mismo modelo
+        // aunque existan múltiples colorways (ej. Jordan 1 Chicago vs Bred)
+        const shuffled = [...sneakers].sort(() => Math.random() - 0.5);
+        const seenModels = new Set();
+        gamePool = shuffled.filter(sneaker => {
             const modelName = sneaker.nombre.trim().toLowerCase();
-            if (seenNames.has(modelName)) return false;
-            seenNames.add(modelName);
+            if (seenModels.has(modelName)) return false;
+            seenModels.add(modelName);
             return true;
         });
     } else {
-        gamePool = [...sneakers];
+        const diff = difficulties[difficultyIndex];
+        if (diff === 'normal') {
+            const shuffled = [...sneakers].sort(() => Math.random() - 0.5);
+            const seenModels = new Set();
+            gamePool = shuffled.filter(sneaker => {
+                const modelName = sneaker.nombre.trim().toLowerCase();
+                if (seenModels.has(modelName)) return false;
+                seenModels.add(modelName);
+                return true;
+            });
+        } else {
+            // En Hard e Imposible se permite cada colorway ya que el jugador debe escribir el colorway o año
+            gamePool = [...sneakers].sort(() => Math.random() - 0.5);
+        }
     }
 }
 
@@ -1281,12 +1310,13 @@ function updateExpertInstructions() {
 
 function generateButtons() {
     optionsContainer.innerHTML = "";
-    const diff        = difficulties[difficultyIndex];
-    const correctText = formatSneakerText(currentSneaker, diff);
+    // En modo Classic siempre se adivina únicamente el nombre del modelo
+    const correctText = currentSneaker.nombre.trim();
 
+    // Distractores de la misma marca que sean modelos completamente distintos
     const sameBrandSneakers = sneakers.filter(s => s.marca.toLowerCase() === currentSneaker.marca.toLowerCase());
-    let brandDistractors = [...new Set(sameBrandSneakers.map(s => formatSneakerText(s, diff)))]
-        .filter(text => text !== correctText);
+    let brandDistractors = [...new Set(sameBrandSneakers.map(s => s.nombre.trim()))]
+        .filter(text => text.toLowerCase() !== correctText.toLowerCase());
     brandDistractors.sort(() => Math.random() - 0.5);
 
     let selectedDistractors = [];
@@ -1295,7 +1325,8 @@ function generateButtons() {
     } else {
         selectedDistractors = [...brandDistractors];
         const otherBrandSneakers = sneakers.filter(s => s.marca.toLowerCase() !== currentSneaker.marca.toLowerCase());
-        let otherDistractors = [...new Set(otherBrandSneakers.map(s => formatSneakerText(s, diff)))];
+        let otherDistractors = [...new Set(otherBrandSneakers.map(s => s.nombre.trim()))]
+            .filter(text => text.toLowerCase() !== correctText.toLowerCase() && !selectedDistractors.some(d => d.toLowerCase() === text.toLowerCase()));
         otherDistractors.sort(() => Math.random() - 0.5);
         selectedDistractors = selectedDistractors.concat(otherDistractors.slice(0, 3 - selectedDistractors.length));
     }
@@ -1578,7 +1609,7 @@ function renderCatalog() {
                 <span class="catalog-year">${s.año || ''}</span>
             </div>
             <div class="catalog-img-wrapper">
-                <img loading="lazy" src="${s.imagen}" alt="${s.nombre}">
+                <img loading="lazy" src="${s.imagen}" alt="${s.nombre}" onerror="this.onerror=null; this.src='${FALLBACK_SNEAKER_SVG}';">
             </div>
             <strong class="catalog-name">${s.nombre}</strong>
             <span class="catalog-colorway">${s.colorway || ''}</span>
@@ -2166,8 +2197,15 @@ async function startMultiplayerMatch(isHost, rivalName, isBot, roomCode, sequenc
 
     if (!isBot && roomCode && isHost) {
         const seqIndices = [];
-        for (let i = 0; i < 40; i++) {
-            seqIndices.push(Math.floor(Math.random() * sneakers.length));
+        const seenNames = new Set();
+        const shuffledIndices = Array.from({ length: sneakers.length }, (_, i) => i).sort(() => Math.random() - 0.5);
+        for (const idx of shuffledIndices) {
+            const nameKey = (sneakers[idx].nombre || '').trim().toLowerCase();
+            if (!seenNames.has(nameKey)) {
+                seenNames.add(nameKey);
+                seqIndices.push(idx);
+                if (seqIndices.length >= 40) break;
+            }
         }
         mpSneakersList = seqIndices.map(idx => sneakers[idx]);
 
@@ -2181,7 +2219,14 @@ async function startMultiplayerMatch(isHost, rivalName, isBot, roomCode, sequenc
     } else if (!isBot && roomCode && !isHost && sequence && Array.isArray(sequence)) {
         mpSneakersList = sequence.map(idx => sneakers[idx] || sneakers[0]);
     } else {
-        mpSneakersList = [...sneakers].sort(() => Math.random() - 0.5).slice(0, 40);
+        const seenNames = new Set();
+        const shuffled = [...sneakers].sort(() => Math.random() - 0.5);
+        mpSneakersList = shuffled.filter(s => {
+            const nameKey = (s.nombre || '').trim().toLowerCase();
+            if (seenNames.has(nameKey)) return false;
+            seenNames.add(nameKey);
+            return true;
+        }).slice(0, 40);
     }
 
     if (!isBot && mpChannel) {
@@ -2227,7 +2272,14 @@ function startMpRound() {
     if (mpBotTimeout)    { clearTimeout(mpBotTimeout);    mpBotTimeout = null; }
 
     if (mpCurrentIndex >= mpSneakersList.length) {
-        mpSneakersList = [...sneakers].sort(() => Math.random() - 0.5).slice(0, 40);
+        const seenNames = new Set();
+        const shuffled = [...sneakers].sort(() => Math.random() - 0.5);
+        mpSneakersList = shuffled.filter(s => {
+            const nameKey = (s.nombre || '').trim().toLowerCase();
+            if (seenNames.has(nameKey)) return false;
+            seenNames.add(nameKey);
+            return true;
+        }).slice(0, 40);
         mpCurrentIndex = 0;
     }
 
@@ -2250,11 +2302,13 @@ function startMpRound() {
     // Generar 4 opciones únicas
     const correctText = currentSneaker.nombre.trim();
     const sameBrand = sneakers.filter(s => s.marca.toLowerCase() === currentSneaker.marca.toLowerCase());
-    let distractors = [...new Set(sameBrand.map(s => s.nombre.trim()))].filter(n => n !== correctText);
+    let distractors = [...new Set(sameBrand.map(s => s.nombre.trim()))]
+        .filter(n => n.toLowerCase() !== correctText.toLowerCase());
     distractors.sort(() => Math.random() - 0.5);
 
     if (distractors.length < 3) {
-        const otherDistractors = [...new Set(sneakers.map(s => s.nombre.trim()))].filter(n => n !== correctText && !distractors.includes(n));
+        const otherDistractors = [...new Set(sneakers.map(s => s.nombre.trim()))]
+            .filter(n => n.toLowerCase() !== correctText.toLowerCase() && !distractors.some(d => d.toLowerCase() === n.toLowerCase()));
         otherDistractors.sort(() => Math.random() - 0.5);
         distractors = distractors.concat(otherDistractors.slice(0, 3 - distractors.length));
     }
