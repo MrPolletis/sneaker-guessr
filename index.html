@@ -40,7 +40,11 @@
 
         <div class="menu-container" id="menu-screen">
             <h1 class="menu-title">SneakerGuessr</h1>
-            <button class="btn play-btn" id="play-btn">PLAY</button>
+            <button class="btn play-btn" id="play-btn">SOLO PLAY</button>
+            <button class="btn multiplayer-btn" id="multiplayer-btn">
+                <span>⚔️ 1 VS 1 MULTIJUGADOR</span>
+                <span class="badge-live">ONLINE</span>
+            </button>
             <button class="btn secondary-btn" id="game-mode-setup-btn">GAME MODE</button>
             <button class="btn secondary-btn" id="catalog-btn">👟 CATÁLOGO</button>
             <button class="btn auth-btn" id="auth-btn">🔐 INICIAR SESIÓN</button>
@@ -87,6 +91,66 @@
                 </div>
 
                 <button id="back-to-menu-btn" class="btn secondary-btn" style="margin-top: 25px; width: 100%; border-color: #333;">VOLVER AL MENÚ</button>
+            </div>
+        </div>
+
+        <!-- PANTALLA MULTIJUGADOR 1 VS 1 (ESTILO KAHOOT EN TIEMPO REAL) -->
+        <div id="multiplayer-screen" class="hidden">
+            <div class="mp-battle-container">
+                <!-- MARCADOR DE BATALLA 1VS1 -->
+                <div class="mp-battle-header">
+                    <!-- JUGADOR LOCAL (TÚ) -->
+                    <div class="mp-player-card mp-player-local">
+                        <div class="mp-player-info">
+                            <span class="mp-avatar">👟</span>
+                            <div class="mp-name-box">
+                                <span class="mp-player-name" id="mp-local-name">TÚ</span>
+                                <span class="mp-player-score"><span id="mp-local-score">0</span> / 3.000</span>
+                            </div>
+                        </div>
+                        <div class="mp-progress-bar-bg">
+                            <div class="mp-progress-bar-fill mp-fill-local" id="mp-local-bar" style="width: 0%;"></div>
+                        </div>
+                        <span class="mp-player-status" id="mp-local-status">Pensando...</span>
+                    </div>
+
+                    <!-- CRONÓMETRO CENTRAL KAHOOT -->
+                    <div class="mp-center-timer">
+                        <div class="mp-timer-circle" id="mp-timer-circle">
+                            <span id="mp-timer-val">10</span>
+                        </div>
+                        <span class="mp-round-indicator" id="mp-round-indicator">RONDA 1</span>
+                    </div>
+
+                    <!-- RIVAL -->
+                    <div class="mp-player-card mp-player-rival">
+                        <div class="mp-player-info">
+                            <span class="mp-avatar">🔥</span>
+                            <div class="mp-name-box">
+                                <span class="mp-player-name" id="mp-rival-name">@Rival</span>
+                                <span class="mp-player-score"><span id="mp-rival-score">0</span> / 3.000</span>
+                            </div>
+                        </div>
+                        <div class="mp-progress-bar-bg">
+                            <div class="mp-progress-bar-fill mp-fill-rival" id="mp-rival-bar" style="width: 0%;"></div>
+                        </div>
+                        <span class="mp-player-status" id="mp-rival-status">Esperando...</span>
+                    </div>
+                </div>
+
+                <!-- IMAGEN DE LA ZAPATILLA -->
+                <div class="img-wrapper mp-img-wrapper">
+                    <img id="mp-sneaker-img" src="" alt="Sneaker" class="sneaker-img">
+                </div>
+
+                <!-- FEEDBACK RÁPIDO INTER-RONDA -->
+                <div id="mp-round-feedback" class="mp-round-feedback hidden"></div>
+
+                <!-- 4 OPCIONES ESTILO KAHOOT -->
+                <div id="mp-options-container" class="mp-answers-grid"></div>
+
+                <!-- BOTÓN PARA SALIR DE LA PARTIDA -->
+                <button id="mp-leave-btn" class="btn secondary-btn" style="margin-top: 20px; width: 100%; border-color: #333; font-size: 13px;">🚪 ABANDONAR PARTIDA</button>
             </div>
         </div>
 
@@ -206,7 +270,7 @@
                     <div class="filter-buttons" id="filter-diff-container">
                         <button class="btn-filter-opt active" data-filter-diff="normal">NORMAL</button>
                         <button class="btn-filter-opt" data-filter-diff="hard">HARD</button>
-                        <button class="btn-filter-opt" data-filter-diff="expert">EXPERT</button>
+                        <button class="btn-filter-opt" data-filter-diff="expert" id="filter-diff-impossible-btn">IMPOSIBLE</button>
                     </div>
                 </div>
             </div>
@@ -239,16 +303,12 @@
                 </div>
                 
                 <div class="stat-box" style="border-color: #333;">
-                    <span class="stat-label" style="color: #bbb;">Classic (Normal)</span>
+                    <span class="stat-label" style="color: #bbb;">Racha Classic</span>
                     <span class="stat-val" id="streak-classic-normal-val">0</span>
                 </div>
                 <div class="stat-box" style="border-color: #333;">
-                    <span class="stat-label" style="color: #bbb;">Classic (Hard)</span>
-                    <span class="stat-val" id="streak-classic-hard-val">0</span>
-                </div>
-                <div class="stat-box" style="grid-column: span 2; margin-bottom: 10px; border-color: #333;">
-                    <span class="stat-label" style="color: #bbb;">Classic (Expert)</span>
-                    <span class="stat-val" id="streak-classic-expert-val">0</span>
+                    <span class="stat-label" style="color: #ffaa40;">Victorias 1vs1 ⚔️</span>
+                    <span class="stat-val" id="mp-wins-val">0</span>
                 </div>
 
                 <div class="stat-box">
@@ -260,7 +320,7 @@
                     <span class="stat-val" id="streak-expert-hard-val">0</span>
                 </div>
                 <div class="stat-box" style="grid-column: span 2;">
-                    <span class="stat-label">Expert (Expert)</span>
+                    <span class="stat-label" style="color: #e74c3c;">Expert (Imposible)</span>
                     <span class="stat-val" id="streak-expert-expert-val">0</span>
                 </div>
             </div>
@@ -273,7 +333,7 @@
             <span class="close-btn" id="close-game-mode-btn">&times;</span>
             <h2 style="margin-bottom: 25px; text-align: center; font-weight: 800; letter-spacing: 1px;">⚙️ AJUSTES DE PARTIDA</h2>
             
-            <div style="margin-bottom: 30px;">
+            <div style="margin-bottom: 25px;">
                 <h3 style="font-size: 13px; color: #888; margin-bottom: 12px; letter-spacing: 1px; font-weight: 600;">MODO DE JUEGO</h3>
                 <div style="display: flex; gap: 12px;">
                     <button class="btn-opt" id="opt-mode-classic">CLASSIC (Opciones)</button>
@@ -281,14 +341,18 @@
                 </div>
             </div>
             
-            <div>
-                <h3 style="font-size: 13px; color: #888; margin-bottom: 12px; letter-spacing: 1px; font-weight: 600;">DIFICULTAD</h3>
+            <div id="difficulty-settings-group">
+                <h3 id="difficulty-heading-modal" style="font-size: 13px; color: #888; margin-bottom: 12px; letter-spacing: 1px; font-weight: 600;">DIFICULTAD (MODO EXPERT)</h3>
                 <div style="display: flex; gap: 12px;">
                     <button class="btn-opt diff-normal" id="opt-diff-normal">NORMAL</button>
                     <button class="btn-opt diff-hard" id="opt-diff-hard">HARD</button>
-                    <button class="btn-opt diff-expert" id="opt-diff-expert">EXPERT</button>
+                    <button class="btn-opt diff-expert" id="opt-diff-expert">IMPOSIBLE</button>
                 </div>
             </div>
+
+            <p id="classic-mode-note" style="font-size: 12px; color: #888; text-align: center; margin-top: 15px; font-style: italic;">
+                ℹ️ En modo Classic siempre se adivina el modelo entre 4 opciones. La dificultad se aplica al modo Expert.
+            </p>
         </div>
     </div>
 
@@ -307,19 +371,107 @@
                 <ul style="margin-left: 20px; margin-bottom: 15px; padding-left: 5px;">
                     <li><strong>Classic:</strong> Elige la respuesta correcta entre 4 opciones con botones.</li>
                     <li><strong>Expert:</strong> Pon a prueba tu memoria escribiendo la respuesta exacta.</li>
+                    <li><strong>⚔️ 1 vs 1 Multijugador:</strong> ¡Duelo en tiempo real estilo Kahoot! La misma zapatilla, 10 segundos por ronda. Cuanto antes aciertes, más puntos. ¡El primero a 3.000 puntos gana!</li>
                 </ul>
                 
-                <h3 style="color: #fff; font-size: 15px; margin-bottom: 5px;">🔥 DIFICULTADES</h3>
+                <h3 style="color: #fff; font-size: 15px; margin-bottom: 5px;">🔥 DIFICULTADES (MODO EXPERT)</h3>
                 <ul style="margin-left: 20px; padding-left: 5px;">
                     <li><strong style="color: #2ecc71;">Normal:</strong> Solo el <strong>Nombre del modelo</strong> (Ej: <em>Nike Air Jordan 1</em>).</li>
                     <li><strong style="color: #f1c40f;">Hard:</strong> Requiere <strong>Nombre + Colorway</strong> (Ej: <em>Nike Air Jordan 1 Chicago</em>).</li>
-                    <li><strong style="color: #e74c3c;">Expert:</strong> Requiere <strong>Nombre + Colorway + Año</strong> (Ej: <em>Nike Air Jordan 1 Chicago 1985</em>).</li>
+                    <li><strong style="color: #e74c3c;">Imposible:</strong> Requiere <strong>Nombre + Colorway + Año</strong> (Ej: <em>Nike Air Jordan 1 Chicago 1985</em>).</li>
                 </ul>
 
                 <h3 style="color: #fff; font-size: 15px; margin-bottom: 5px;">🛒 TIENDAS Y ENLACES</h3>
                 <p style="margin-left: 5px; font-size: 13px; color: #aaa; margin-bottom: 10px;">
                     Al adivinar o explorar zapatillas, verás enlaces directos a tiendas especializadas (StockX, GOAT, KLEKT, eBay). Podrás ver ofertas en tiempo real o comprar tus pares favoritos.
                 </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: LOBBY 1 VS 1 MULTIJUGADOR -->
+    <div id="mp-lobby-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 480px; text-align: center;">
+            <span class="close-btn" id="close-mp-lobby-btn">&times;</span>
+            <h2 style="font-weight: 800; margin-bottom: 8px;">⚔️ 1 VS 1 MULTIJUGADOR</h2>
+            <p style="font-size: 13px; color: #888; margin-bottom: 20px; line-height: 1.5;">
+                ¡Compite en tiempo real estilo Kahoot! Misma zapatilla, 10s por ronda. ¡El primero a 3.000 puntos gana!
+            </p>
+
+            <div class="auth-modal-tabs" style="margin-bottom: 20px;">
+                <button class="auth-tab-btn active" id="tab-mp-matchmaking">ONLINE RÁPIDO</button>
+                <button class="auth-tab-btn" id="tab-mp-friend">SALA CON AMIGO</button>
+            </div>
+
+            <!-- VISTA 1: MATCHMAKING RÁPIDO -->
+            <div id="mp-view-matchmaking">
+                <div id="mp-radar-box" class="hidden" style="margin: 25px 0;">
+                    <div class="mp-radar-pulse"></div>
+                    <p id="mp-radar-status" style="margin-top: 15px; font-weight: 700; color: #ff6a00; font-size: 14px;">Buscando rival en línea...</p>
+                    <p style="font-size: 12px; color: #666; margin-top: 6px;">Tiempo en cola: <span id="mp-queue-timer">0</span>s</p>
+                    <button class="btn secondary-btn" id="mp-cancel-matchmaking-btn" style="margin-top: 15px; padding: 8px 20px; font-size: 12px;">Cancelar búsqueda</button>
+                </div>
+
+                <div id="mp-start-matchmaking-box">
+                    <p style="font-size: 13px; color: #bbb; margin-bottom: 18px;">
+                        Te emparejaremos automáticamente con otro jugador conectado para un duelo instantáneo.
+                    </p>
+                    <button class="btn play-btn" id="btn-start-matchmaking" style="width: 100%; font-size: 16px; padding: 15px;">
+                        🎮 BUSCAR RIVAL ONLINE
+                    </button>
+                </div>
+            </div>
+
+            <!-- VISTA 2: SALA CON AMIGO -->
+            <div id="mp-view-friend" class="hidden">
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid #333; border-radius: 10px; padding: 15px; margin-bottom: 15px; text-align: left;">
+                    <h3 style="font-size: 13px; color: #ff6a00; margin-bottom: 8px; font-weight: 700;">🏠 CREAR SALA PRIVADA</h3>
+                    <button class="btn secondary-btn" id="btn-create-room" style="width: 100%; margin-bottom: 8px;">CREAR CÓDIGO DE SALA</button>
+                    
+                    <div id="mp-created-room-box" class="hidden" style="text-align: center; margin-top: 10px;">
+                        <span style="font-size: 11px; color: #888;">CÓDIGO DE TU SALA:</span>
+                        <div id="mp-room-code-display" style="font-size: 26px; font-weight: 800; color: #2ecc71; letter-spacing: 4px; margin: 6px 0;">-----</div>
+                        <button class="btn" id="btn-copy-invite" style="width: 100%; font-size: 12px; background: #2ecc71; color: #000; font-weight: 700; padding: 8px;">📋 COPIAR ENLACE DE INVITACIÓN</button>
+                        <p style="font-size: 11px; color: #aaa; margin-top: 8px;">Esperando a que tu amigo se una...</p>
+                    </div>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid #333; border-radius: 10px; padding: 15px; text-align: left;">
+                    <h3 style="font-size: 13px; color: #ff6a00; margin-bottom: 8px; font-weight: 700;">🔑 UNIRTE A SALA</h3>
+                    <input type="text" id="mp-input-room-code" placeholder="CÓDIGO (Ej: KICK8)" maxlength="6" style="width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #fff; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; text-align: center;">
+                    <button class="btn play-btn" id="btn-join-room" style="width: 100%; font-size: 14px;">ENTRAR A LA SALA</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: RESULTADOS DE PARTIDA 1 VS 1 -->
+    <div id="mp-results-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 440px; text-align: center; position: relative; overflow: hidden;">
+            <canvas id="confetti-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;"></canvas>
+            <div style="position: relative; z-index: 2;">
+                <div id="mp-results-icon" style="font-size: 55px; margin-bottom: 10px;">🏆</div>
+                <h2 id="mp-results-title" style="font-weight: 800; font-size: 26px; margin-bottom: 6px; letter-spacing: 1px;">¡VICTORIA!</h2>
+                <p id="mp-results-subtitle" style="font-size: 14px; color: #aaa; margin-bottom: 25px;">Has derrotado a @Rival</p>
+
+                <div style="display: flex; justify-content: space-around; background: rgba(255,255,255,0.04); border: 1px solid #333; border-radius: 12px; padding: 15px; margin-bottom: 25px;">
+                    <div>
+                        <span style="font-size: 11px; color: #888; text-transform: uppercase;">TUS PUNTOS</span>
+                        <div id="mp-final-local-score" style="font-size: 24px; font-weight: 800; color: #2ecc71;">3.120</div>
+                    </div>
+                    <div style="border-left: 1px solid #333;"></div>
+                    <div>
+                        <span style="font-size: 11px; color: #888; text-transform: uppercase;">RIVAL</span>
+                        <div id="mp-final-rival-score" style="font-size: 24px; font-weight: 800; color: #e74c3c;">2.400</div>
+                    </div>
+                </div>
+
+                <div id="mp-reward-badge" style="background: rgba(255, 106, 0, 0.15); border: 1px solid #ff6a00; color: #ffaa40; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; margin-bottom: 20px;">
+                    ⭐ +50 puntos sumados a tu perfil
+                </div>
+
+                <button class="btn play-btn" id="mp-btn-rematch" style="width: 100%; margin-bottom: 10px; font-size: 15px;">JUGAR OTRA VEZ 🔄</button>
+                <button class="btn secondary-btn" id="mp-btn-back-menu" style="width: 100%; border-color: #333; font-size: 14px;">VOLVER AL MENÚ 🏠</button>
             </div>
         </div>
     </div>

@@ -156,6 +156,47 @@ const backToMenuBtn         = document.getElementById("back-to-menu-btn");
 const feedbackToast         = document.getElementById("feedback-toast");
 const feedbackDetails       = document.getElementById("feedback-details");
 
+// ELEMENTOS MODO MULTIJUGADOR 1 VS 1 (ESTILO KAHOOT)
+const multiplayerBtn        = document.getElementById("multiplayer-btn");
+const multiplayerScreen     = document.getElementById("multiplayer-screen");
+const mpLobbyModal          = document.getElementById("mp-lobby-modal");
+const closeMpLobbyBtn       = document.getElementById("close-mp-lobby-btn");
+const tabMpMatchmaking      = document.getElementById("tab-mp-matchmaking");
+const tabMpFriend           = document.getElementById("tab-mp-friend");
+const mpViewMatchmaking     = document.getElementById("mp-view-matchmaking");
+const mpViewFriend          = document.getElementById("mp-view-friend");
+const btnStartMatchmaking   = document.getElementById("btn-start-matchmaking");
+const mpRadarBox            = document.getElementById("mp-radar-box");
+const mpStartMatchmakingBox = document.getElementById("mp-start-matchmaking-box");
+const mpQueueTimer          = document.getElementById("mp-queue-timer");
+const mpRadarStatus         = document.getElementById("mp-radar-status");
+const mpCancelMatchmakingBtn= document.getElementById("mp-cancel-matchmaking-btn");
+const btnCreateRoom         = document.getElementById("btn-create-room");
+const mpCreatedRoomBox      = document.getElementById("mp-created-room-box");
+const mpRoomCodeDisplay     = document.getElementById("mp-room-code-display");
+const btnCopyInvite         = document.getElementById("btn-copy-invite");
+const mpInputRoomCode       = document.getElementById("mp-input-room-code");
+const btnJoinRoom           = document.getElementById("btn-join-room");
+const mpResultsModal        = document.getElementById("mp-results-modal");
+const mpBtnRematch          = document.getElementById("mp-btn-rematch");
+const mpBtnBackMenu         = document.getElementById("mp-btn-back-menu");
+const mpLeaveBtn            = document.getElementById("mp-leave-btn");
+
+const mpLocalName           = document.getElementById("mp-local-name");
+const mpLocalScore          = document.getElementById("mp-local-score");
+const mpLocalBar            = document.getElementById("mp-local-bar");
+const mpLocalStatus         = document.getElementById("mp-local-status");
+const mpRivalName           = document.getElementById("mp-rival-name");
+const mpRivalScore          = document.getElementById("mp-rival-score");
+const mpRivalBar            = document.getElementById("mp-rival-bar");
+const mpRivalStatus         = document.getElementById("mp-rival-status");
+const mpTimerVal            = document.getElementById("mp-timer-val");
+const mpTimerCircle         = document.getElementById("mp-timer-circle");
+const mpRoundIndicator      = document.getElementById("mp-round-indicator");
+const mpSneakerImg          = document.getElementById("mp-sneaker-img");
+const mpRoundFeedback       = document.getElementById("mp-round-feedback");
+const mpOptionsContainer     = document.getElementById("mp-options-container");
+
 // ====
 // VARIABLES DE ESTADO
 // ====
@@ -176,6 +217,28 @@ let selectedFilterScope = "global"; // 'global' | 'local'
 let selectedFilterType  = "points"; // 'points' | 'streak'
 let selectedFilterMode  = "classic";
 let selectedFilterDiff  = "normal";
+
+// Estado multijugador 1 vs 1
+let mpChannel               = null;
+let mpMatchmakingChannel    = null;
+let mpRoomCode              = null;
+let mpIsHost                = false;
+let mpIsBot                 = false;
+let mpRivalUsername         = "Rival";
+let mpLocalPoints           = 0;
+let mpRivalPoints           = 0;
+let mpRound                 = 0;
+let mpSneakersList          = [];
+let mpCurrentIndex          = 0;
+let mpTimerInterval         = null;
+let mpTimeLeft              = 10;
+let mpAnswerLocked          = false;
+let mpRivalAnswered         = false;
+let mpBotTimeout            = null;
+let mpMatchmakingTimeout    = null;
+let mpQueueInterval         = null;
+let mpQueueSeconds          = 0;
+let mpConfettiAnimationId   = null;
 
 // Estado de autenticación Supabase
 let currentUser  = null;
@@ -452,7 +515,13 @@ if (filterTypeContainer) {
                 if (filterDiffGroup) filterDiffGroup.classList.add("hidden");
             } else {
                 if (filterModeGroup) filterModeGroup.classList.remove("hidden");
-                if (filterDiffGroup) filterDiffGroup.classList.remove("hidden");
+                if (filterDiffGroup) {
+                    if (selectedFilterMode === 'classic') {
+                        filterDiffGroup.classList.add("hidden");
+                    } else {
+                        filterDiffGroup.classList.remove("hidden");
+                    }
+                }
             }
 
             renderLeaderboard();
@@ -467,6 +536,13 @@ if (filterModeContainer) {
             filterModeContainer.querySelectorAll(".btn-filter-opt").forEach(b => b.classList.remove("active"));
             e.currentTarget.classList.add("active");
             selectedFilterMode = e.currentTarget.getAttribute("data-filter-mode");
+            if (filterDiffGroup) {
+                if (selectedFilterMode === 'classic') {
+                    filterDiffGroup.classList.add("hidden");
+                } else {
+                    filterDiffGroup.classList.remove("hidden");
+                }
+            }
             renderLeaderboard();
         });
     });
@@ -841,12 +917,13 @@ loginForm.addEventListener("submit", async (e) => {
 // CIERRE DE MODALES AL CLICAR FUERA
 // ====
 window.addEventListener("click", (e) => {
-    if (e.target === statsModal)       statsModal.classList.add("hidden");
-    if (e.target === gameModeModal)    gameModeModal.classList.add("hidden");
-    if (e.target === infoModal)        infoModal.classList.add("hidden");
+    if (e.target === statsModal)        statsModal.classList.add("hidden");
+    if (e.target === gameModeModal)     gameModeModal.classList.add("hidden");
+    if (e.target === infoModal)         infoModal.classList.add("hidden");
     if (e.target === leaderboardModal)  leaderboardModal.classList.add("hidden");
-    if (e.target === authModal)        authModal.classList.add("hidden");
-    if (e.target === catalogModal)     catalogModal.classList.add("hidden");
+    if (e.target === authModal)         authModal.classList.add("hidden");
+    if (e.target === catalogModal)      catalogModal.classList.add("hidden");
+    if (e.target === mpLobbyModal)      closeMpLobby();
 });
 
 backToMenuBtn.addEventListener("click", () => {
@@ -864,12 +941,11 @@ backToMenuBtn.addEventListener("click", () => {
 // AJUSTES DE PARTIDA
 // ====
 optModeClassic.addEventListener("click", () => {
-    if (gameMode !== 'classic') {
-        gameMode = 'classic';
-        currentStreak = 0;
-        updateModalUI();
-        if (!gameScreen.classList.contains("hidden")) { prepareGamePool(); nextQuestion(); }
-    }
+    gameMode = 'classic';
+    difficultyIndex = 0;
+    currentStreak = 0;
+    updateModalUI();
+    if (!gameScreen.classList.contains("hidden")) { prepareGamePool(); nextQuestion(); }
 });
 
 optModeExpert.addEventListener("click", () => {
@@ -910,14 +986,25 @@ optDiffExpert.addEventListener("click", () => {
 
 function updateModalUI() {
     [optModeClassic, optModeExpert, optDiffNormal, optDiffHard, optDiffExpert]
-        .forEach(b => b.classList.remove("active"));
+        .forEach(b => { if (b) b.classList.remove("active"); });
 
-    if (gameMode === 'classic') optModeClassic.classList.add("active");
-    else                    optModeExpert.classList.add("active");
+    const diffGroup   = document.getElementById("difficulty-settings-group");
+    const classicNote = document.getElementById("classic-mode-note");
 
-    if      (difficultyIndex === 0) optDiffNormal.classList.add("active");
-    else if (difficultyIndex === 1) optDiffHard.classList.add("active");
-    else if (difficultyIndex === 2) optDiffExpert.classList.add("active");
+    if (gameMode === 'classic') {
+        if (optModeClassic) optModeClassic.classList.add("active");
+        if (diffGroup)   diffGroup.classList.add("hidden");
+        if (classicNote) classicNote.classList.remove("hidden");
+        difficultyIndex = 0;
+    } else {
+        if (optModeExpert) optModeExpert.classList.add("active");
+        if (diffGroup)   diffGroup.classList.remove("hidden");
+        if (classicNote) classicNote.classList.add("hidden");
+    }
+
+    if      (difficultyIndex === 0 && optDiffNormal) optDiffNormal.classList.add("active");
+    else if (difficultyIndex === 1 && optDiffHard)   optDiffHard.classList.add("active");
+    else if (difficultyIndex === 2 && optDiffExpert) optDiffExpert.classList.add("active");
 }
 
 // ====
@@ -969,11 +1056,12 @@ async function renderLeaderboard() {
 
         } else {
             // CLASIFICACIÓN POR RACHAS (tabla 'player_stats' unida a 'profiles')
+            const diffToQuery = (selectedFilterMode === 'classic') ? 'normal' : selectedFilterDiff;
             let query = supabaseClient
                 .from('player_stats')
                 .select('best_streak, user_id, profiles!inner(username, country)')
                 .eq('game_mode', selectedFilterMode)
-                .eq('difficulty', selectedFilterDiff)
+                .eq('difficulty', diffToQuery)
                 .gt('best_streak', 0)
                 .order('best_streak', { ascending: false })
                 .limit(10);
@@ -1163,7 +1251,7 @@ function updateExpertInstructions() {
             instructionEl.innerText    = "Modo: DIFÍCIL\n🎨 Estructura: Nombre + Colorway\nEjemplo: Nike Air Max 95 Neon";
             sneakerInput.placeholder   = "Nombre + Colorway...";
         } else if (diff === 'expert') {
-            instructionEl.innerText    = "Modo: EXPERTO 🔥\n📅 Estructura: Nombre + Colorway + Año\nEjemplo: Nike Air Max 95 Neon 1995";
+            instructionEl.innerText    = "Modo: IMPOSIBLE 🔥\n📅 Estructura: Nombre + Colorway + Año\nEjemplo: Nike Air Max 95 Neon 1995";
             sneakerInput.placeholder   = "Nombre + Colorway + Año...";
         }
     } else {
@@ -1174,7 +1262,7 @@ function updateExpertInstructions() {
             instructionEl.innerText    = "Mode: HARD\n🎨 Structure: Name + Colorway\nExample: Nike Air Max 95 Neon";
             sneakerInput.placeholder   = "Name + Colorway...";
         } else if (diff === 'expert') {
-            instructionEl.innerText    = "Mode: EXPERT 🔥\n📅 Structure: Name + Colorway + Year\nExample: Nike Air Max 95 Neon 1995";
+            instructionEl.innerText    = "Mode: IMPOSSIBLE 🔥\n📅 Structure: Name + Colorway + Year\nExample: Nike Air Max 95 Neon 1995";
             sneakerInput.placeholder   = "Name + Colorway + Year...";
         }
     }
@@ -1227,6 +1315,16 @@ if (submitBtn) {
 async function openStatsModal() {
     statsModal.classList.remove("hidden");
 
+    const totalPtsEl        = document.getElementById("total-points-val");
+    const classicStreakEl   = document.getElementById("streak-classic-normal-val");
+    const mpWinsEl          = document.getElementById("mp-wins-val");
+    const expNormEl         = document.getElementById("streak-expert-normal-val");
+    const expHardEl         = document.getElementById("streak-expert-hard-val");
+    const expExpertEl       = document.getElementById("streak-expert-expert-val");
+
+    const mpWins = localStorage.getItem("sneaker_mp_wins") || "0";
+    if (mpWinsEl) mpWinsEl.innerText = mpWins;
+
     if (currentUser) {
         // Usuario con sesión: cargar desde Supabase
         const { data } = await supabaseClient
@@ -1245,24 +1343,20 @@ async function openStatsModal() {
             ? profileData.total_points
             : (localStorage.getItem("sneaker_total_points") || "0");
 
-        document.getElementById("total-points-val").innerText            = Number(totalPts).toLocaleString();
-        document.getElementById("streak-classic-normal-val").innerText   = statsMap["classic_normal"]  ?? "0";
-        document.getElementById("streak-classic-hard-val").innerText     = statsMap["classic_hard"]    ?? "0";
-        document.getElementById("streak-classic-expert-val").innerText   = statsMap["classic_expert"]  ?? "0";
-        document.getElementById("streak-expert-normal-val").innerText    = statsMap["expert_normal"]   ?? "0";
-        document.getElementById("streak-expert-hard-val").innerText      = statsMap["expert_hard"]     ?? "0";
-        document.getElementById("streak-expert-expert-val").innerText    = statsMap["expert_expert"]   ?? "0";
+        if (totalPtsEl)      totalPtsEl.innerText      = Number(totalPts).toLocaleString();
+        if (classicStreakEl) classicStreakEl.innerText = statsMap["classic_normal"] ?? (localStorage.getItem("sneaker_streak_classic_normal") || "0");
+        if (expNormEl)       expNormEl.innerText       = statsMap["expert_normal"]  ?? (localStorage.getItem("sneaker_streak_expert_normal")  || "0");
+        if (expHardEl)       expHardEl.innerText       = statsMap["expert_hard"]    ?? (localStorage.getItem("sneaker_streak_expert_hard")    || "0");
+        if (expExpertEl)     expExpertEl.innerText     = statsMap["expert_expert"]  ?? (localStorage.getItem("sneaker_streak_expert_expert")  || "0");
 
     } else {
         // Invitado: cargar desde localStorage
         const totalPts = localStorage.getItem("sneaker_total_points") || "0";
-        document.getElementById("total-points-val").innerText            = Number(totalPts).toLocaleString();
-        document.getElementById("streak-classic-normal-val").innerText   = localStorage.getItem("sneaker_streak_classic_normal")  || "0";
-        document.getElementById("streak-classic-hard-val").innerText     = localStorage.getItem("sneaker_streak_classic_hard")    || "0";
-        document.getElementById("streak-classic-expert-val").innerText   = localStorage.getItem("sneaker_streak_classic_expert")  || "0";
-        document.getElementById("streak-expert-normal-val").innerText    = localStorage.getItem("sneaker_streak_expert_normal")   || "0";
-        document.getElementById("streak-expert-hard-val").innerText      = localStorage.getItem("sneaker_streak_expert_hard")     || "0";
-        document.getElementById("streak-expert-expert-val").innerText    = localStorage.getItem("sneaker_streak_expert_expert")   || "0";
+        if (totalPtsEl)      totalPtsEl.innerText      = Number(totalPts).toLocaleString();
+        if (classicStreakEl) classicStreakEl.innerText = localStorage.getItem("sneaker_streak_classic_normal") || "0";
+        if (expNormEl)       expNormEl.innerText       = localStorage.getItem("sneaker_streak_expert_normal")  || "0";
+        if (expHardEl)       expHardEl.innerText       = localStorage.getItem("sneaker_streak_expert_hard")    || "0";
+        if (expExpertEl)     expExpertEl.innerText     = localStorage.getItem("sneaker_streak_expert_expert")  || "0";
     }
 }
 
@@ -1274,7 +1368,7 @@ function checkAnswer(guess) {
     isProcessingAnswer = true;
 
     const userAnswer    = guess.toLowerCase().trim();
-    const diff          = difficulties[difficultyIndex];
+    const diff          = (gameMode === 'classic') ? 'normal' : difficulties[difficultyIndex];
     let isCorrect       = false;
 
     let validAnswers    = [];
@@ -1500,7 +1594,7 @@ const dictionary = {
     es: {
         scoreText:          "PUNTOS",
         totalText:          "TOTAL",
-        playBtn:            "JUGAR",
+        playBtn:            "SOLO PLAY",
         gameModeBtn:        "MODO DE JUEGO",
         authBtn:            "🔐 INICIAR SESIÓN",
         submitGuessBtn:     "ADIVINAR",
@@ -1513,7 +1607,7 @@ const dictionary = {
         gameModeHeading:    "MODO DE JUEGO",
         difficultyHeading:  "DIFICULTAD",
         infoTitle:          "ℹ️ ¿CÓMO JUGAR?",
-        infoBody:           `<p style="margin-bottom:15px;text-align:center;font-weight:600;color:#ff6a00;">¡Demuestra tus conocimientos de cultura sneakerhead adivinando el calzado de la imagen!</p><hr style="border:0;height:1px;background:#333;margin-bottom:15px;"><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🕹️ MODOS DE JUEGO</h3><ul style="margin-left:20px;margin-bottom:15px;padding-left:5px;"><li><strong>Classic:</strong> Elige la respuesta correcta entre 4 opciones.</li><li><strong>Expert:</strong> Escribe la respuesta exacta.</li></ul><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🔥 DIFICULTADES</h3><ul style="margin-left:20px;padding-left:5px;"><li><strong style="color:#2ecc71;">Normal:</strong> Solo el nombre del modelo.</li><li><strong style="color:#f1c40f;">Hard:</strong> Nombre + Colorway.</li><li><strong style="color:#e74c3c;">Expert:</strong> Nombre + Colorway + Año.</li></ul>`,
+        infoBody:           `<p style="margin-bottom:15px;text-align:center;font-weight:600;color:#ff6a00;">¡Demuestra tus conocimientos de cultura sneakerhead adivinando el calzado de la imagen!</p><hr style="border:0;height:1px;background:#333;margin-bottom:15px;"><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🕹️ MODOS DE JUEGO</h3><ul style="margin-left:20px;margin-bottom:15px;padding-left:5px;"><li><strong>Classic:</strong> Elige la respuesta correcta entre 4 opciones con botones.</li><li><strong>Expert:</strong> Pon a prueba tu memoria escribiendo la respuesta exacta.</li><li><strong>⚔️ 1 vs 1 Multijugador:</strong> ¡Duelo en tiempo real estilo Kahoot! Misma zapatilla, 10 segundos por ronda. Cuanto antes aciertes, más puntos. ¡El primero a 3.000 puntos gana!</li></ul><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🔥 DIFICULTADES (MODO EXPERT)</h3><ul style="margin-left:20px;padding-left:5px;"><li><strong style="color:#2ecc71;">Normal:</strong> Solo el nombre del modelo.</li><li><strong style="color:#f1c40f;">Hard:</strong> Nombre + Colorway.</li><li><strong style="color:#e74c3c;">Imposible:</strong> Nombre + Colorway + Año.</li></ul>`,
         leaderboardTitle:   "🏆 CLASIFICACIONES",
         filterScopeLabel:   "ÁMBITO",
         scopeGlobal:        "🌍 GLOBAL",
@@ -1552,12 +1646,27 @@ const dictionary = {
         emptyJsonAlert:     "El archivo zapatillas.json parece estar vacío.",
         criticalErrorAlert: "Error crítico al cargar zapatillas.json. Abre index.html usando 'Live Server'.",
         shareMessage:       (streak, points) => `¡Llevo una racha de ${streak} aciertos y ${points} puntos en SneakerGuessr! ¿Podrás superarme? 👟🔥 Juega gratis aquí: https://sneakerguessr.com`,
-        copiedAlert:        "📋 ¡Texto de compartir copiado al portapapeles!"
+        copiedAlert:        "📋 ¡Texto de compartir copiado al portapapeles!",
+        multiplayerBtn:     "⚔️ 1 VS 1 MULTIJUGADOR",
+        tabMpMatchmaking:   "ONLINE RÁPIDO",
+        tabMpFriend:        "SALA CON AMIGO",
+        mpSearchingRival:   "Buscando rival en línea...",
+        mpRivalFound:       "¡Rival encontrado! Conectando...",
+        mpVictory:          "¡VICTORIA!",
+        mpDefeat:           "DERROTA",
+        mpWonAgainst:       (rival) => `Has derrotado a ${rival}`,
+        mpLostAgainst:      (rival) => `${rival} ha ganado la partida`,
+        mpRematchBtn:       "JUGAR OTRA VEZ 🔄",
+        mpBtnBackMenu:      "VOLVER AL MENÚ 🏠",
+        mpLeaveBtn:         "🚪 ABANDONAR PARTIDA",
+        mpLeaveConfirm:     "¿Seguro que quieres abandonar la partida? Contará como una retirada.",
+        mpDiffImpossible:   "IMPOSIBLE",
+        roundText:          (r) => `RONDA ${r}`
     },
     en: {
         scoreText:          "SCORE",
         totalText:          "TOTAL",
-        playBtn:            "PLAY",
+        playBtn:            "SOLO PLAY",
         gameModeBtn:        "GAME MODE",
         authBtn:            "🔐 LOG IN",
         submitGuessBtn:     "GUESS",
@@ -1570,7 +1679,7 @@ const dictionary = {
         gameModeHeading:    "GAME MODE",
         difficultyHeading:  "DIFFICULTY",
         infoTitle:          "ℹ️ HOW TO PLAY?",
-        infoBody:           `<p style="margin-bottom:15px;text-align:center;font-weight:600;color:#ff6a00;">Prove your sneakerhead culture knowledge by guessing the footwear in the picture!</p><hr style="border:0;height:1px;background:#333;margin-bottom:15px;"><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🕹️ GAME MODES</h3><ul style="margin-left:20px;margin-bottom:15px;padding-left:5px;"><li><strong>Classic:</strong> Choose the correct answer from 4 options.</li><li><strong>Expert:</strong> Type the exact answer.</li></ul><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🔥 DIFFICULTY LEVELS</h3><ul style="margin-left:20px;padding-left:5px;"><li><strong style="color:#2ecc71;">Normal:</strong> Model name only.</li><li><strong style="color:#f1c40f;">Hard:</strong> Name + Colorway.</li><li><strong style="color:#e74c3c;">Expert:</strong> Name + Colorway + Year.</li></ul>`,
+        infoBody:           `<p style="margin-bottom:15px;text-align:center;font-weight:600;color:#ff6a00;">Prove your sneakerhead culture knowledge by guessing the footwear in the picture!</p><hr style="border:0;height:1px;background:#333;margin-bottom:15px;"><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🕹️ GAME MODES</h3><ul style="margin-left:20px;margin-bottom:15px;padding-left:5px;"><li><strong>Classic:</strong> Choose the correct answer from 4 options.</li><li><strong>Expert:</strong> Type the exact answer.</li><li><strong>⚔️ 1 vs 1 Multiplayer:</strong> Real-time Kahoot-style battle! Same sneaker, 10 seconds per round. Faster answer = more points. First to 3,000 points wins!</li></ul><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🔥 DIFFICULTY (EXPERT MODE)</h3><ul style="margin-left:20px;padding-left:5px;"><li><strong style="color:#2ecc71;">Normal:</strong> Model name only.</li><li><strong style="color:#f1c40f;">Hard:</strong> Name + Colorway.</li><li><strong style="color:#e74c3c;">Impossible:</strong> Name + Colorway + Year.</li></ul>`,
         leaderboardTitle:   "🏆 LEADERBOARD",
         filterScopeLabel:   "SCOPE",
         scopeGlobal:        "🌍 GLOBAL",
@@ -1609,7 +1718,22 @@ const dictionary = {
         emptyJsonAlert:     "The file zapatillas.json appears to be empty.",
         criticalErrorAlert: "Critical error loading zapatillas.json. Open index.html using 'Live Server'.",
         shareMessage:       (streak, points) => `I'm on a streak of ${streak} correct answers and ${points} points on SneakerGuessr! Can you beat me? 👟🔥 Play free here: https://sneakerguessr.com`,
-        copiedAlert:        "📋 Sharing text copied to clipboard!"
+        copiedAlert:        "📋 Sharing text copied to clipboard!",
+        multiplayerBtn:     "⚔️ 1 VS 1 MULTIPLAYER",
+        tabMpMatchmaking:   "QUICK MATCH",
+        tabMpFriend:        "FRIEND ROOM",
+        mpSearchingRival:   "Searching for online opponent...",
+        mpRivalFound:       "Opponent found! Connecting...",
+        mpVictory:          "VICTORY!",
+        mpDefeat:           "DEFEAT",
+        mpWonAgainst:       (rival) => `You defeated ${rival}`,
+        mpLostAgainst:      (rival) => `${rival} won the match`,
+        mpRematchBtn:       "PLAY AGAIN 🔄",
+        mpBtnBackMenu:      "BACK TO MENU 🏠",
+        mpLeaveBtn:         "🚪 LEAVE MATCH",
+        mpLeaveConfirm:     "Are you sure you want to leave the match? It will count as a forfeit.",
+        mpDiffImpossible:   "IMPOSSIBLE",
+        roundText:          (r) => `ROUND ${r}`
     }
 };
 
@@ -1627,6 +1751,17 @@ function applyLanguage(lang) {
     if (el("game-mode-setup-btn"))  el("game-mode-setup-btn").innerText  = texts.gameModeBtn;
     if (el("submit-guess"))        el("submit-guess").innerText        = texts.submitGuessBtn;
     if (el("back-to-menu-btn"))    el("back-to-menu-btn").innerText    = texts.backToMenuBtn;
+
+    const mpBtnSpan = document.querySelector("#multiplayer-btn span:first-child");
+    if (mpBtnSpan) mpBtnSpan.innerText = texts.multiplayerBtn;
+
+    if (el("opt-diff-expert"))            el("opt-diff-expert").innerText            = texts.mpDiffImpossible;
+    if (el("filter-diff-impossible-btn"))  el("filter-diff-impossible-btn").innerText  = texts.mpDiffImpossible;
+    if (el("tab-mp-matchmaking"))          el("tab-mp-matchmaking").innerText          = texts.tabMpMatchmaking;
+    if (el("tab-mp-friend"))               el("tab-mp-friend").innerText               = texts.tabMpFriend;
+    if (el("mp-btn-rematch"))              el("mp-btn-rematch").innerText              = texts.mpRematchBtn;
+    if (el("mp-btn-back-menu"))            el("mp-btn-back-menu").innerText            = texts.mpBtnBackMenu;
+    if (el("mp-leave-btn"))                el("mp-leave-btn").innerText                = texts.mpLeaveBtn;
 
     if (el("catalog-btn"))            el("catalog-btn").innerText            = texts.catalogBtn;
     if (el("catalog-title"))          el("catalog-title").innerText          = texts.catalogTitle;
@@ -1718,6 +1853,642 @@ document.getElementById("share-btn").addEventListener("click", async () => {
     }
 });
 
+// ==========================================
+// MOTOR MULTIJUGADOR 1 VS 1 (ESTILO KAHOOT)
+// ==========================================
+
+function getPlayerDisplayName() {
+    if (profileData && profileData.username) return `@${profileData.username}`;
+    if (currentUser && currentUser.user_metadata && currentUser.user_metadata.username) {
+        return `@${currentUser.user_metadata.username}`;
+    }
+    return currentLang === 'es' ? "TÚ" : "YOU";
+}
+
+function openMpLobby() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room');
+
+    if (roomParam) {
+        switchMpTab('friend');
+        if (mpInputRoomCode) mpInputRoomCode.value = roomParam.toUpperCase();
+    } else {
+        switchMpTab('matchmaking');
+    }
+
+    if (mpRadarBox) mpRadarBox.classList.add("hidden");
+    if (mpStartMatchmakingBox) mpStartMatchmakingBox.classList.remove("hidden");
+    if (mpLobbyModal) mpLobbyModal.classList.remove("hidden");
+}
+
+function closeMpLobby() {
+    cleanupMatchmaking();
+    if (mpLobbyModal) mpLobbyModal.classList.add("hidden");
+}
+
+function switchMpTab(tab) {
+    if (tab === 'matchmaking') {
+        if (tabMpMatchmaking) tabMpMatchmaking.classList.add("active");
+        if (tabMpFriend) tabMpFriend.classList.remove("active");
+        if (mpViewMatchmaking) mpViewMatchmaking.classList.remove("hidden");
+        if (mpViewFriend) mpViewFriend.classList.add("hidden");
+    } else {
+        if (tabMpFriend) tabMpFriend.classList.add("active");
+        if (tabMpMatchmaking) tabMpMatchmaking.classList.remove("active");
+        if (mpViewFriend) mpViewFriend.classList.remove("hidden");
+        if (mpViewMatchmaking) mpViewMatchmaking.classList.add("hidden");
+    }
+}
+
+if (multiplayerBtn) {
+    multiplayerBtn.addEventListener("click", openMpLobby);
+}
+if (closeMpLobbyBtn) {
+    closeMpLobbyBtn.addEventListener("click", closeMpLobby);
+}
+if (tabMpMatchmaking) {
+    tabMpMatchmaking.addEventListener("click", () => switchMpTab('matchmaking'));
+}
+if (tabMpFriend) {
+    tabMpFriend.addEventListener("click", () => switchMpTab('friend'));
+}
+
+// MATCHMAKING RÁPIDO ONLINE
+function cleanupMatchmaking() {
+    if (mpQueueInterval) {
+        clearInterval(mpQueueInterval);
+        mpQueueInterval = null;
+    }
+    if (mpMatchmakingTimeout) {
+        clearTimeout(mpMatchmakingTimeout);
+        mpMatchmakingTimeout = null;
+    }
+    if (mpMatchmakingChannel) {
+        try {
+            supabaseClient.removeChannel(mpMatchmakingChannel);
+        } catch (e) {}
+        mpMatchmakingChannel = null;
+    }
+}
+
+if (btnStartMatchmaking) {
+    btnStartMatchmaking.addEventListener("click", async () => {
+        await ensureSneakersLoaded();
+        if (mpStartMatchmakingBox) mpStartMatchmakingBox.classList.add("hidden");
+        if (mpRadarBox) mpRadarBox.classList.remove("hidden");
+
+        mpQueueSeconds = 0;
+        if (mpQueueTimer) mpQueueTimer.innerText = "0";
+        if (mpRadarStatus) mpRadarStatus.innerText = dictionary[currentLang].mpSearchingRival;
+
+        mpQueueInterval = setInterval(() => {
+            mpQueueSeconds++;
+            if (mpQueueTimer) mpQueueTimer.innerText = mpQueueSeconds;
+        }, 1000);
+
+        const myTicket = 't_' + Math.random().toString(36).substring(2, 8);
+        const myName = getPlayerDisplayName();
+        let matchFound = false;
+
+        mpMatchmakingChannel = supabaseClient.channel('sneaker_matchmaking_lobby', {
+            config: { broadcast: { self: false } }
+        });
+
+        mpMatchmakingChannel
+            .on('broadcast', { event: 'looking_for_match' }, (payload) => {
+                if (matchFound) return;
+                const otherTicket = payload.payload ? payload.payload.ticket : null;
+                const otherName   = payload.payload ? payload.payload.username : 'Rival';
+                if (!otherTicket || otherTicket === myTicket) return;
+
+                if (myTicket > otherTicket) {
+                    matchFound = true;
+                    const assignedRoom = 'ROOM_' + Math.random().toString(36).substring(2, 7).toUpperCase();
+                    mpMatchmakingChannel.send({
+                        type: 'broadcast',
+                        event: 'match_pair',
+                        payload: { targetTicket: otherTicket, room: assignedRoom, hostName: myName, guestName: otherName }
+                    });
+                    cleanupMatchmaking();
+                    if (mpRadarStatus) mpRadarStatus.innerText = dictionary[currentLang].mpRivalFound;
+                    setTimeout(() => {
+                        closeMpLobby();
+                        startMultiplayerMatch(true, otherName, false, assignedRoom);
+                    }, 800);
+                }
+            })
+            .on('broadcast', { event: 'match_pair' }, (payload) => {
+                if (matchFound) return;
+                const data = payload.payload;
+                if (data && data.targetTicket === myTicket) {
+                    matchFound = true;
+                    cleanupMatchmaking();
+                    if (mpRadarStatus) mpRadarStatus.innerText = dictionary[currentLang].mpRivalFound;
+                    setTimeout(() => {
+                        closeMpLobby();
+                        startMultiplayerMatch(false, data.hostName, false, data.room);
+                    }, 800);
+                }
+            })
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    mpMatchmakingChannel.send({
+                        type: 'broadcast',
+                        event: 'looking_for_match',
+                        payload: { ticket: myTicket, username: myName }
+                    });
+                }
+            });
+
+        // Si pasan 4.2s sin rival humano online, emparejar con Bot realista
+        mpMatchmakingTimeout = setTimeout(() => {
+            if (matchFound) return;
+            matchFound = true;
+            cleanupMatchmaking();
+            if (mpRadarStatus) mpRadarStatus.innerText = dictionary[currentLang].mpRivalFound;
+
+            const botList = ["@hypebeast_99", "@kicks_collector", "@sole_master", "@jumpman_alex", "@snkrs_queen", "@air_max_fan"];
+            const pickedBot = botList[Math.floor(Math.random() * botList.length)];
+            setTimeout(() => {
+                closeMpLobby();
+                startMultiplayerMatch(true, pickedBot, true, null);
+            }, 800);
+        }, 4200);
+    });
+}
+
+if (mpCancelMatchmakingBtn) {
+    mpCancelMatchmakingBtn.addEventListener("click", () => {
+        cleanupMatchmaking();
+        if (mpRadarBox) mpRadarBox.classList.add("hidden");
+        if (mpStartMatchmakingBox) mpStartMatchmakingBox.classList.remove("hidden");
+    });
+}
+
+// SALA CON AMIGO
+if (btnCreateRoom) {
+    btnCreateRoom.addEventListener("click", async () => {
+        await ensureSneakersLoaded();
+        const code = Math.random().toString(36).substring(2, 7).toUpperCase();
+        mpRoomCode = code;
+        if (mpRoomCodeDisplay) mpRoomCodeDisplay.innerText = code;
+        if (mpCreatedRoomBox) mpCreatedRoomBox.classList.remove("hidden");
+
+        if (mpChannel) supabaseClient.removeChannel(mpChannel);
+        mpChannel = supabaseClient.channel(`sneaker_room_${code}`, {
+            config: { broadcast: { self: false } }
+        });
+
+        mpChannel
+            .on('broadcast', { event: 'guest_joined' }, (payload) => {
+                const guestName = (payload.payload && payload.payload.username) ? payload.payload.username : "Amigo";
+                closeMpLobby();
+                startMultiplayerMatch(true, guestName, false, code);
+            })
+            .subscribe();
+    });
+}
+
+if (btnCopyInvite) {
+    btnCopyInvite.addEventListener("click", () => {
+        if (!mpRoomCode) return;
+        const inviteUrl = `${window.location.origin}${window.location.pathname}?room=${mpRoomCode}`;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(inviteUrl).then(() => {
+                const oldText = btnCopyInvite.innerText;
+                btnCopyInvite.innerText = "¡ENLACE COPIADO! ✅";
+                setTimeout(() => { btnCopyInvite.innerText = oldText; }, 2000);
+            }).catch(() => {
+                prompt("Copia este enlace de invitación:", inviteUrl);
+            });
+        } else {
+            prompt("Copia este enlace de invitación:", inviteUrl);
+        }
+    });
+}
+
+if (btnJoinRoom) {
+    btnJoinRoom.addEventListener("click", async () => {
+        await ensureSneakersLoaded();
+        const code = (mpInputRoomCode ? mpInputRoomCode.value.trim().toUpperCase() : "");
+        if (!code || code.length < 4) {
+            alert(currentLang === 'es' ? "Introduce un código de sala válido." : "Enter a valid room code.");
+            return;
+        }
+
+        btnJoinRoom.disabled = true;
+        btnJoinRoom.innerText = currentLang === 'es' ? "Conectando..." : "Connecting...";
+
+        if (mpChannel) supabaseClient.removeChannel(mpChannel);
+        mpChannel = supabaseClient.channel(`sneaker_room_${code}`, {
+            config: { broadcast: { self: false } }
+        });
+
+        mpChannel
+            .on('broadcast', { event: 'host_ready' }, (payload) => {
+                const hostName = (payload.payload && payload.payload.username) ? payload.payload.username : "Host";
+                const sequence = (payload.payload && payload.payload.sequence) ? payload.payload.sequence : null;
+                btnJoinRoom.disabled = false;
+                btnJoinRoom.innerText = currentLang === 'es' ? "ENTRAR A LA SALA" : "JOIN ROOM";
+                closeMpLobby();
+                startMultiplayerMatch(false, hostName, false, code, sequence);
+            })
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    mpChannel.send({
+                        type: 'broadcast',
+                        event: 'guest_joined',
+                        payload: { username: getPlayerDisplayName() }
+                    });
+                }
+            });
+
+        setTimeout(() => {
+            if (btnJoinRoom && btnJoinRoom.disabled) {
+                btnJoinRoom.disabled = false;
+                btnJoinRoom.innerText = currentLang === 'es' ? "ENTRAR A LA SALA" : "JOIN ROOM";
+            }
+        }, 8000);
+    });
+}
+
+// BUCLE DE PARTIDA MULTIJUGADOR
+async function startMultiplayerMatch(isHost, rivalName, isBot, roomCode, sequence) {
+    await ensureSneakersLoaded();
+
+    mpIsHost = isHost;
+    mpIsBot = isBot;
+    mpRivalUsername = rivalName || "Rival";
+    mpRoomCode = roomCode;
+    mpLocalPoints = 0;
+    mpRivalPoints = 0;
+    mpRound = 0;
+    mpCurrentIndex = 0;
+
+    if (!isBot && roomCode && isHost) {
+        const seqIndices = [];
+        for (let i = 0; i < 35; i++) {
+            seqIndices.push(Math.floor(Math.random() * sneakers.length));
+        }
+        mpSneakersList = seqIndices.map(idx => sneakers[idx]);
+
+        if (mpChannel) {
+            mpChannel.send({
+                type: 'broadcast',
+                event: 'host_ready',
+                payload: { username: getPlayerDisplayName(), sequence: seqIndices }
+            });
+        }
+    } else if (!isBot && roomCode && !isHost && sequence && Array.isArray(sequence)) {
+        mpSneakersList = sequence.map(idx => sneakers[idx] || sneakers[0]);
+    } else {
+        mpSneakersList = [...sneakers].sort(() => Math.random() - 0.5).slice(0, 35);
+    }
+
+    if (!isBot && mpChannel) {
+        mpChannel
+            .on('broadcast', { event: 'rival_answer' }, (payload) => {
+                const data = payload.payload;
+                if (data) {
+                    handleMpRivalAnswer(data.roundPts, data.isCorrect, data.totalPoints);
+                }
+            })
+            .on('broadcast', { event: 'player_left' }, () => {
+                alert(currentLang === 'es'
+                    ? `${mpRivalUsername} ha abandonado la partida.`
+                    : `${mpRivalUsername} has left the match.`);
+                finishMpMatch(true);
+            });
+    }
+
+    if (mpLocalName)  mpLocalName.innerText  = getPlayerDisplayName();
+    if (mpRivalName)  mpRivalName.innerText  = mpRivalUsername;
+    if (mpLocalScore) mpLocalScore.innerText = "0";
+    if (mpRivalScore) mpRivalScore.innerText = "0";
+    if (mpLocalBar)   mpLocalBar.style.width = "0%";
+    if (mpRivalBar)   mpRivalBar.style.width = "0%";
+
+    if (menuScreen)        menuScreen.classList.add("hidden");
+    if (gameScreen)        gameScreen.classList.add("hidden");
+    if (mpResultsModal)    mpResultsModal.classList.add("hidden");
+    if (multiplayerScreen) multiplayerScreen.classList.remove("hidden");
+
+    startMpRound();
+}
+
+function startMpRound() {
+    if (mpTimerInterval) { clearInterval(mpTimerInterval); mpTimerInterval = null; }
+    if (mpBotTimeout)    { clearTimeout(mpBotTimeout);    mpBotTimeout = null; }
+
+    if (mpCurrentIndex >= mpSneakersList.length) {
+        mpSneakersList = [...sneakers].sort(() => Math.random() - 0.5).slice(0, 35);
+        mpCurrentIndex = 0;
+    }
+
+    mpRound++;
+    if (mpRoundIndicator) mpRoundIndicator.innerText = dictionary[currentLang].roundText(mpRound);
+    if (mpRoundFeedback)  mpRoundFeedback.classList.add("hidden");
+
+    if (mpLocalStatus) mpLocalStatus.innerText = currentLang === 'es' ? "Pensando..." : "Thinking...";
+    if (mpRivalStatus) mpRivalStatus.innerText = currentLang === 'es' ? "Esperando..." : "Waiting...";
+
+    mpAnswerLocked = false;
+    mpRivalAnswered = false;
+
+    const currentSneaker = mpSneakersList[mpCurrentIndex];
+    if (mpSneakerImg) mpSneakerImg.src = currentSneaker.imagen;
+
+    // Generar 4 opciones únicas
+    const correctText = currentSneaker.nombre.trim();
+    const sameBrand = sneakers.filter(s => s.marca.toLowerCase() === currentSneaker.marca.toLowerCase());
+    let distractors = [...new Set(sameBrand.map(s => s.nombre.trim()))].filter(n => n !== correctText);
+    distractors.sort(() => Math.random() - 0.5);
+
+    if (distractors.length < 3) {
+        const otherDistractors = [...new Set(sneakers.map(s => s.nombre.trim()))].filter(n => n !== correctText && !distractors.includes(n));
+        otherDistractors.sort(() => Math.random() - 0.5);
+        distractors = distractors.concat(otherDistractors.slice(0, 3 - distractors.length));
+    }
+
+    const options = [correctText, distractors[0], distractors[1], distractors[2]];
+    options.sort(() => Math.random() - 0.5);
+
+    // Botones estilo Kahoot con formas geométricas
+    const shapes = ["▲", "◆", "●", "■"];
+    if (mpOptionsContainer) {
+        mpOptionsContainer.innerHTML = "";
+        options.forEach((optText, idx) => {
+            const btn = document.createElement("button");
+            btn.className = `mp-answer-btn mp-btn-${idx}`;
+            btn.innerHTML = `<span class="mp-btn-icon">${shapes[idx]}</span> <span class="mp-btn-text">${optText}</span>`;
+            btn.addEventListener("click", () => handleMpLocalAnswer(optText, correctText, btn));
+            mpOptionsContainer.appendChild(btn);
+        });
+    }
+
+    // Cronómetro central de 10 segundos
+    mpTimeLeft = 10;
+    if (mpTimerVal) mpTimerVal.innerText = "10";
+    if (mpTimerCircle) mpTimerCircle.className = "mp-timer-circle";
+
+    mpTimerInterval = setInterval(() => {
+        mpTimeLeft -= 0.1;
+        if (mpTimerVal) mpTimerVal.innerText = Math.max(0, Math.ceil(mpTimeLeft));
+
+        if (mpTimeLeft <= 3 && mpTimerCircle) {
+            mpTimerCircle.classList.add("timer-danger");
+        }
+
+        if (mpTimeLeft <= 0) {
+            clearInterval(mpTimerInterval);
+            mpTimerInterval = null;
+            if (!mpAnswerLocked) {
+                mpAnswerLocked = true;
+                if (mpLocalStatus) mpLocalStatus.innerText = currentLang === 'es' ? "⏰ Tiempo agotado" : "⏰ Time's up";
+            }
+            endMpRound(correctText);
+        }
+    }, 100);
+
+    // Simulación de respuesta del Bot
+    if (mpIsBot) {
+        const botDelay = Math.random() * 3800 + 1800; // entre 1.8s y 5.6s
+        const botCorrect = Math.random() < 0.75;      // 75% precisión
+
+        mpBotTimeout = setTimeout(() => {
+            const botPts = botCorrect ? Math.max(100, Math.round(1000 * ((10 - (botDelay / 1000)) / 10))) : 0;
+            mpRivalPoints += botPts;
+            if (mpRivalScore) mpRivalScore.innerText = mpRivalPoints;
+            if (mpRivalBar)   mpRivalBar.style.width = Math.min(100, (mpRivalPoints / 3000) * 100) + '%';
+            if (mpRivalStatus) mpRivalStatus.innerText = botCorrect ? `✅ +${botPts} pts` : "❌ 0 pts";
+            mpRivalAnswered = true;
+
+            if (mpAnswerLocked) {
+                setTimeout(() => endMpRound(correctText), 700);
+            }
+        }, botDelay);
+    }
+}
+
+function handleMpLocalAnswer(chosenText, correctText, btnElement) {
+    if (mpAnswerLocked) return;
+    mpAnswerLocked = true;
+
+    const isCorrect = (chosenText === correctText);
+    const roundPts = isCorrect ? Math.max(100, Math.round(1000 * (mpTimeLeft / 10))) : 0;
+
+    mpLocalPoints += roundPts;
+    if (mpLocalScore) mpLocalScore.innerText = mpLocalPoints;
+    if (mpLocalBar)   mpLocalBar.style.width = Math.min(100, (mpLocalPoints / 3000) * 100) + '%';
+    if (mpLocalStatus) mpLocalStatus.innerText = isCorrect ? `✅ +${roundPts} pts` : "❌ 0 pts";
+
+    if (btnElement) {
+        btnElement.classList.add(isCorrect ? "btn-correct" : "btn-incorrect");
+    }
+
+    if (mpChannel && !mpIsBot) {
+        mpChannel.send({
+            type: 'broadcast',
+            event: 'rival_answer',
+            payload: { isCorrect, roundPts, totalPoints: mpLocalPoints }
+        });
+    }
+
+    if (mpRivalAnswered) {
+        setTimeout(() => endMpRound(correctText), 700);
+    }
+}
+
+function handleMpRivalAnswer(roundPts, isCorrect, totalPoints) {
+    mpRivalPoints = totalPoints;
+    if (mpRivalScore) mpRivalScore.innerText = mpRivalPoints;
+    if (mpRivalBar)   mpRivalBar.style.width = Math.min(100, (mpRivalPoints / 3000) * 100) + '%';
+    if (mpRivalStatus) mpRivalStatus.innerText = isCorrect ? `✅ +${roundPts} pts` : "❌ 0 pts";
+    mpRivalAnswered = true;
+
+    if (mpAnswerLocked) {
+        const currentSneaker = mpSneakersList[mpCurrentIndex];
+        const correctText = currentSneaker ? currentSneaker.nombre.trim() : "";
+        setTimeout(() => endMpRound(correctText), 700);
+    }
+}
+
+function endMpRound(correctText) {
+    if (mpTimerInterval) { clearInterval(mpTimerInterval); mpTimerInterval = null; }
+    if (mpBotTimeout)    { clearTimeout(mpBotTimeout);    mpBotTimeout = null; }
+
+    // Revelar la respuesta correcta
+    if (mpOptionsContainer) {
+        const buttons = mpOptionsContainer.querySelectorAll(".mp-answer-btn");
+        buttons.forEach(b => {
+            b.style.pointerEvents = "none";
+            const textSpan = b.querySelector(".mp-btn-text");
+            if (textSpan && textSpan.innerText.trim() === correctText) {
+                b.classList.add("btn-correct");
+            }
+        });
+    }
+
+    if (mpRoundFeedback) {
+        mpRoundFeedback.innerHTML = `<strong>${correctText}</strong>`;
+        mpRoundFeedback.classList.remove("hidden");
+    }
+
+    setTimeout(() => {
+        if (mpLocalPoints >= 3000 || mpRivalPoints >= 3000) {
+            finishMpMatch(false);
+        } else {
+            mpCurrentIndex++;
+            startMpRound();
+        }
+    }, 2200);
+}
+
+function finishMpMatch(forfeitLocalWin) {
+    if (mpTimerInterval) { clearInterval(mpTimerInterval); mpTimerInterval = null; }
+    if (mpBotTimeout)    { clearTimeout(mpBotTimeout);    mpBotTimeout = null; }
+
+    const localWon = forfeitLocalWin || (mpLocalPoints >= 3000 && mpLocalPoints >= mpRivalPoints) || (mpLocalPoints > mpRivalPoints);
+
+    const finalLocalScoreEl = document.getElementById("mp-final-local-score");
+    const finalRivalScoreEl = document.getElementById("mp-final-rival-score");
+    const resultsIconEl     = document.getElementById("mp-results-icon");
+    const resultsTitleEl    = document.getElementById("mp-results-title");
+    const resultsSubEl      = document.getElementById("mp-results-subtitle");
+    const rewardBadgeEl     = document.getElementById("mp-reward-badge");
+
+    if (finalLocalScoreEl) finalLocalScoreEl.innerText = Number(mpLocalPoints).toLocaleString();
+    if (finalRivalScoreEl) finalRivalScoreEl.innerText = Number(mpRivalPoints).toLocaleString();
+
+    if (localWon) {
+        if (resultsIconEl)  resultsIconEl.innerText  = "🏆";
+        if (resultsTitleEl) resultsTitleEl.innerText = dictionary[currentLang].mpVictory;
+        if (resultsSubEl)   resultsSubEl.innerText   = dictionary[currentLang].mpWonAgainst(mpRivalUsername);
+        if (rewardBadgeEl)  rewardBadgeEl.classList.remove("hidden");
+
+        startConfetti();
+
+        // Registrar victoria 1vs1
+        let currentMpWins = parseInt(localStorage.getItem("sneaker_mp_wins") || "0");
+        currentMpWins++;
+        localStorage.setItem("sneaker_mp_wins", currentMpWins);
+
+        // Otorgar +50 puntos de recompensa en perfil
+        let totalPts = parseInt(localStorage.getItem("sneaker_total_points") || "0");
+        totalPts += 50;
+        localStorage.setItem("sneaker_total_points", totalPts);
+
+        if (currentUser) {
+            savePointsToSupabase(totalPts).catch(console.error);
+        }
+        updateHeaderScore();
+    } else {
+        if (resultsIconEl)  resultsIconEl.innerText  = "💀";
+        if (resultsTitleEl) resultsTitleEl.innerText = dictionary[currentLang].mpDefeat;
+        if (resultsSubEl)   resultsSubEl.innerText   = dictionary[currentLang].mpLostAgainst(mpRivalUsername);
+        if (rewardBadgeEl)  rewardBadgeEl.classList.add("hidden");
+        stopConfetti();
+    }
+
+    if (mpResultsModal) mpResultsModal.classList.remove("hidden");
+}
+
+function cleanupMpMatch() {
+    if (mpTimerInterval) { clearInterval(mpTimerInterval); mpTimerInterval = null; }
+    if (mpBotTimeout)    { clearTimeout(mpBotTimeout);    mpBotTimeout = null; }
+    stopConfetti();
+
+    if (mpChannel) {
+        try {
+            mpChannel.send({ type: 'broadcast', event: 'player_left', payload: {} });
+            supabaseClient.removeChannel(mpChannel);
+        } catch (e) {}
+        mpChannel = null;
+    }
+
+    if (multiplayerScreen) multiplayerScreen.classList.add("hidden");
+    if (mpResultsModal)    mpResultsModal.classList.add("hidden");
+    if (menuScreen)        menuScreen.classList.remove("hidden");
+    updateHeaderScore();
+}
+
+if (mpLeaveBtn) {
+    mpLeaveBtn.addEventListener("click", () => {
+        const confirmed = confirm(dictionary[currentLang].mpLeaveConfirm);
+        if (confirmed) cleanupMpMatch();
+    });
+}
+
+if (mpBtnRematch) {
+    mpBtnRematch.addEventListener("click", () => {
+        stopConfetti();
+        if (mpResultsModal) mpResultsModal.classList.add("hidden");
+        startMultiplayerMatch(true, mpRivalUsername, mpIsBot, mpRoomCode);
+    });
+}
+
+if (mpBtnBackMenu) {
+    mpBtnBackMenu.addEventListener("click", cleanupMpMatch);
+}
+
+// ANIMACIÓN DE CONFETI EN CANVAS
+function startConfetti() {
+    const canvas = document.getElementById("confetti-canvas");
+    if (!canvas || !canvas.parentElement) return;
+    const ctx = canvas.getContext("2d");
+    canvas.width = canvas.parentElement.clientWidth || 440;
+    canvas.height = canvas.parentElement.clientHeight || 400;
+
+    const pieces = [];
+    const colors = ["#ff6a00", "#ee0979", "#2ecc71", "#f1c40f", "#3498db", "#9b59b6"];
+    for (let i = 0; i < 75; i++) {
+        pieces.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height - canvas.height,
+            size: Math.random() * 8 + 4,
+            speedY: Math.random() * 3 + 2,
+            speedX: Math.random() * 2 - 1,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rotation: Math.random() * 360,
+            rotationSpeed: Math.random() * 4 - 2
+        });
+    }
+
+    function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+            p.y += p.speedY;
+            p.x += p.speedX;
+            p.rotation += p.rotationSpeed;
+            if (p.y > canvas.height) {
+                p.y = -10;
+                p.x = Math.random() * canvas.width;
+            }
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate((p.rotation * Math.PI) / 180);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+            ctx.restore();
+        });
+        mpConfettiAnimationId = requestAnimationFrame(render);
+    }
+    stopConfetti();
+    render();
+}
+
+function stopConfetti() {
+    if (mpConfettiAnimationId) {
+        cancelAnimationFrame(mpConfettiAnimationId);
+        mpConfettiAnimationId = null;
+    }
+    const canvas = document.getElementById("confetti-canvas");
+    if (canvas) {
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+}
+
 // ====
 // INICIALIZACIÓN (esperar a que el DOM esté listo)
 // ====
@@ -1725,11 +2496,20 @@ document.addEventListener("DOMContentLoaded", () => {
     applyLanguage(currentLang);
     initAuth(); // Arrancar el sistema de autenticación Supabase
 
+    // Detección automática de invitación por enlace de amigo (?room=CODE)
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room');
+    if (roomParam) {
+        setTimeout(() => {
+            openMpLobby();
+        }, 500);
+    }
+
     // Mostrar tutorial automáticamente la primera vez que se abre la web
     const hasSeenTutorial = localStorage.getItem("sneaker_tutorial_seen");
     if (!hasSeenTutorial) {
         setTimeout(() => {
-            if (infoModal) {
+            if (infoModal && !roomParam) {
                 infoModal.classList.remove("hidden");
                 localStorage.setItem("sneaker_tutorial_seen", "true");
             }

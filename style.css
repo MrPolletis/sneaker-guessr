@@ -861,3 +861,308 @@ body {
         grid-template-columns: 1fr 1fr;
     }
 }
+
+/* ============================================================
+   ESTILOS MULTIJUGADOR 1 VS 1 (ESTILO KAHOOT)
+   ============================================================ */
+
+/* Botón 1vs1 en el menú principal */
+.multiplayer-btn {
+    background: linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%) !important;
+    color: #ffffff !important;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 4px 20px rgba(142, 45, 226, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    animation: mpPulse 2.5s infinite;
+}
+
+@keyframes mpPulse {
+    0%, 100% { box-shadow: 0 4px 20px rgba(142, 45, 226, 0.4); }
+    50% { box-shadow: 0 4px 30px rgba(142, 45, 226, 0.7); }
+}
+
+.badge-live {
+    background: #e74c3c;
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 10px;
+    letter-spacing: 0.5px;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+/* Pantalla de Batalla 1vs1 */
+.mp-battle-container {
+    width: 100%;
+    max-width: 650px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 0.3s ease;
+}
+
+.mp-battle-header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 12px 16px;
+    margin-bottom: 18px;
+}
+
+.mp-player-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mp-player-rival {
+    text-align: right;
+}
+
+.mp-player-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mp-player-rival .mp-player-info {
+    flex-direction: row-reverse;
+}
+
+.mp-avatar {
+    font-size: 22px;
+}
+
+.mp-name-box {
+    display: flex;
+    flex-direction: column;
+}
+
+.mp-player-name {
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+}
+
+.mp-player-score {
+    font-size: 11px;
+    font-weight: 700;
+    color: #ffaa40;
+}
+
+.mp-progress-bar-bg {
+    width: 100%;
+    height: 8px;
+    background: #222;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.mp-progress-bar-fill {
+    height: 100%;
+    transition: width 0.4s ease;
+    border-radius: 4px;
+}
+
+.mp-fill-local {
+    background: linear-gradient(90deg, #2ecc71, #27ae60);
+}
+
+.mp-fill-rival {
+    background: linear-gradient(90deg, #e74c3c, #c0392b);
+}
+
+.mp-player-status {
+    font-size: 10px;
+    font-weight: 600;
+    color: #888;
+}
+
+/* Cronómetro Central Kahoot */
+.mp-center-timer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.mp-timer-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #111;
+    border: 3px solid #ff6a00;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    transition: all 0.2s ease;
+}
+
+.mp-timer-circle.timer-warning {
+    border-color: #f1c40f;
+    color: #f1c40f;
+}
+
+.mp-timer-circle.timer-danger {
+    border-color: #e74c3c;
+    color: #e74c3c;
+    animation: timerPulse 0.5s infinite alternate;
+}
+
+@keyframes timerPulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+}
+
+.mp-round-indicator {
+    font-size: 9px;
+    font-weight: 800;
+    color: #888;
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+}
+
+.mp-img-wrapper {
+    height: 230px !important;
+    margin-bottom: 18px;
+}
+
+/* Opciones de respuesta estilo Kahoot (4 colores vivos) */
+.mp-answers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.mp-answer-btn {
+    border: none;
+    border-radius: 12px;
+    padding: 16px 12px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    color: #ffffff;
+    cursor: pointer;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 64px;
+    transition: all 0.15s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.mp-answer-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.15);
+}
+
+.mp-answer-btn:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.mp-answer-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+/* 4 Formas y Colores Kahoot */
+.mp-btn-0 { background: #e21b3c; } /* Rojo ▲ */
+.mp-btn-1 { background: #1368ce; } /* Azul ◆ */
+.mp-btn-2 { background: #d89e00; } /* Amarillo ● */
+.mp-btn-3 { background: #26890c; } /* Verde ■ */
+
+.mp-btn-correct {
+    background: #2ecc71 !important;
+    border: 3px solid #ffffff !important;
+    box-shadow: 0 0 20px rgba(46, 204, 113, 0.8) !important;
+    transform: scale(1.02);
+}
+
+.mp-btn-incorrect {
+    background: #555555 !important;
+    opacity: 0.4 !important;
+}
+
+/* Banner de feedback inter-ronda */
+.mp-round-feedback {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    animation: slideDown 0.2s ease;
+}
+
+/* Radar animación en Matchmaking */
+.mp-radar-pulse {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 106, 0, 0.2);
+    border: 2px solid #ff6a00;
+    margin: 0 auto;
+    position: relative;
+    animation: radarRipple 1.6s infinite ease-out;
+}
+
+@keyframes radarRipple {
+    0% { transform: scale(0.6); opacity: 1; }
+    100% { transform: scale(1.8); opacity: 0; }
+}
+
+@media (max-width: 768px) {
+    .mp-battle-header {
+        padding: 8px 10px;
+        gap: 6px;
+    }
+    .mp-player-name {
+        max-width: 80px;
+        font-size: 12px;
+    }
+    .mp-player-score {
+        font-size: 10px;
+    }
+    .mp-timer-circle {
+        width: 40px;
+        height: 40px;
+        font-size: 15px;
+    }
+    .mp-img-wrapper {
+        height: 170px !important;
+    }
+    .mp-answers-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    .mp-answer-btn {
+        min-height: 50px;
+        padding: 12px 10px;
+        font-size: 13px;
+    }
+}
