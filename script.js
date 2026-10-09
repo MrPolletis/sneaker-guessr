@@ -100,8 +100,11 @@ const catalogModal          = document.getElementById("catalog-modal");
 const closeCatalogBtn       = document.getElementById("close-catalog-btn");
 const catalogSearch         = document.getElementById("catalog-search");
 const catalogBrandFilter    = document.getElementById("catalog-brand-filter");
+const catalogFavFilterBtn   = document.getElementById("catalog-fav-filter-btn");
 const catalogCount          = document.getElementById("catalog-count");
 const catalogGrid           = document.getElementById("catalog-grid");
+const gameFavBtn            = document.getElementById("game-fav-btn");
+const gameFavIcon           = document.getElementById("game-fav-icon");
 
 // TARJETA DE AFILIADOS TRAS RESPONDER
 const affiliateCard         = document.getElementById("affiliate-card");
@@ -226,6 +229,57 @@ let difficultyIndex = 0;
 
 let feedbackTimeout     = null;
 let isProcessingAnswer  = false;
+
+// Estado y persistencia de Favoritos
+const FAVORITES_KEY = "sneaker_favorites";
+let catalogFilterOnlyFav = false;
+
+function getFavorites() {
+    try {
+        const raw = localStorage.getItem(FAVORITES_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function isSneakerFavorite(sneaker) {
+    if (!sneaker) return false;
+    const favs = getFavorites();
+    const idKey = String(sneaker.id != null ? sneaker.id : (sneaker.imagen || sneaker.nombre));
+    return favs.includes(idKey);
+}
+
+function toggleSneakerFavorite(sneaker) {
+    if (!sneaker) return false;
+    let favs = getFavorites();
+    const idKey = String(sneaker.id != null ? sneaker.id : (sneaker.imagen || sneaker.nombre));
+    const idx = favs.indexOf(idKey);
+    let isNowFav = false;
+    if (idx >= 0) {
+        favs.splice(idx, 1);
+        isNowFav = false;
+    } else {
+        favs.push(idKey);
+        isNowFav = true;
+    }
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs));
+    return isNowFav;
+}
+
+function updateGameFavBtn() {
+    if (!gameFavBtn || !currentSneaker || !currentSneaker.nombre) return;
+    const isFav = isSneakerFavorite(currentSneaker);
+    if (isFav) {
+        gameFavBtn.classList.add("is-fav");
+        if (gameFavIcon) gameFavIcon.innerText = "❤️";
+        gameFavBtn.title = dictionary[currentLang] ? dictionary[currentLang].favRemove : "Quitar de favoritos";
+    } else {
+        gameFavBtn.classList.remove("is-fav");
+        if (gameFavIcon) gameFavIcon.innerText = "🤍";
+        gameFavBtn.title = dictionary[currentLang] ? dictionary[currentLang].favAdd : "Añadir a favoritos";
+    }
+}
 
 // Estado de los filtros del leaderboard
 let selectedFilterScope = "global"; // 'global' | 'local'
@@ -1264,6 +1318,7 @@ function nextQuestion() {
     currentSneaker     = gamePool[randomIndex];
     gamePool.splice(randomIndex, 1);
     sneakerImg.src     = currentSneaker.imagen;
+    updateGameFavBtn();
 
     if (gameMode === 'classic') {
         optionsContainer.classList.remove("hidden");
@@ -1566,6 +1621,7 @@ async function openCatalogModal() {
 
     if (catalogSearch) catalogSearch.value = "";
     if (catalogBrandFilter) catalogBrandFilter.value = "all";
+    if (catalogFavFilterBtn) catalogFavFilterBtn.classList.toggle("active", catalogFilterOnlyFav);
 
     renderCatalog();
     if (catalogModal) catalogModal.classList.remove("hidden");
@@ -1579,6 +1635,9 @@ function renderCatalog() {
     const selectedBrand = (catalogBrandFilter ? catalogBrandFilter.value.toLowerCase() : "all");
 
     const filtered = catalogSneakersList.filter(s => {
+        if (catalogFilterOnlyFav && !isSneakerFavorite(s)) {
+            return false;
+        }
         const marca = (s.marca || '').toLowerCase();
         const matchBrand = (selectedBrand === "all" || marca === selectedBrand);
         const textToSearch = `${s.nombre || ''} ${s.colorway || ''} ${s.marca || ''} ${s.año || ''}`.toLowerCase();
@@ -1591,9 +1650,12 @@ function renderCatalog() {
     }
 
     if (filtered.length === 0) {
+        const emptyMsg = catalogFilterOnlyFav
+            ? (dictionary[currentLang].favFilterEmpty || '❤️ No tienes zapatillas añadidas a favoritos todavía.')
+            : (currentLang === 'es' ? '👟 No se encontraron zapatillas con ese filtro.' : '👟 No sneakers found matching your search.');
         catalogGrid.innerHTML = `
-            <div style="grid-column: 1 / -1; text-align: center; padding: 40px 10px; color: #888;">
-                👟 ${currentLang === 'es' ? 'No se encontraron zapatillas con ese filtro.' : 'No sneakers found matching your search.'}
+            <div style="grid-column: 1 / -1; text-align: center; padding: 40px 10px; color: #888; line-height: 1.6;">
+                ${emptyMsg}
             </div>
         `;
         return;
@@ -1601,12 +1663,18 @@ function renderCatalog() {
 
     filtered.forEach(s => {
         const urls = getAffiliateUrls(s);
+        const isFav = isSneakerFavorite(s);
         const card = document.createElement("div");
         card.className = "catalog-card";
         card.innerHTML = `
             <div class="catalog-card-header">
                 <span class="catalog-badge">${s.marca || 'SNEAKER'}</span>
-                <span class="catalog-year">${s.año || ''}</span>
+                <div class="catalog-header-right">
+                    <span class="catalog-year">${s.año || ''}</span>
+                    <button type="button" class="catalog-card-fav-btn ${isFav ? 'is-fav' : ''}" data-id="${s.id}" title="${isFav ? dictionary[currentLang].favRemove : dictionary[currentLang].favAdd}">
+                        ${isFav ? '❤️' : '🤍'}
+                    </button>
+                </div>
             </div>
             <div class="catalog-img-wrapper">
                 <img loading="lazy" src="${s.imagen}" alt="${s.nombre}" onerror="this.onerror=null; this.src='${FALLBACK_SNEAKER_SVG}';">
@@ -1620,6 +1688,23 @@ function renderCatalog() {
                 <a href="${urls.ebay}" target="_blank" rel="noopener noreferrer nofollow sponsored" class="affiliate-btn ebay-btn">eBay</a>
             </div>
         `;
+
+        const favBtn = card.querySelector(".catalog-card-fav-btn");
+        if (favBtn) {
+            favBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const nowFav = toggleSneakerFavorite(s);
+                if (catalogFilterOnlyFav) {
+                    renderCatalog();
+                } else {
+                    favBtn.innerText = nowFav ? '❤️' : '🤍';
+                    favBtn.title = nowFav ? dictionary[currentLang].favRemove : dictionary[currentLang].favAdd;
+                    favBtn.classList.toggle("is-fav", nowFav);
+                }
+                updateGameFavBtn();
+            });
+        }
+
         catalogGrid.appendChild(card);
     });
 }
@@ -1628,6 +1713,22 @@ if (catalogBtn)        catalogBtn.addEventListener("click", openCatalogModal);
 if (closeCatalogBtn)   closeCatalogBtn.addEventListener("click", () => catalogModal.classList.add("hidden"));
 if (catalogSearch)     catalogSearch.addEventListener("input", renderCatalog);
 if (catalogBrandFilter) catalogBrandFilter.addEventListener("change", renderCatalog);
+if (catalogFavFilterBtn) {
+    catalogFavFilterBtn.addEventListener("click", () => {
+        catalogFilterOnlyFav = !catalogFilterOnlyFav;
+        catalogFavFilterBtn.classList.toggle("active", catalogFilterOnlyFav);
+        renderCatalog();
+    });
+}
+
+// Botón de favoritos en partida
+if (gameFavBtn) {
+    gameFavBtn.addEventListener("click", () => {
+        if (!currentSneaker || !currentSneaker.nombre) return;
+        toggleSneakerFavorite(currentSneaker);
+        updateGameFavBtn();
+    });
+}
 
 // ====
 // DICCIONARIOS DE TRADUCCIÓN
@@ -1643,13 +1744,51 @@ const dictionary = {
         backToMenuBtn:      "VOLVER AL MENÚ",
         helloText:          "HOLA",
         logoutText:         "SALIR",
+
+        // Botones del Header
+        labelLeaderboard:   "Ranking",
+        labelStats:         "Récords",
+        labelInfo:          "Ayuda",
+        labelShare:         "Compartir",
+        titleLeaderboard:   "Clasificaciones",
+        titleStats:         "Mis récords",
+        titleInfo:          "Cómo jugar",
+        titleShare:         "Compartir racha",
+        titleLang:          "Cambiar Idioma",
+
+        // Favoritos
+        favAdd:             "Añadir a favoritos",
+        favRemove:          "Quitar de favoritos",
+        favFilterText:      "Favoritos",
+        favFilterTitle:     "Filtrar por favoritos",
+        favFilterEmpty:     "❤️ No tienes zapatillas añadidas a favoritos todavía.<br><span style='font-size:12px;color:#888;'>Haz clic en el corazón de cualquier zapatilla para guardarla aquí.</span>",
+
+        // Modal: Mis Récords
         statsTitle:         "📊 MIS RÉCORDS",
-        totalPointsLabel:   "PUNTOS TOTALES (DE SIEMPRE)",
-        gameSettingsTitle:  "⚙️ AJUSTES DE PARTIDA",
-        gameModeHeading:    "MODO DE JUEGO",
-        difficultyHeading:  "DIFICULTAD",
+        statTotal:          "PUNTOS TOTALES (DE SIEMPRE)",
+        statClassic:        "Racha Classic",
+        statMp:             "Victorias 1vs1 ⚔️",
+        statExpNormal:      "Expert (Normal)",
+        statExpHard:        "Expert (Hard)",
+        statExpExpert:      "Expert (Imposible)",
+
+        // Modal: Solo Play
+        soloModeTitle:      "⚙️ SOLO PLAY",
+        headingGameMode:    "MODO DE JUEGO",
+        optClassic:         "CLASSIC (Opciones)",
+        optExpert:          "EXPERT (Escribir)",
+        headingDifficulty:  "DIFICULTAD (MODO EXPERT)",
+        diffNormal:         "NORMAL",
+        diffHard:           "HARD",
+        diffImpossible:     "IMPOSIBLE",
+        classicModeNote:    "ℹ️ En modo Classic siempre se adivina el modelo entre 4 opciones. La dificultad se aplica al modo Expert.",
+        startSoloGameBtn:   "¡A JUGAR! ▶",
+
+        // Modal: Cómo jugar
         infoTitle:          "ℹ️ ¿CÓMO JUGAR?",
-        infoBody:           `<p style="margin-bottom:15px;text-align:center;font-weight:600;color:#ff6a00;">¡Demuestra tus conocimientos de cultura sneakerhead adivinando el calzado de la imagen!</p><hr style="border:0;height:1px;background:#333;margin-bottom:15px;"><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🕹️ MODOS DE JUEGO</h3><ul style="margin-left:20px;margin-bottom:15px;padding-left:5px;"><li><strong>Classic:</strong> Elige la respuesta correcta entre 4 opciones con botones.</li><li><strong>Expert:</strong> Pon a prueba tu memoria escribiendo la respuesta exacta.</li><li><strong>⚔️ 1 vs 1 Multijugador:</strong> ¡Duelo en tiempo real estilo Kahoot! Misma zapatilla, 10 segundos por ronda. Cuanto antes aciertes, más puntos. ¡El primero a 3.000 puntos gana!</li></ul><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🔥 DIFICULTADES (MODO EXPERT)</h3><ul style="margin-left:20px;padding-left:5px;"><li><strong style="color:#2ecc71;">Normal:</strong> Solo el nombre del modelo.</li><li><strong style="color:#f1c40f;">Hard:</strong> Nombre + Colorway.</li><li><strong style="color:#e74c3c;">Imposible:</strong> Nombre + Colorway + Año.</li></ul>`,
+        infoBody:           `<p style="margin-bottom:15px;text-align:center;font-weight:600;color:#ff6a00;">¡Demuestra tus conocimientos de cultura sneakerhead adivinando el calzado de la imagen!</p><hr style="border:0;height:1px;background:#333;margin-bottom:15px;"><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🕹️ MODOS DE JUEGO</h3><ul style="margin-left:20px;margin-bottom:15px;padding-left:5px;"><li><strong>Classic:</strong> Elige la respuesta correcta entre 4 opciones con botones.</li><li><strong>Expert:</strong> Pon a prueba tu memoria escribiendo la respuesta exacta.</li><li><strong>⚔️ 1 vs 1 Multijugador:</strong> ¡Duelo de alta tensión! Misma zapatilla, 10 segundos por ronda. El primero que acierte se lleva 1 punto. Si pruebas primero y fallas, -1 punto. ¡El primero a 10 puntos gana!</li></ul><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🔥 DIFICULTADES (MODO EXPERT)</h3><ul style="margin-left:20px;padding-left:5px;"><li><strong style="color:#2ecc71;">Normal:</strong> Solo el nombre del modelo (Ej: <em>Nike Air Jordan 1</em>).</li><li><strong style="color:#f1c40f;">Hard:</strong> Requiere Nombre + Colorway (Ej: <em>Nike Air Jordan 1 Chicago</em>).</li><li><strong style="color:#e74c3c;">Imposible:</strong> Requiere Nombre + Colorway + Año (Ej: <em>Nike Air Jordan 1 Chicago 1985</em>).</li></ul><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🛒 TIENDAS Y ENLACES</h3><p style="margin-left:5px;font-size:13px;color:#aaa;margin-bottom:10px;">Al adivinar o explorar zapatillas, verás enlaces directos a tiendas especializadas (StockX, GOAT, KLEKT, eBay). Podrás ver ofertas en tiempo real o comprar tus pares favoritos.</p>`,
+
+        // Modal: Leaderboard
         leaderboardTitle:   "🏆 CLASIFICACIONES",
         filterScopeLabel:   "ÁMBITO",
         scopeGlobal:        "🌍 GLOBAL",
@@ -1664,15 +1803,35 @@ const dictionary = {
         thCountry:          "País",
         thPoints:           "Puntos",
         thStreak:           "Racha Máx.",
+
+        // Modal: Autenticación
         tabLogin:           "INICIAR SESIÓN",
         tabRegister:        "REGISTRARSE",
         tabDelete:          "ELIMINAR",
+        lblLoginUsername:   "Usuario (@)",
+        lblLoginPassword:   "Contraseña",
+        placeholderLoginUser: "Tu nombre de usuario",
+        btnSubmitLogin:     "ENTRAR",
+        lblRegUsername:     "Usuario (@) — mín. 3 caracteres",
+        placeholderRegUser: "Crea tu usuario",
+        lblRegCountry:      "País (código: ES, US, MX…)",
+        lblRegPassword:     "Contraseña — mín. 6 caracteres",
+        placeholderRegPass: "Mínimo 6 caracteres",
+        regNoEmailWarning:  "⚠️ No hay recuperación de contraseña por email. ¡Apúntala en un lugar seguro!",
+        btnSubmitReg:       "CREAR CUENTA",
+        delWarningDesc:     "⚠️ Esta acción es permanente. Se eliminará tu usuario, tus puntos acumulados y tus marcas en la clasificación.",
+        lblDelUsername:     "Usuario (@) a eliminar",
+        lblDelPassword:     "Contraseña de confirmación",
+        btnSubmitDel:       "ELIMINAR DEFINITIVAMENTE",
         logoutModalBtn:     "SALIR DE LA CUENTA",
         delLoggedBtn:       "🗑️ ELIMINAR MI CUENTA",
         delConfirm:         "¿Estás seguro de que quieres eliminar tu cuenta permanentemente? Se perderán todos tus puntos y posiciones en la clasificación.",
         delSuccess:         "Tu cuenta y tus datos han sido eliminados con éxito.",
         delError:           "Ocurrió un error al intentar eliminar la cuenta. Por favor, inténtalo de nuevo.",
         delWrongCreds:      "Usuario o contraseña incorrectos.",
+        loggedAccountTitle: "👤 MI CUENTA",
+
+        // Catálogo SneakerDex
         catalogBtn:         "👟 CATÁLOGO",
         catalogTitle:       "👟 CATÁLOGO SNEAKERDEX",
         catalogSubtitle:    "Explora todos los modelos de la base de datos y encuéntralos en tus tiendas favoritas.",
@@ -1682,6 +1841,8 @@ const dictionary = {
         affiliateLabel:     "🛒 ¿Te mola este par? Cómpralo en:",
         affiliateNextBtn:   "Siguiente ⏩",
         affiliateDisclosure:"⚠️ SneakerGuessr participa en programas de afiliación. Si compras a través de nuestros enlaces, podemos recibir una comisión sin coste adicional para ti.",
+
+        // Feedback durante la partida
         correctToast:       (streak) => `✅ ¡Correcto! (Racha: ${streak})`,
         incorrectToast:     "❌ ¡Fallaste!",
         exactAnswerWas:     "La respuesta exacta era:",
@@ -1689,23 +1850,37 @@ const dictionary = {
         criticalErrorAlert: "Error crítico al cargar zapatillas.json. Abre index.html usando 'Live Server'.",
         shareMessage:       (streak, points) => `¡Llevo una racha de ${streak} aciertos y ${points} puntos en SneakerGuessr! ¿Podrás superarme? 👟🔥 Juega gratis aquí: https://sneakerguessr.com`,
         copiedAlert:        "📋 ¡Texto de compartir copiado al portapapeles!",
+
+        // Lobby Multijugador 1vs1
         multiplayerBtn:     "⚔️ 1 VS 1 MULTIJUGADOR",
+        mpLobbyTitle:       "⚔️ 1 VS 1 MULTIJUGADOR",
+        mpLobbyDesc:        "¡Duelo 1vs1 de alta intensidad! El primero en acertar se lleva 1 punto. Si pruebas primero y fallas, te resta -1 punto. ¡El primero a 10 puntos gana!",
         tabMpMatchmaking:   "ONLINE RÁPIDO",
         tabMpFriend:        "SALA CON AMIGO",
         mpSearchingRival:   "Buscando rival en línea...",
         mpRivalFound:       "¡Rival encontrado! Conectando...",
+        mpQueueTimeLabel:   (s) => `Tiempo en cola: ${s}s`,
+        mpCancelMatchmakingBtn: "Cancelar búsqueda",
+        mpMatchmakingDesc:  "Te emparejaremos automáticamente con otro jugador conectado para un duelo instantáneo.",
+        btnStartMatchmaking:"🎮 BUSCAR RIVAL ONLINE",
+        mpCreateRoomTitle:  "🏠 CREAR SALA PRIVADA",
+        btnCreateRoom:      "CREAR CÓDIGO DE SALA",
+        mpRoomCodeLabel:    "CÓDIGO DE TU SALA:",
+        btnCopyInvite:      "📋 COPIAR ENLACE DE INVITACIÓN",
+        mpWaitingFriendLabel: "Esperando a que tu amigo se una...",
+        mpJoinRoomTitle:    "🔑 UNIRTE A SALA",
+        mpInputRoomCodePlaceholder: "CÓDIGO (Ej: KICK8)",
+        btnJoinRoom:        "ENTRAR A LA SALA",
         mpVictory:          "¡VICTORIA!",
         mpDefeat:           "DERROTA",
         mpWonAgainst:       (rival) => `Has derrotado a ${rival}`,
         mpLostAgainst:      (rival) => `${rival} ha ganado la partida`,
+        mpRewardBadgeText:  "⭐ +50 puntos sumados a tu perfil",
         mpRematchBtn:       "JUGAR OTRA VEZ 🔄",
         mpBtnBackMenu:      "VOLVER AL MENÚ 🏠",
         mpLeaveBtn:         "🚪 ABANDONAR PARTIDA",
         mpLeaveConfirm:     "¿Seguro que quieres abandonar la partida? Contará como una retirada.",
-        mpDiffImpossible:   "IMPOSIBLE",
         roundText:          (r) => `RONDA ${r}`,
-        startSoloGameBtn:   "¡A JUGAR! ▶",
-        soloModeTitle:      "⚙️ SOLO PLAY",
         mpFirstCorrect:     "🎯 ¡Primero en acertar! (+1 pt)",
         mpFirstFailed:      "💥 ¡Te precipitaste! (-1 pt)",
         mpStealCorrect:     "🎯 ¡Acierto! (+1 pt)",
@@ -1723,13 +1898,51 @@ const dictionary = {
         backToMenuBtn:      "BACK TO MENU",
         helloText:          "HELLO",
         logoutText:         "LOGOUT",
+
+        // Header Controls
+        labelLeaderboard:   "Ranking",
+        labelStats:         "Records",
+        labelInfo:          "Help",
+        labelShare:         "Share",
+        titleLeaderboard:   "Leaderboard",
+        titleStats:         "My Records",
+        titleInfo:          "How to Play",
+        titleShare:         "Share Streak",
+        titleLang:          "Change Language",
+
+        // Favorites
+        favAdd:             "Add to favorites",
+        favRemove:          "Remove from favorites",
+        favFilterText:      "Favorites",
+        favFilterTitle:     "Filter by favorites",
+        favFilterEmpty:     "❤️ No favorite sneakers yet.<br><span style='font-size:12px;color:#888;'>Click the heart icon on any sneaker to save it here.</span>",
+
+        // Stats Modal
         statsTitle:         "📊 MY RECORDS",
-        totalPointsLabel:   "TOTAL POINTS (ALL TIME)",
-        gameSettingsTitle:  "⚙️ GAME SETTINGS",
-        gameModeHeading:    "GAME MODE",
-        difficultyHeading:  "DIFFICULTY",
+        statTotal:          "TOTAL POINTS (ALL-TIME)",
+        statClassic:        "Classic Streak",
+        statMp:             "1vs1 Wins ⚔️",
+        statExpNormal:      "Expert (Normal)",
+        statExpHard:        "Expert (Hard)",
+        statExpExpert:      "Expert (Impossible)",
+
+        // Solo Play Modal
+        soloModeTitle:      "⚙️ SOLO PLAY",
+        headingGameMode:    "GAME MODE",
+        optClassic:         "CLASSIC (Choices)",
+        optExpert:          "EXPERT (Typing)",
+        headingDifficulty:  "DIFFICULTY (EXPERT MODE)",
+        diffNormal:         "NORMAL",
+        diffHard:           "HARD",
+        diffImpossible:     "IMPOSSIBLE",
+        classicModeNote:    "ℹ️ In Classic mode you always guess from 4 choices. Difficulty applies to Expert mode.",
+        startSoloGameBtn:   "PLAY NOW! ▶",
+
+        // Info Modal
         infoTitle:          "ℹ️ HOW TO PLAY?",
-        infoBody:           `<p style="margin-bottom:15px;text-align:center;font-weight:600;color:#ff6a00;">Prove your sneakerhead culture knowledge by guessing the footwear in the picture!</p><hr style="border:0;height:1px;background:#333;margin-bottom:15px;"><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🕹️ GAME MODES</h3><ul style="margin-left:20px;margin-bottom:15px;padding-left:5px;"><li><strong>Classic:</strong> Choose the correct answer from 4 options.</li><li><strong>Expert:</strong> Type the exact answer.</li><li><strong>⚔️ 1 vs 1 Multiplayer:</strong> High intensity duel! Same sneaker, 10 seconds per round. First to guess gets 1 point. If you rush first and fail, -1 point penalty. First to 10 points wins!</li></ul><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🔥 DIFFICULTY (EXPERT MODE)</h3><ul style="margin-left:20px;padding-left:5px;"><li><strong style="color:#2ecc71;">Normal:</strong> Model name only.</li><li><strong style="color:#f1c40f;">Hard:</strong> Name + Colorway.</li><li><strong style="color:#e74c3c;">Impossible:</strong> Name + Colorway + Year.</li></ul>`,
+        infoBody:           `<p style="margin-bottom:15px;text-align:center;font-weight:600;color:#ff6a00;">Show off your sneakerhead culture knowledge by guessing the shoe in the photo!</p><hr style="border:0;height:1px;background:#333;margin-bottom:15px;"><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🕹️ GAME MODES</h3><ul style="margin-left:20px;margin-bottom:15px;padding-left:5px;"><li><strong>Classic:</strong> Pick the correct answer from 4 multiple-choice options.</li><li><strong>Expert:</strong> Put your memory to the test by typing the exact answer.</li><li><strong>⚔️ 1 vs 1 Multiplayer:</strong> High intensity duel! Same sneaker, 10 seconds per round. First to guess correctly gets 1 point. If you rush first and miss, -1 point penalty. First to 10 points wins!</li></ul><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🔥 DIFFICULTIES (EXPERT MODE)</h3><ul style="margin-left:20px;padding-left:5px;"><li><strong style="color:#2ecc71;">Normal:</strong> Model name only (e.g. <em>Nike Air Jordan 1</em>).</li><li><strong style="color:#f1c40f;">Hard:</strong> Requires Model Name + Colorway (e.g. <em>Nike Air Jordan 1 Chicago</em>).</li><li><strong style="color:#e74c3c;">Impossible:</strong> Requires Model Name + Colorway + Year (e.g. <em>Nike Air Jordan 1 Chicago 1985</em>).</li></ul><h3 style="color:#fff;font-size:15px;margin-bottom:5px;">🛒 STORES & LINKS</h3><p style="margin-left:5px;font-size:13px;color:#aaa;margin-bottom:10px;">When guessing or browsing sneakers, direct links to trusted marketplaces (StockX, GOAT, KLEKT, eBay) will appear so you can explore live pricing or buy your favorite pairs.</p>`,
+
+        // Leaderboard
         leaderboardTitle:   "🏆 LEADERBOARD",
         filterScopeLabel:   "SCOPE",
         scopeGlobal:        "🌍 GLOBAL",
@@ -1744,15 +1957,35 @@ const dictionary = {
         thCountry:          "Country",
         thPoints:           "Points",
         thStreak:           "Max Streak",
+
+        // Auth Modal
         tabLogin:           "LOG IN",
         tabRegister:        "SIGN UP",
         tabDelete:          "DELETE",
+        lblLoginUsername:   "Username (@)",
+        lblLoginPassword:   "Password",
+        placeholderLoginUser: "Your username",
+        btnSubmitLogin:     "LOG IN",
+        lblRegUsername:     "Username (@) — min. 3 chars",
+        placeholderRegUser: "Create your username",
+        lblRegCountry:      "Country (code: US, ES, GB…)",
+        lblRegPassword:     "Password — min. 6 chars",
+        placeholderRegPass: "At least 6 characters",
+        regNoEmailWarning:  "⚠️ No email password recovery. Keep it safe!",
+        btnSubmitReg:       "CREATE ACCOUNT",
+        delWarningDesc:     "⚠️ This action is permanent. Your user, accumulated points, and leaderboard ranks will be deleted.",
+        lblDelUsername:     "Username (@) to delete",
+        lblDelPassword:     "Confirmation password",
+        btnSubmitDel:       "DELETE PERMANENTLY",
         logoutModalBtn:     "LOG OUT",
         delLoggedBtn:       "🗑️ DELETE MY ACCOUNT",
         delConfirm:         "Are you sure you want to permanently delete your account? All your points and leaderboard entries will be lost.",
         delSuccess:         "Your account and data have been deleted successfully.",
         delError:           "An error occurred while deleting your account. Please try again.",
         delWrongCreds:      "Incorrect username or password.",
+        loggedAccountTitle: "👤 MY ACCOUNT",
+
+        // Catalog
         catalogBtn:         "👟 CATALOG",
         catalogTitle:       "👟 SNEAKERDEX CATALOG",
         catalogSubtitle:    "Browse all sneaker models and find them on your favorite stores.",
@@ -1762,6 +1995,8 @@ const dictionary = {
         affiliateLabel:     "🛒 Like this pair? Buy on:",
         affiliateNextBtn:   "Next ⏩",
         affiliateDisclosure:"⚠️ SneakerGuessr participates in affiliate programs. If you purchase through our links, we may earn a commission at no additional cost to you.",
+
+        // In-game Feedback
         correctToast:       (streak) => `✅ Correct! (Streak: ${streak})`,
         incorrectToast:     "❌ Incorrect!",
         exactAnswerWas:     "The exact answer was:",
@@ -1769,23 +2004,37 @@ const dictionary = {
         criticalErrorAlert: "Critical error loading zapatillas.json. Open index.html using 'Live Server'.",
         shareMessage:       (streak, points) => `I'm on a streak of ${streak} correct answers and ${points} points on SneakerGuessr! Can you beat me? 👟🔥 Play free here: https://sneakerguessr.com`,
         copiedAlert:        "📋 Sharing text copied to clipboard!",
+
+        // Multiplayer Lobby
         multiplayerBtn:     "⚔️ 1 VS 1 MULTIPLAYER",
+        mpLobbyTitle:       "⚔️ 1 VS 1 MULTIPLAYER",
+        mpLobbyDesc:        "High intensity 1vs1 duel! First to guess wins 1 point. If you rush first and fail, you lose 1 point. First to 10 points wins!",
         tabMpMatchmaking:   "QUICK MATCH",
-        tabMpFriend:        "FRIEND ROOM",
+        tabMpFriend:        "PLAY WITH FRIEND",
         mpSearchingRival:   "Searching for online opponent...",
         mpRivalFound:       "Opponent found! Connecting...",
+        mpQueueTimeLabel:   (s) => `Queue time: ${s}s`,
+        mpCancelMatchmakingBtn: "Cancel search",
+        mpMatchmakingDesc:  "We will automatically match you with another online player for an instant duel.",
+        btnStartMatchmaking:"🎮 FIND OPPONENT ONLINE",
+        mpCreateRoomTitle:  "🏠 CREATE PRIVATE ROOM",
+        btnCreateRoom:      "GENERATE ROOM CODE",
+        mpRoomCodeLabel:    "YOUR ROOM CODE:",
+        btnCopyInvite:      "📋 COPY INVITE LINK",
+        mpWaitingFriendLabel: "Waiting for friend to join...",
+        mpJoinRoomTitle:    "🔑 JOIN A ROOM",
+        mpInputRoomCodePlaceholder: "CODE (e.g. KICK8)",
+        btnJoinRoom:        "ENTER ROOM",
         mpVictory:          "VICTORY!",
         mpDefeat:           "DEFEAT",
         mpWonAgainst:       (rival) => `You defeated ${rival}`,
         mpLostAgainst:      (rival) => `${rival} won the match`,
+        mpRewardBadgeText:  "⭐ +50 points added to your profile",
         mpRematchBtn:       "PLAY AGAIN 🔄",
         mpBtnBackMenu:      "BACK TO MENU 🏠",
         mpLeaveBtn:         "🚪 LEAVE MATCH",
         mpLeaveConfirm:     "Are you sure you want to leave the match? It will count as a forfeit.",
-        mpDiffImpossible:   "IMPOSSIBLE",
         roundText:          (r) => `ROUND ${r}`,
-        startSoloGameBtn:   "START PLAYING! ▶",
-        soloModeTitle:      "⚙️ SOLO PLAY",
         mpFirstCorrect:     "🎯 First to guess! (+1 pt)",
         mpFirstFailed:      "💥 Too rushed! (-1 pt)",
         mpStealCorrect:     "🎯 Correct! (+1 pt)",
@@ -1802,45 +2051,63 @@ let currentLang = localStorage.getItem("sneaker_lang") || "es";
 // ====
 function applyLanguage(lang) {
     const texts = dictionary[lang];
-
     const el = (id) => document.getElementById(id);
 
-    if (el("play-btn"))            el("play-btn").innerText            = texts.playBtn;
-    if (el("game-mode-setup-btn"))  el("game-mode-setup-btn").innerText  = texts.gameModeBtn;
-    if (el("start-solo-game-btn")) el("start-solo-game-btn").innerText = texts.startSoloGameBtn;
-    if (el("solo-mode-title"))     el("solo-mode-title").innerText     = texts.soloModeTitle;
-    if (el("submit-guess"))        el("submit-guess").innerText        = texts.submitGuessBtn;
-    if (el("back-to-menu-btn"))    el("back-to-menu-btn").innerText    = texts.backToMenuBtn;
-
+    // Menú principal
+    if (el("play-btn"))           el("play-btn").innerText           = texts.playBtn;
+    if (el("catalog-btn"))        el("catalog-btn").innerText        = texts.catalogBtn;
     const mpBtnSpan = document.querySelector("#multiplayer-btn span:first-child");
     if (mpBtnSpan) mpBtnSpan.innerText = texts.multiplayerBtn;
 
-    if (el("opt-diff-expert"))            el("opt-diff-expert").innerText            = texts.mpDiffImpossible;
-    if (el("filter-diff-impossible-btn"))  el("filter-diff-impossible-btn").innerText  = texts.mpDiffImpossible;
-    if (el("tab-mp-matchmaking"))          el("tab-mp-matchmaking").innerText          = texts.tabMpMatchmaking;
-    if (el("tab-mp-friend"))               el("tab-mp-friend").innerText               = texts.tabMpFriend;
-    if (el("mp-btn-rematch"))              el("mp-btn-rematch").innerText              = texts.mpRematchBtn;
-    if (el("mp-btn-back-menu"))            el("mp-btn-back-menu").innerText            = texts.mpBtnBackMenu;
-    if (el("mp-leave-btn"))                el("mp-leave-btn").innerText                = texts.mpLeaveBtn;
+    // Header buttons (Icons, Labels, Titles)
+    if (el("label-leaderboard")) el("label-leaderboard").innerText = texts.labelLeaderboard;
+    if (el("label-stats"))       el("label-stats").innerText       = texts.labelStats;
+    if (el("label-info"))        el("label-info").innerText        = texts.labelInfo;
+    if (el("label-share"))       el("label-share").innerText       = texts.labelShare;
+    if (el("lang-flag"))         el("lang-flag").innerText         = lang === "es" ? "🇪🇸" : "🇬🇧";
+    if (el("lang-code"))         el("lang-code").innerText         = lang === "es" ? "ES" : "EN";
 
-    if (el("catalog-btn"))            el("catalog-btn").innerText            = texts.catalogBtn;
-    if (el("catalog-title"))          el("catalog-title").innerText          = texts.catalogTitle;
-    if (el("catalog-subtitle"))       el("catalog-subtitle").innerText       = texts.catalogSubtitle;
-    if (el("catalog-search"))         el("catalog-search").placeholder       = texts.catalogSearchPlaceholder;
-    if (el("affiliate-label"))        el("affiliate-label").innerText        = texts.affiliateLabel;
-    if (el("affiliate-next-btn"))     el("affiliate-next-btn").innerText     = texts.affiliateNextBtn;
-    if (el("affiliate-disclosure"))   el("affiliate-disclosure").innerText   = texts.affiliateDisclosure;
-    if (catalogBrandFilter && catalogBrandFilter.options[0]) {
-        catalogBrandFilter.options[0].text = texts.allBrands;
-    }
+    if (el("leaderboard-btn"))   el("leaderboard-btn").title       = texts.titleLeaderboard;
+    if (el("stats-btn"))         el("stats-btn").title             = texts.titleStats;
+    if (el("info-btn"))          el("info-btn").title              = texts.titleInfo;
+    if (el("share-btn"))         el("share-btn").title             = texts.titleShare;
+    if (el("lang-btn"))          el("lang-btn").title              = texts.titleLang;
 
-    if (el("tab-login-btn"))          el("tab-login-btn").innerText          = texts.tabLogin;
-    if (el("tab-register-btn"))       el("tab-register-btn").innerText       = texts.tabRegister;
-    if (el("tab-delete-btn"))         el("tab-delete-btn").innerText         = texts.tabDelete;
-    if (el("btn-modal-logout"))       el("btn-modal-logout").innerText       = texts.logoutModalBtn;
-    if (el("btn-modal-delete-logged")) el("btn-modal-delete-logged").innerText = texts.delLoggedBtn;
-    if (el("logged-title"))           el("logged-title").innerText           = lang === 'es' ? "👤 MI CUENTA" : "👤 MY ACCOUNT";
+    // Favoritos
+    if (el("fav-filter-text"))   el("fav-filter-text").innerText   = texts.favFilterText;
+    if (el("catalog-fav-filter-btn")) el("catalog-fav-filter-btn").title = texts.favFilterTitle;
+    updateGameFavBtn();
 
+    // Solo Play modal
+    if (el("solo-mode-title"))            el("solo-mode-title").innerText            = texts.soloModeTitle;
+    if (el("heading-game-mode"))          el("heading-game-mode").innerText          = texts.headingGameMode;
+    if (el("opt-mode-classic"))           el("opt-mode-classic").innerText           = texts.optClassic;
+    if (el("opt-mode-expert"))            el("opt-mode-expert").innerText            = texts.optExpert;
+    if (el("difficulty-heading-modal"))   el("difficulty-heading-modal").innerText   = texts.headingDifficulty;
+    if (el("opt-diff-normal"))            el("opt-diff-normal").innerText            = texts.diffNormal;
+    if (el("opt-diff-hard"))              el("opt-diff-hard").innerText              = texts.diffHard;
+    if (el("opt-diff-expert"))            el("opt-diff-expert").innerText            = texts.diffImpossible;
+    if (el("classic-mode-note"))          el("classic-mode-note").innerText          = texts.classicModeNote;
+    if (el("start-solo-game-btn"))        el("start-solo-game-btn").innerText        = texts.startSoloGameBtn;
+
+    // Partida en curso
+    if (el("submit-guess"))       el("submit-guess").innerText       = texts.submitGuessBtn;
+    if (el("back-to-menu-btn"))   el("back-to-menu-btn").innerText   = texts.backToMenuBtn;
+
+    // Info modal (Cómo jugar)
+    if (el("info-title"))         el("info-title").innerText         = texts.infoTitle;
+    if (el("info-content"))       el("info-content").innerHTML       = texts.infoBody;
+
+    // Stats modal
+    if (el("stats-title"))             el("stats-title").innerText             = texts.statsTitle;
+    if (el("label-stat-total"))        el("label-stat-total").innerText        = texts.statTotal;
+    if (el("label-stat-classic"))      el("label-stat-classic").innerText      = texts.statClassic;
+    if (el("label-stat-mp"))           el("label-stat-mp").innerText           = texts.statMp;
+    if (el("label-stat-exp-normal"))   el("label-stat-exp-normal").innerText   = texts.statExpNormal;
+    if (el("label-stat-exp-hard"))     el("label-stat-exp-hard").innerText     = texts.statExpHard;
+    if (el("label-stat-exp-expert"))   el("label-stat-exp-expert").innerText   = texts.statExpExpert;
+
+    // Leaderboard modal
     if (el("leaderboard-title"))   el("leaderboard-title").innerText   = texts.leaderboardTitle;
     if (el("filter-scope-label"))  el("filter-scope-label").innerText  = texts.filterScopeLabel;
     if (el("scope-global-btn"))    el("scope-global-btn").innerText    = texts.scopeGlobal;
@@ -1849,37 +2116,76 @@ function applyLanguage(lang) {
     if (el("type-streak-btn"))     el("type-streak-btn").innerText     = texts.typeStreak;
     if (el("filter-mode-label"))   el("filter-mode-label").innerText   = texts.filterModeLabel;
     if (el("filter-diff-label"))   el("filter-diff-label").innerText   = texts.filterDiffLabel;
-
-    if (el("th-pos"))     el("th-pos").innerText     = texts.thPos;
-    if (el("th-player"))  el("th-player").innerText  = texts.thPlayer;
-    if (el("th-country")) el("th-country").innerText = texts.thCountry;
+    if (el("filter-diff-impossible-btn")) el("filter-diff-impossible-btn").innerText = texts.diffImpossible;
+    if (el("th-pos"))              el("th-pos").innerText              = texts.thPos;
+    if (el("th-player"))           el("th-player").innerText           = texts.thPlayer;
+    if (el("th-country"))          el("th-country").innerText          = texts.thCountry;
     if (el("th-score")) {
         el("th-score").innerText = selectedFilterType === 'points' ? texts.thPoints : texts.thStreak;
     }
 
-    updateHeaderScore();
-    updateAuthButton();
+    // Auth modal
+    if (el("tab-login-btn"))           el("tab-login-btn").innerText           = texts.tabLogin;
+    if (el("tab-register-btn"))        el("tab-register-btn").innerText        = texts.tabRegister;
+    if (el("tab-delete-btn"))          el("tab-delete-btn").innerText          = texts.tabDelete;
+    if (el("lbl-login-username"))      el("lbl-login-username").innerText      = texts.lblLoginUsername;
+    if (el("lbl-login-password"))      el("lbl-login-password").innerText      = texts.lblLoginPassword;
+    if (el("login-username"))          el("login-username").placeholder        = texts.placeholderLoginUser;
+    if (el("btn-submit-login"))        el("btn-submit-login").innerText        = texts.btnSubmitLogin;
+    if (el("lbl-reg-username"))        el("lbl-reg-username").innerText        = texts.lblRegUsername;
+    if (el("reg-username"))            el("reg-username").placeholder          = texts.placeholderRegUser;
+    if (el("lbl-reg-country"))         el("lbl-reg-country").innerText         = texts.lblRegCountry;
+    if (el("lbl-reg-password"))        el("lbl-reg-password").innerText        = texts.lblRegPassword;
+    if (el("reg-password"))            el("reg-password").placeholder          = texts.placeholderRegPass;
+    if (el("reg-no-email-warning"))    el("reg-no-email-warning").innerText    = texts.regNoEmailWarning;
+    if (el("btn-submit-reg"))          el("btn-submit-reg").innerText          = texts.btnSubmitReg;
+    if (el("del-warning-desc"))        el("del-warning-desc").innerText        = texts.delWarningDesc;
+    if (el("lbl-del-username"))        el("lbl-del-username").innerText        = texts.lblDelUsername;
+    if (el("lbl-del-password"))        el("lbl-del-password").innerText        = texts.lblDelPassword;
+    if (el("btn-submit-del"))          el("btn-submit-del").innerText          = texts.btnSubmitDel;
+    if (el("btn-modal-logout"))        el("btn-modal-logout").innerText        = texts.logoutModalBtn;
+    if (el("btn-modal-delete-logged")) el("btn-modal-delete-logged").innerText = texts.delLoggedBtn;
+    if (el("logged-title"))            el("logged-title").innerText            = texts.loggedAccountTitle;
 
-    const statsTitle = document.querySelector("#stats-modal h2");
-    if (statsTitle) statsTitle.innerText = texts.statsTitle;
-
-    const totalPointsLabel = document.querySelector("#stats-modal .stat-box.full-width .stat-label");
-    if (totalPointsLabel) totalPointsLabel.innerText = texts.totalPointsLabel;
-
-    const gameSettingsTitle = document.querySelector("#game-mode-modal h2");
-    if (gameSettingsTitle) gameSettingsTitle.innerText = texts.gameSettingsTitle;
-
-    const gameModeHeadings = document.querySelectorAll("#game-mode-modal h3");
-    if (gameModeHeadings.length >= 2) {
-        gameModeHeadings[0].innerText = texts.gameModeHeading;
-        gameModeHeadings[1].innerText = texts.difficultyHeading;
+    // Catálogo SneakerDex
+    if (el("catalog-title"))          el("catalog-title").innerText          = texts.catalogTitle;
+    if (el("catalog-subtitle"))       el("catalog-subtitle").innerText       = texts.catalogSubtitle;
+    if (el("catalog-search"))         el("catalog-search").placeholder       = texts.catalogSearchPlaceholder;
+    if (catalogBrandFilter && catalogBrandFilter.options[0]) {
+        catalogBrandFilter.options[0].text = texts.allBrands;
+    }
+    if (catalogModal && !catalogModal.classList.contains("hidden")) {
+        renderCatalog();
     }
 
-    const infoTitle = document.querySelector("#info-modal h2");
-    if (infoTitle) infoTitle.innerText = texts.infoTitle;
+    // Afiliados card & footer
+    if (el("affiliate-label"))        el("affiliate-label").innerText        = texts.affiliateLabel;
+    if (el("affiliate-next-btn"))     el("affiliate-next-btn").innerText     = texts.affiliateNextBtn;
+    if (el("affiliate-disclosure"))   el("affiliate-disclosure").innerText   = texts.affiliateDisclosure;
 
-    const langBtn = el("lang-btn");
-    if (langBtn) langBtn.innerText = lang === "es" ? "🇪🇸" : "🇬🇧";
+    // Multijugador Lobby
+    if (el("mp-lobby-title"))              el("mp-lobby-title").innerText              = texts.mpLobbyTitle;
+    if (el("mp-lobby-desc"))               el("mp-lobby-desc").innerText               = texts.mpLobbyDesc;
+    if (el("tab-mp-matchmaking"))          el("tab-mp-matchmaking").innerText          = texts.tabMpMatchmaking;
+    if (el("tab-mp-friend"))               el("tab-mp-friend").innerText               = texts.tabMpFriend;
+    if (el("mp-matchmaking-desc"))         el("mp-matchmaking-desc").innerText         = texts.mpMatchmakingDesc;
+    if (el("btn-start-matchmaking"))       el("btn-start-matchmaking").innerText       = texts.btnStartMatchmaking;
+    if (el("mp-cancel-matchmaking-btn"))   el("mp-cancel-matchmaking-btn").innerText   = texts.mpCancelMatchmakingBtn;
+    if (el("mp-create-room-title"))        el("mp-create-room-title").innerText        = texts.mpCreateRoomTitle;
+    if (el("btn-create-room"))             el("btn-create-room").innerText             = texts.btnCreateRoom;
+    if (el("mp-room-code-label"))          el("mp-room-code-label").innerText          = texts.mpRoomCodeLabel;
+    if (el("btn-copy-invite"))             el("btn-copy-invite").innerText             = texts.btnCopyInvite;
+    if (el("mp-waiting-friend-label"))     el("mp-waiting-friend-label").innerText     = texts.mpWaitingFriendLabel;
+    if (el("mp-join-room-title"))          el("mp-join-room-title").innerText          = texts.mpJoinRoomTitle;
+    if (el("mp-input-room-code"))          el("mp-input-room-code").placeholder        = texts.mpInputRoomCodePlaceholder;
+    if (el("btn-join-room"))               el("btn-join-room").innerText               = texts.btnJoinRoom;
+    if (el("mp-btn-rematch"))              el("mp-btn-rematch").innerText              = texts.mpRematchBtn;
+    if (el("mp-btn-back-menu"))            el("mp-btn-back-menu").innerText            = texts.mpBtnBackMenu;
+    if (el("mp-leave-btn"))                el("mp-leave-btn").innerText                = texts.mpLeaveBtn;
+    if (el("mp-reward-badge"))             el("mp-reward-badge").innerText             = texts.mpRewardBadgeText;
+
+    updateHeaderScore();
+    updateAuthButton();
 
     if (!gameScreen.classList.contains("hidden") && gameMode === 'expert') {
         updateExpertInstructions();
@@ -2116,13 +2422,13 @@ if (btnCopyInvite) {
         if (navigator.clipboard) {
             navigator.clipboard.writeText(inviteUrl).then(() => {
                 const oldText = btnCopyInvite.innerText;
-                btnCopyInvite.innerText = "¡ENLACE COPIADO! ✅";
+                btnCopyInvite.innerText = currentLang === 'es' ? "¡ENLACE COPIADO! ✅" : "LINK COPIED! ✅";
                 setTimeout(() => { btnCopyInvite.innerText = oldText; }, 2000);
             }).catch(() => {
-                prompt("Copia este enlace de invitación:", inviteUrl);
+                prompt(currentLang === 'es' ? "Copia este enlace de invitación:" : "Copy this invite link:", inviteUrl);
             });
         } else {
-            prompt("Copia este enlace de invitación:", inviteUrl);
+            prompt(currentLang === 'es' ? "Copia este enlace de invitación:" : "Copy this invite link:", inviteUrl);
         }
     });
 }

@@ -27,12 +27,27 @@
     <header class="header">
         <div class="logo">SneakerGuessr</div>
         <div class="score-display"><span id="score-text">SCORE</span>: <span id="score-val">0</span></div>
-        <div class="header-controls">
-            <div class="settings" id="lang-btn" title="Cambiar Idioma">🌐</div>
-            <div class="settings" id="share-btn" title="Compartir racha">🔗</div>
-            <div class="settings" id="info-btn" title="Cómo jugar">ℹ️</div>
-            <div class="settings" id="stats-btn" title="Mis récords">📊</div>
-            <div class="settings" id="leaderboard-btn" title="Clasificaciones">🏆</div>
+        <div class="header-controls" id="header-controls">
+            <button class="header-btn" id="leaderboard-btn" title="Clasificaciones" aria-label="Clasificaciones">
+                <span class="header-btn-icon">🏆</span>
+                <span class="header-btn-label" id="label-leaderboard">Ranking</span>
+            </button>
+            <button class="header-btn" id="stats-btn" title="Mis récords" aria-label="Mis récords">
+                <span class="header-btn-icon">📊</span>
+                <span class="header-btn-label" id="label-stats">Récords</span>
+            </button>
+            <button class="header-btn" id="info-btn" title="Cómo jugar" aria-label="Cómo jugar">
+                <span class="header-btn-icon">ℹ️</span>
+                <span class="header-btn-label" id="label-info">Ayuda</span>
+            </button>
+            <button class="header-btn" id="share-btn" title="Compartir racha" aria-label="Compartir racha">
+                <span class="header-btn-icon">🔗</span>
+                <span class="header-btn-label" id="label-share">Compartir</span>
+            </button>
+            <button class="header-btn lang-toggle-btn" id="lang-btn" title="Cambiar Idioma" aria-label="Cambiar Idioma">
+                <span class="header-btn-icon" id="lang-flag">🇪🇸</span>
+                <span class="header-btn-label" id="lang-code">ES</span>
+            </button>
         </div>
     </header>
 
@@ -54,6 +69,9 @@
                 <div id="feedback-toast" class="feedback-banner hidden"></div>
 
                 <div class="img-wrapper">
+                    <button type="button" id="game-fav-btn" class="fav-float-btn" title="Añadir a favoritos" aria-label="Favorito">
+                        <span id="game-fav-icon">🤍</span>
+                    </button>
                     <img id="sneaker-img" src="" alt="Sneaker" class="sneaker-img">
                 </div>
                 
@@ -181,11 +199,11 @@
                 <!-- FORMULARIO LOGIN -->
                 <form id="login-form" class="auth-form">
                     <div class="form-group">
-                        <label for="login-username">Usuario (@)</label>
+                        <label for="login-username" id="lbl-login-username">Usuario (@)</label>
                         <input type="text" id="login-username" required placeholder="Tu nombre de usuario" autocomplete="username">
                     </div>
                     <div class="form-group">
-                        <label for="login-password">Contraseña</label>
+                        <label for="login-password" id="lbl-login-password">Contraseña</label>
                         <input type="password" id="login-password" required placeholder="••••" autocomplete="current-password">
                     </div>
                     <div id="login-error" class="auth-error hidden"></div>
@@ -195,17 +213,17 @@
                 <!-- FORMULARIO REGISTRO -->
                 <form id="register-form" class="auth-form hidden">
                     <div class="form-group">
-                        <label for="reg-username">Usuario (@) — mín. 3 caracteres</label>
+                        <label for="reg-username" id="lbl-reg-username">Usuario (@) — mín. 3 caracteres</label>
                         <input type="text" id="reg-username" required placeholder="Crea tu usuario" autocomplete="off">
                     </div>
                     <div class="form-group">
-                        <label for="reg-country">País (código: ES, US, MX…)</label>
+                        <label for="reg-country" id="lbl-reg-country">País (código: ES, US, MX…)</label>
                         <input type="text" id="reg-country" required maxlength="2" placeholder="ES" style="text-transform: uppercase;">
                     </div>
                     <div class="form-group">
-                        <label for="reg-password">Contraseña — mín. 6 caracteres</label>
+                        <label for="reg-password" id="lbl-reg-password">Contraseña — mín. 6 caracteres</label>
                         <input type="password" id="reg-password" required placeholder="Mínimo 6 caracteres" autocomplete="new-password">
-                        <p style="margin-top: 8px; font-size: 11px; color: #f39c12; font-weight: 600; line-height: 1.4;">
+                        <p id="reg-no-email-warning" style="margin-top: 8px; font-size: 11px; color: #f39c12; font-weight: 600; line-height: 1.4;">
                             ⚠️ No hay recuperación de contraseña por email. ¡Apúntala en un lugar seguro!
                         </p>
                     </div>
@@ -215,15 +233,15 @@
 
                 <!-- FORMULARIO ELIMINAR CUENTA (SIN SESIÓN ACTIVA) -->
                 <form id="delete-form" class="auth-form hidden">
-                    <p style="font-size: 12px; color: #e74c3c; line-height: 1.5; text-align: center;">
+                    <p id="del-warning-desc" style="font-size: 12px; color: #e74c3c; line-height: 1.5; text-align: center;">
                         ⚠️ Esta acción es permanente. Se eliminará tu usuario, tus puntos acumulados y tus marcas en la clasificación.
                     </p>
                     <div class="form-group">
-                        <label for="del-username">Usuario (@) a eliminar</label>
+                        <label for="del-username" id="lbl-del-username">Usuario (@) a eliminar</label>
                         <input type="text" id="del-username" required placeholder="Tu usuario" autocomplete="username">
                     </div>
                     <div class="form-group">
-                        <label for="del-password">Contraseña de confirmación</label>
+                        <label for="del-password" id="lbl-del-password">Contraseña de confirmación</label>
                         <input type="password" id="del-password" required placeholder="••••" autocomplete="current-password">
                     </div>
                     <div id="delete-error" class="auth-error hidden"></div>
@@ -294,32 +312,32 @@
     <div id="stats-modal" class="modal hidden">
         <div class="modal-content" style="max-width: 500px; max-height: 90vh; overflow-y: auto;">
             <span class="close-btn" id="close-stats-btn">&times;</span>
-            <h2>📊 MIS RÉCORDS</h2>
+            <h2 id="stats-title">📊 MIS RÉCORDS</h2>
             <div class="stats-grid">
                 <div class="stat-box full-width">
-                    <span class="stat-label">PUNTOS TOTALES (DE SIEMPRE)</span>
+                    <span class="stat-label" id="label-stat-total">PUNTOS TOTALES (DE SIEMPRE)</span>
                     <span class="stat-val" id="total-points-val">0</span>
                 </div>
                 
                 <div class="stat-box" style="border-color: #333;">
-                    <span class="stat-label" style="color: #bbb;">Racha Classic</span>
+                    <span class="stat-label" id="label-stat-classic" style="color: #bbb;">Racha Classic</span>
                     <span class="stat-val" id="streak-classic-normal-val">0</span>
                 </div>
                 <div class="stat-box" style="border-color: #333;">
-                    <span class="stat-label" style="color: #ffaa40;">Victorias 1vs1 ⚔️</span>
+                    <span class="stat-label" id="label-stat-mp" style="color: #ffaa40;">Victorias 1vs1 ⚔️</span>
                     <span class="stat-val" id="mp-wins-val">0</span>
                 </div>
 
                 <div class="stat-box">
-                    <span class="stat-label">Expert (Normal)</span>
+                    <span class="stat-label" id="label-stat-exp-normal">Expert (Normal)</span>
                     <span class="stat-val" id="streak-expert-normal-val">0</span>
                 </div>
                 <div class="stat-box">
-                    <span class="stat-label">Expert (Hard)</span>
+                    <span class="stat-label" id="label-stat-exp-hard">Expert (Hard)</span>
                     <span class="stat-val" id="streak-expert-hard-val">0</span>
                 </div>
                 <div class="stat-box" style="grid-column: span 2;">
-                    <span class="stat-label" style="color: #e74c3c;">Expert (Imposible)</span>
+                    <span class="stat-label" id="label-stat-exp-expert" style="color: #e74c3c;">Expert (Imposible)</span>
                     <span class="stat-val" id="streak-expert-expert-val">0</span>
                 </div>
             </div>
@@ -363,8 +381,8 @@
     <div id="info-modal" class="modal hidden">
         <div class="modal-content" style="max-width: 480px; max-height: 90vh; overflow-y: auto;">
             <span class="close-btn" id="close-info-btn">&times;</span>
-            <h2>ℹ️ ¿CÓMO JUGAR?</h2>
-            <div style="line-height: 1.6; font-size: 14px; color: #e0e0e0; text-align: left;">
+            <h2 id="info-title">ℹ️ ¿CÓMO JUGAR?</h2>
+            <div id="info-content" style="line-height: 1.6; font-size: 14px; color: #e0e0e0; text-align: left;">
                 <p style="margin-bottom: 15px; text-align: center; font-weight: 600; color: #ff6a00;">
                     ¡Demuestra tus conocimientos de cultura sneakerhead adivinando el calzado de la imagen!
                 </p>
@@ -396,8 +414,8 @@
     <div id="mp-lobby-modal" class="modal hidden">
         <div class="modal-content" style="max-width: 480px; text-align: center;">
             <span class="close-btn" id="close-mp-lobby-btn">&times;</span>
-            <h2 style="font-weight: 800; margin-bottom: 8px;">⚔️ 1 VS 1 MULTIJUGADOR</h2>
-            <p style="font-size: 13px; color: #888; margin-bottom: 20px; line-height: 1.5;">
+            <h2 id="mp-lobby-title" style="font-weight: 800; margin-bottom: 8px;">⚔️ 1 VS 1 MULTIJUGADOR</h2>
+            <p id="mp-lobby-desc" style="font-size: 13px; color: #888; margin-bottom: 20px; line-height: 1.5;">
                 ¡Duelo 1vs1 de alta intensidad! El primero en acertar se lleva 1 punto. Si pruebas primero y fallas, te resta -1 punto. ¡El primero a 10 puntos gana!
             </p>
 
@@ -411,12 +429,12 @@
                 <div id="mp-radar-box" class="hidden" style="margin: 25px 0;">
                     <div class="mp-radar-pulse"></div>
                     <p id="mp-radar-status" style="margin-top: 15px; font-weight: 700; color: #ff6a00; font-size: 14px;">Buscando rival en línea...</p>
-                    <p style="font-size: 12px; color: #666; margin-top: 6px;">Tiempo en cola: <span id="mp-queue-timer">0</span>s</p>
+                    <p id="mp-queue-label" style="font-size: 12px; color: #666; margin-top: 6px;">Tiempo en cola: <span id="mp-queue-timer">0</span>s</p>
                     <button class="btn secondary-btn" id="mp-cancel-matchmaking-btn" style="margin-top: 15px; padding: 8px 20px; font-size: 12px;">Cancelar búsqueda</button>
                 </div>
 
                 <div id="mp-start-matchmaking-box">
-                    <p style="font-size: 13px; color: #bbb; margin-bottom: 18px;">
+                    <p id="mp-matchmaking-desc" style="font-size: 13px; color: #bbb; margin-bottom: 18px;">
                         Te emparejaremos automáticamente con otro jugador conectado para un duelo instantáneo.
                     </p>
                     <button class="btn play-btn" id="btn-start-matchmaking" style="width: 100%; font-size: 16px; padding: 15px;">
@@ -428,19 +446,19 @@
             <!-- VISTA 2: SALA CON AMIGO -->
             <div id="mp-view-friend" class="hidden">
                 <div style="background: rgba(255,255,255,0.03); border: 1px solid #333; border-radius: 10px; padding: 15px; margin-bottom: 15px; text-align: left;">
-                    <h3 style="font-size: 13px; color: #ff6a00; margin-bottom: 8px; font-weight: 700;">🏠 CREAR SALA PRIVADA</h3>
+                    <h3 id="mp-create-room-title" style="font-size: 13px; color: #ff6a00; margin-bottom: 8px; font-weight: 700;">🏠 CREAR SALA PRIVADA</h3>
                     <button class="btn secondary-btn" id="btn-create-room" style="width: 100%; margin-bottom: 8px;">CREAR CÓDIGO DE SALA</button>
                     
                     <div id="mp-created-room-box" class="hidden" style="text-align: center; margin-top: 10px;">
-                        <span style="font-size: 11px; color: #888;">CÓDIGO DE TU SALA:</span>
+                        <span id="mp-room-code-label" style="font-size: 11px; color: #888;">CÓDIGO DE TU SALA:</span>
                         <div id="mp-room-code-display" style="font-size: 26px; font-weight: 800; color: #2ecc71; letter-spacing: 4px; margin: 6px 0;">-----</div>
                         <button class="btn" id="btn-copy-invite" style="width: 100%; font-size: 12px; background: #2ecc71; color: #000; font-weight: 700; padding: 8px;">📋 COPIAR ENLACE DE INVITACIÓN</button>
-                        <p style="font-size: 11px; color: #aaa; margin-top: 8px;">Esperando a que tu amigo se una...</p>
+                        <p id="mp-waiting-friend-label" style="font-size: 11px; color: #aaa; margin-top: 8px;">Esperando a que tu amigo se una...</p>
                     </div>
                 </div>
 
                 <div style="background: rgba(255,255,255,0.03); border: 1px solid #333; border-radius: 10px; padding: 15px; text-align: left;">
-                    <h3 style="font-size: 13px; color: #ff6a00; margin-bottom: 8px; font-weight: 700;">🔑 UNIRTE A SALA</h3>
+                    <h3 id="mp-join-room-title" style="font-size: 13px; color: #ff6a00; margin-bottom: 8px; font-weight: 700;">🔑 UNIRTE A SALA</h3>
                     <input type="text" id="mp-input-room-code" placeholder="CÓDIGO (Ej: KICK8)" maxlength="6" style="width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #fff; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; text-align: center;">
                     <button class="btn play-btn" id="btn-join-room" style="width: 100%; font-size: 14px;">ENTRAR A LA SALA</button>
                 </div>
@@ -493,6 +511,10 @@
                 <select id="catalog-brand-filter" style="flex: 1; padding: 10px 12px; background: #181818; border: 1px solid #333; border-radius: 8px; color: #fff; font-family: 'Montserrat', sans-serif;">
                     <option value="all">Todas las marcas</option>
                 </select>
+                <button type="button" id="catalog-fav-filter-btn" class="btn-filter-fav" title="Filtrar por favoritos">
+                    <span class="fav-filter-icon">❤️</span>
+                    <span id="fav-filter-text">Favoritos</span>
+                </button>
             </div>
 
             <div id="catalog-count" style="font-size: 12px; color: #ff6a00; font-weight: 600; margin: 12px 0 10px 0; text-align: left;"></div>
