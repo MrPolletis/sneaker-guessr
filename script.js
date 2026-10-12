@@ -230,14 +230,16 @@ let difficultyIndex = 0;
 let feedbackTimeout     = null;
 let isProcessingAnswer  = false;
 
-// Estado y persistencia de Favoritos
+// Estado y persistencia de Favoritos (local + sincronización en la nube con Supabase)
 const FAVORITES_KEY = "sneaker_favorites";
+const FAVORITES_SYNCED_UID_KEY = "sneaker_favs_synced_uid";
 let catalogFilterOnlyFav = false;
 
 function getFavorites() {
     try {
         const raw = localStorage.getItem(FAVORITES_KEY);
-        return raw ? JSON.parse(raw) : [];
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed.map(String) : [];
     } catch (e) {
         return [];
     }
@@ -248,6 +250,74 @@ function isSneakerFavorite(sneaker) {
     const favs = getFavorites();
     const idKey = String(sneaker.id != null ? sneaker.id : (sneaker.imagen || sneaker.nombre));
     return favs.includes(idKey);
+}
+
+async function saveFavoritesToSupabase(favs) {
+    if (!currentUser) return;
+    try {
+        const cleanFavs = Array.isArray(favs) ? [...new Set(favs.map(String))] : [];
+        const { data, error } = await supabaseClient.auth.updateUser({
+            data: { favorites: cleanFavs }
+        });
+        if (!error && data && data.user) {
+            currentUser = data.user;
+        }
+    } catch (err) {
+        console.error("Error al guardar favoritos en Supabase:", err);
+    }
+}
+
+async function syncFavoritesFromSupabase() {
+    if (!currentUser) return;
+    try {
+        // Consultar el usuario fresco del servidor de Supabase para obtener user_metadata actualizado
+        const { data: freshData, error: userErr } = await supabaseClient.auth.getUser();
+        if (!userErr && freshData && freshData.user) {
+            currentUser = freshData.user;
+        }
+
+        const meta = (currentUser && currentUser.user_metadata) ? currentUser.user_metadata : {};
+        const cloudFavs = meta.favorites;
+        const localFavs = getFavorites();
+        const lastSyncedUid = localStorage.getItem(FAVORITES_SYNCED_UID_KEY);
+
+        if (Array.isArray(cloudFavs)) {
+            if (lastSyncedUid !== currentUser.id && localFavs.length > 0) {
+                // Primera vez que este dispositivo sincroniza con esta cuenta:
+                // fusionar favoritos locales previos con los de la nube
+                const merged = [...new Set([...cloudFavs.map(String), ...localFavs.map(String)])];
+                localStorage.setItem(FAVORITES_KEY, JSON.stringify(merged));
+                localStorage.setItem(FAVORITES_SYNCED_UID_KEY, currentUser.id);
+                if (merged.length !== cloudFavs.length) {
+                    await saveFavoritesToSupabase(merged);
+                }
+            } else {
+                // Sincronizar con la lista oficial de la cuenta en la nube
+                localStorage.setItem(FAVORITES_KEY, JSON.stringify(cloudFavs.map(String)));
+                localStorage.setItem(FAVORITES_SYNCED_UID_KEY, currentUser.id);
+            }
+        } else {
+            // La cuenta aún no tenía favoritos en la nube: subir los que tenga este dispositivo
+            localStorage.setItem(FAVORITES_SYNCED_UID_KEY, currentUser.id);
+            await saveFavoritesToSupabase(localFavs);
+        }
+
+        // Sincronizar también victorias 1vs1 entre dispositivos
+        const cloudMpWins = Number(meta.mp_wins) || 0;
+        const localMpWins = Number(localStorage.getItem("sneaker_mp_wins")) || 0;
+        const finalMpWins = Math.max(cloudMpWins, localMpWins);
+        localStorage.setItem("sneaker_mp_wins", String(finalMpWins));
+        if (finalMpWins > cloudMpWins) {
+            await supabaseClient.auth.updateUser({ data: { mp_wins: finalMpWins } });
+        }
+
+        updateGameFavBtn();
+        if (catalogModal && !catalogModal.classList.contains("hidden")) {
+            renderCatalog();
+        }
+    } catch (err) {
+        console.error("Error al sincronizar favoritos desde Supabase:", err);
+    }
 }
 
 function toggleSneakerFavorite(sneaker) {
@@ -264,6 +334,10 @@ function toggleSneakerFavorite(sneaker) {
         isNowFav = true;
     }
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs));
+
+    if (currentUser) {
+        saveFavoritesToSupabase(favs);
+    }
     return isNowFav;
 }
 
@@ -298,6 +372,7 @@ let mpLocalPoints           = 0;
 let mpRivalPoints           = 0;
 let mpRound                 = 0;
 let mpSneakersList          = [];
+let mpMatchPlan             = [];
 let mpCurrentIndex          = 0;
 let mpTimerInterval         = null;
 let mpTimeLeft              = 10;
@@ -308,6 +383,8 @@ let mpMatchmakingTimeout    = null;
 let mpQueueInterval         = null;
 let mpQueueSeconds          = 0;
 let mpConfettiAnimationId   = null;
+let mpNextRoundTimeout      = null;
+let mpHandshakeInterval     = null;
 
 // Estado de autenticación Supabase
 let currentUser  = null;
@@ -344,7 +421,7 @@ async function initAuth() {
 
 /**
  * Carga los datos del perfil (username, country, total_points) desde la tabla 'profiles'.
- * Sincroniza los puntos entre la nube y el dispositivo local.
+ * Sincroniza los puntos y los favoritos entre la nube y el dispositivo local.
  * Si el usuario se registró antes y no tenía fila en 'profiles', la crea automáticamente.
  */
 async function loadProfileData() {
@@ -408,6 +485,9 @@ async function loadProfileData() {
                 };
             }
         }
+
+        // Sincronizar favoritos y victorias 1vs1 en todos los dispositivos
+        await syncFavoritesFromSupabase();
 
         updateHeaderScore();
         updateAuthButton();
@@ -714,6 +794,11 @@ if (btnModalLogout) {
         await supabaseClient.auth.signOut();
         currentUser = null;
         profileData = null;
+        localStorage.removeItem(FAVORITES_KEY);
+        localStorage.removeItem(FAVORITES_SYNCED_UID_KEY);
+        localStorage.removeItem("sneaker_total_points");
+        localStorage.removeItem("sneaker_mp_wins");
+        updateGameFavBtn();
         updateAuthButton();
         updateHeaderScore();
         authModal.classList.add("hidden");
@@ -742,6 +827,9 @@ async function performAccountDeletion(userId) {
         // 4. Limpiar almacenamiento local
         localStorage.removeItem("sneaker_total_points");
         localStorage.setItem("sneaker_total_points", "0");
+        localStorage.removeItem(FAVORITES_KEY);
+        localStorage.removeItem(FAVORITES_SYNCED_UID_KEY);
+        localStorage.removeItem("sneaker_mp_wins");
 
         // 5. Limpiar estado en memoria
         currentUser = null;
@@ -1625,6 +1713,11 @@ async function openCatalogModal() {
 
     renderCatalog();
     if (catalogModal) catalogModal.classList.remove("hidden");
+
+    // Refrescar favoritos desde la nube si hay sesión activa
+    if (currentUser) {
+        syncFavoritesFromSupabase();
+    }
 }
 
 function renderCatalog() {
@@ -2279,11 +2372,88 @@ if (tabMpFriend) {
     tabMpFriend.addEventListener("click", () => switchMpTab('friend'));
 }
 
-// MATCHMAKING RÁPIDO ONLINE
+// ==========================================
+// EMPAREJAMIENTO Y SALAS COMPARTIDAS 1 VS 1
+// ==========================================
+let mpHeartbeatInterval = null;
+let mpGuestReadyInterval = null;
+let mpMatchStarted = false;
+let mpRoundEnded = false;
+
+// Genera un plan de 40 rondas con modelo único y las 4 opciones (A, B, C, D) pre-mezcladas
+// para que ambos jugadores vean exactamente la misma zapatilla y los mismos 4 botones.
+function generateMpMatchPlan(count = 40) {
+    const plan = [];
+    const seenNames = new Set();
+    const indices = Array.from({ length: sneakers.length }, (_, i) => i).sort(() => Math.random() - 0.5);
+
+    for (const idx of indices) {
+        const s = sneakers[idx];
+        if (!s || !s.nombre) continue;
+        const nameKey = s.nombre.trim().toLowerCase();
+        if (seenNames.has(nameKey)) continue;
+        seenNames.add(nameKey);
+
+        const correctText = s.nombre.trim();
+        const sameBrand = sneakers.filter(item => item.marca && s.marca && item.marca.toLowerCase() === s.marca.toLowerCase());
+        let distractors = [...new Set(sameBrand.map(item => item.nombre.trim()))]
+            .filter(n => n.toLowerCase() !== correctText.toLowerCase());
+        distractors.sort(() => Math.random() - 0.5);
+
+        if (distractors.length < 3) {
+            const otherDistractors = [...new Set(sneakers.map(item => item.nombre.trim()))]
+                .filter(n => n.toLowerCase() !== correctText.toLowerCase() && !distractors.some(d => d.toLowerCase() === n.toLowerCase()));
+            otherDistractors.sort(() => Math.random() - 0.5);
+            distractors = distractors.concat(otherDistractors.slice(0, 3 - distractors.length));
+        }
+
+        const opts = [correctText, distractors[0], distractors[1], distractors[2]].filter(Boolean);
+        opts.sort(() => Math.random() - 0.5);
+
+        plan.push({
+            idx: idx,
+            id: s.id,
+            opts: opts
+        });
+
+        if (plan.length >= count) break;
+    }
+    return plan;
+}
+
+function applyMpMatchPlan(plan) {
+    if (Array.isArray(plan) && plan.length > 0) {
+        mpMatchPlan = plan.map(item => {
+            let sneakerObj = null;
+            if (typeof item.idx === 'number' && sneakers[item.idx]) {
+                sneakerObj = sneakers[item.idx];
+            }
+            if (!sneakerObj && item.id !== undefined) {
+                sneakerObj = sneakers.find(s => s.id === item.id);
+            }
+            if (!sneakerObj) sneakerObj = sneakers[0];
+            return {
+                idx: item.idx,
+                id: sneakerObj.id,
+                sneaker: sneakerObj,
+                opts: Array.isArray(item.opts) && item.opts.length === 4 ? item.opts : null
+            };
+        });
+        mpSneakersList = mpMatchPlan.map(p => p.sneaker);
+    } else {
+        const generated = generateMpMatchPlan(40);
+        applyMpMatchPlan(generated);
+    }
+}
+
 function cleanupMatchmaking() {
     if (mpQueueInterval) {
         clearInterval(mpQueueInterval);
         mpQueueInterval = null;
+    }
+    if (mpHeartbeatInterval) {
+        clearInterval(mpHeartbeatInterval);
+        mpHeartbeatInterval = null;
     }
     if (mpMatchmakingTimeout) {
         clearTimeout(mpMatchmakingTimeout);
@@ -2297,9 +2467,146 @@ function cleanupMatchmaking() {
     }
 }
 
+// Configura el canal de sala en tiempo real para partidas online (tanto Online Rápido como Sala con Amigo)
+function setupMpRoomChannel(roomCode, isHost, rivalName, initialPlan) {
+    if (mpGuestReadyInterval) {
+        clearInterval(mpGuestReadyInterval);
+        mpGuestReadyInterval = null;
+    }
+    if (mpChannel) {
+        try {
+            supabaseClient.removeChannel(mpChannel);
+        } catch (e) {}
+        mpChannel = null;
+    }
+
+    mpRoomCode = roomCode;
+    mpIsHost = isHost;
+    mpIsBot = false;
+    mpMatchStarted = false;
+    if (rivalName) mpRivalUsername = rivalName;
+
+    if (isHost) {
+        const plan = (Array.isArray(initialPlan) && initialPlan.length > 0) ? initialPlan : generateMpMatchPlan(40);
+        applyMpMatchPlan(plan);
+    } else if (Array.isArray(initialPlan) && initialPlan.length > 0) {
+        applyMpMatchPlan(initialPlan);
+    }
+
+    mpChannel = supabaseClient.channel(`sneaker_room_${roomCode}`, {
+        config: { broadcast: { self: false } }
+    });
+
+    mpChannel
+        .on('broadcast', { event: 'guest_ready' }, (payload) => {
+            if (!mpIsHost) return;
+            const data = payload.payload || {};
+            if (data.username) mpRivalUsername = data.username;
+
+            const serializablePlan = mpMatchPlan.map(p => ({ idx: p.idx, id: p.id, opts: p.opts }));
+            mpChannel.send({
+                type: 'broadcast',
+                event: 'host_start_match',
+                payload: {
+                    hostName: getPlayerDisplayName(),
+                    matchPlan: serializablePlan
+                }
+            });
+
+            if (!mpMatchStarted) {
+                closeMpLobby();
+                beginMpMatchLoop();
+            }
+        })
+        .on('broadcast', { event: 'host_start_match' }, (payload) => {
+            if (mpIsHost) return;
+            const data = payload.payload || {};
+            if (data.hostName) mpRivalUsername = data.hostName;
+            if (data.matchPlan) applyMpMatchPlan(data.matchPlan);
+
+            if (mpGuestReadyInterval) {
+                clearInterval(mpGuestReadyInterval);
+                mpGuestReadyInterval = null;
+            }
+            if (btnJoinRoom) {
+                btnJoinRoom.disabled = false;
+                btnJoinRoom.innerText = currentLang === 'es' ? "ENTRAR A LA SALA" : "JOIN ROOM";
+            }
+
+            if (!mpMatchStarted) {
+                closeMpLobby();
+                beginMpMatchLoop();
+            }
+        })
+        .on('broadcast', { event: 'round_attempt' }, (payload) => {
+            const data = payload.payload;
+            if (data) {
+                handleMpRivalAttempt(data);
+            }
+        })
+        .on('broadcast', { event: 'round_sync_end' }, (payload) => {
+            const data = payload.payload;
+            if (!data || data.roundIndex !== mpCurrentIndex) return;
+            if (typeof data.senderPoints === 'number') {
+                mpRivalPoints = data.senderPoints;
+                if (mpRivalScore) mpRivalScore.innerText = mpRivalPoints;
+                if (mpRivalBar)   mpRivalBar.style.width = Math.min(100, (mpRivalPoints / MP_GOAL_POINTS) * 100) + '%';
+            }
+            if (!mpRoundEnded) {
+                const currentSneaker = mpSneakersList[mpCurrentIndex];
+                const correctText = currentSneaker ? currentSneaker.nombre.trim() : "";
+                endMpRound(correctText, true);
+            }
+        })
+        .on('broadcast', { event: 'rematch_start' }, (payload) => {
+            const data = payload.payload || {};
+            if (data.matchPlan) {
+                stopConfetti();
+                if (mpResultsModal) mpResultsModal.classList.add("hidden");
+                applyMpMatchPlan(data.matchPlan);
+                beginMpMatchLoop();
+            }
+        })
+        .on('broadcast', { event: 'player_left' }, () => {
+            if (mpGuestReadyInterval) {
+                clearInterval(mpGuestReadyInterval);
+                mpGuestReadyInterval = null;
+            }
+            alert(currentLang === 'es'
+                ? `${mpRivalUsername} ha abandonado la partida.`
+                : `${mpRivalUsername} has left the match.`);
+            finishMpMatch(true);
+        })
+        .subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+                if (!mpIsHost) {
+                    const sendReady = () => {
+                        if (mpMatchStarted || !mpChannel) {
+                            if (mpGuestReadyInterval) {
+                                clearInterval(mpGuestReadyInterval);
+                                mpGuestReadyInterval = null;
+                            }
+                            return;
+                        }
+                        mpChannel.send({
+                            type: 'broadcast',
+                            event: 'guest_ready',
+                            payload: { username: getPlayerDisplayName() }
+                        });
+                    };
+                    sendReady();
+                    mpGuestReadyInterval = setInterval(sendReady, 450);
+                }
+            }
+        });
+}
+
+// MATCHMAKING RÁPIDO ONLINE
 if (btnStartMatchmaking) {
     btnStartMatchmaking.addEventListener("click", async () => {
         await ensureSneakersLoaded();
+        cleanupMatchmaking();
+
         if (mpStartMatchmakingBox) mpStartMatchmakingBox.classList.add("hidden");
         if (mpRadarBox) mpRadarBox.classList.remove("hidden");
 
@@ -2312,13 +2619,22 @@ if (btnStartMatchmaking) {
             if (mpQueueTimer) mpQueueTimer.innerText = mpQueueSeconds;
         }, 1000);
 
-        const myTicket = 't_' + Math.random().toString(36).substring(2, 8);
+        const myTicket = 't_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
         const myName = getPlayerDisplayName();
         let matchFound = false;
 
         mpMatchmakingChannel = supabaseClient.channel('sneaker_matchmaking_lobby', {
             config: { broadcast: { self: false } }
         });
+
+        const broadcastPresence = () => {
+            if (matchFound || !mpMatchmakingChannel) return;
+            mpMatchmakingChannel.send({
+                type: 'broadcast',
+                event: 'looking_for_match',
+                payload: { ticket: myTicket, username: myName }
+            });
+        };
 
         mpMatchmakingChannel
             .on('broadcast', { event: 'looking_for_match' }, (payload) => {
@@ -2329,18 +2645,27 @@ if (btnStartMatchmaking) {
 
                 if (myTicket > otherTicket) {
                     matchFound = true;
-                    const assignedRoom = 'ROOM_' + Math.random().toString(36).substring(2, 7).toUpperCase();
+                    const assignedRoom = 'QM_' + Math.random().toString(36).substring(2, 8).toUpperCase();
+                    const sharedPlan = generateMpMatchPlan(40);
+
                     mpMatchmakingChannel.send({
                         type: 'broadcast',
                         event: 'match_pair',
-                        payload: { targetTicket: otherTicket, room: assignedRoom, hostName: myName, guestName: otherName }
+                        payload: {
+                            targetTicket: otherTicket,
+                            room: assignedRoom,
+                            hostName: myName,
+                            guestName: otherName,
+                            matchPlan: sharedPlan
+                        }
                     });
+
                     cleanupMatchmaking();
                     if (mpRadarStatus) mpRadarStatus.innerText = dictionary[currentLang].mpRivalFound;
-                    setTimeout(() => {
-                        closeMpLobby();
-                        startMultiplayerMatch(true, otherName, false, assignedRoom);
-                    }, 800);
+                    setupMpRoomChannel(assignedRoom, true, otherName, sharedPlan);
+                } else {
+                    // Responder de inmediato para que el ticket mayor empareje al instante
+                    broadcastPresence();
                 }
             })
             .on('broadcast', { event: 'match_pair' }, (payload) => {
@@ -2350,23 +2675,17 @@ if (btnStartMatchmaking) {
                     matchFound = true;
                     cleanupMatchmaking();
                     if (mpRadarStatus) mpRadarStatus.innerText = dictionary[currentLang].mpRivalFound;
-                    setTimeout(() => {
-                        closeMpLobby();
-                        startMultiplayerMatch(false, data.hostName, false, data.room);
-                    }, 800);
+                    setupMpRoomChannel(data.room, false, data.hostName || 'Rival', data.matchPlan || null);
                 }
             })
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
-                    mpMatchmakingChannel.send({
-                        type: 'broadcast',
-                        event: 'looking_for_match',
-                        payload: { ticket: myTicket, username: myName }
-                    });
+                    broadcastPresence();
+                    mpHeartbeatInterval = setInterval(broadcastPresence, 900);
                 }
             });
 
-        // Si pasan 4.2s sin rival humano online, emparejar con Bot realista
+        // Si pasan 7s sin otro jugador humano buscando a la vez, emparejar con Bot competitivo
         mpMatchmakingTimeout = setTimeout(() => {
             if (matchFound) return;
             matchFound = true;
@@ -2378,8 +2697,8 @@ if (btnStartMatchmaking) {
             setTimeout(() => {
                 closeMpLobby();
                 startMultiplayerMatch(true, pickedBot, true, null);
-            }, 800);
-        }, 4200);
+            }, 600);
+        }, 7000);
     });
 }
 
@@ -2400,18 +2719,8 @@ if (btnCreateRoom) {
         if (mpRoomCodeDisplay) mpRoomCodeDisplay.innerText = code;
         if (mpCreatedRoomBox) mpCreatedRoomBox.classList.remove("hidden");
 
-        if (mpChannel) supabaseClient.removeChannel(mpChannel);
-        mpChannel = supabaseClient.channel(`sneaker_room_${code}`, {
-            config: { broadcast: { self: false } }
-        });
-
-        mpChannel
-            .on('broadcast', { event: 'guest_joined' }, (payload) => {
-                const guestName = (payload.payload && payload.payload.username) ? payload.payload.username : "Amigo";
-                closeMpLobby();
-                startMultiplayerMatch(true, guestName, false, code);
-            })
-            .subscribe();
+        const sharedPlan = generateMpMatchPlan(40);
+        setupMpRoomChannel(code, true, "Amigo", sharedPlan);
     });
 }
 
@@ -2445,29 +2754,7 @@ if (btnJoinRoom) {
         btnJoinRoom.disabled = true;
         btnJoinRoom.innerText = currentLang === 'es' ? "Conectando..." : "Connecting...";
 
-        if (mpChannel) supabaseClient.removeChannel(mpChannel);
-        mpChannel = supabaseClient.channel(`sneaker_room_${code}`, {
-            config: { broadcast: { self: false } }
-        });
-
-        mpChannel
-            .on('broadcast', { event: 'host_ready' }, (payload) => {
-                const hostName = (payload.payload && payload.payload.username) ? payload.payload.username : "Host";
-                const sequence = (payload.payload && payload.payload.sequence) ? payload.payload.sequence : null;
-                btnJoinRoom.disabled = false;
-                btnJoinRoom.innerText = currentLang === 'es' ? "ENTRAR A LA SALA" : "JOIN ROOM";
-                closeMpLobby();
-                startMultiplayerMatch(false, hostName, false, code, sequence);
-            })
-            .subscribe((status) => {
-                if (status === 'SUBSCRIBED') {
-                    mpChannel.send({
-                        type: 'broadcast',
-                        event: 'guest_joined',
-                        payload: { username: getPlayerDisplayName() }
-                    });
-                }
-            });
+        setupMpRoomChannel(code, false, "Host", null);
 
         setTimeout(() => {
             if (btnJoinRoom && btnJoinRoom.disabled) {
@@ -2485,13 +2772,24 @@ let mpRoundWinner = null;
 let mpLocalAttemptDone = false;
 let mpRivalAttemptDone = false;
 
-async function startMultiplayerMatch(isHost, rivalName, isBot, roomCode, sequence) {
+async function startMultiplayerMatch(isHost, rivalName, isBot, roomCode, customPlan) {
     await ensureSneakersLoaded();
 
     mpIsHost = isHost;
     mpIsBot = isBot;
     mpRivalUsername = rivalName || "Rival";
     mpRoomCode = roomCode;
+
+    if (isBot) {
+        applyMpMatchPlan(generateMpMatchPlan(40));
+        beginMpMatchLoop();
+    } else if (roomCode) {
+        setupMpRoomChannel(roomCode, isHost, mpRivalUsername, customPlan || null);
+    }
+}
+
+function beginMpMatchLoop() {
+    mpMatchStarted = true;
     mpLocalPoints = 0;
     mpRivalPoints = 0;
     mpRound = 0;
@@ -2500,55 +2798,10 @@ async function startMultiplayerMatch(isHost, rivalName, isBot, roomCode, sequenc
     mpRoundWinner = null;
     mpLocalAttemptDone = false;
     mpRivalAttemptDone = false;
+    mpRoundEnded = false;
 
-    if (!isBot && roomCode && isHost) {
-        const seqIndices = [];
-        const seenNames = new Set();
-        const shuffledIndices = Array.from({ length: sneakers.length }, (_, i) => i).sort(() => Math.random() - 0.5);
-        for (const idx of shuffledIndices) {
-            const nameKey = (sneakers[idx].nombre || '').trim().toLowerCase();
-            if (!seenNames.has(nameKey)) {
-                seenNames.add(nameKey);
-                seqIndices.push(idx);
-                if (seqIndices.length >= 40) break;
-            }
-        }
-        mpSneakersList = seqIndices.map(idx => sneakers[idx]);
-
-        if (mpChannel) {
-            mpChannel.send({
-                type: 'broadcast',
-                event: 'host_ready',
-                payload: { username: getPlayerDisplayName(), sequence: seqIndices }
-            });
-        }
-    } else if (!isBot && roomCode && !isHost && sequence && Array.isArray(sequence)) {
-        mpSneakersList = sequence.map(idx => sneakers[idx] || sneakers[0]);
-    } else {
-        const seenNames = new Set();
-        const shuffled = [...sneakers].sort(() => Math.random() - 0.5);
-        mpSneakersList = shuffled.filter(s => {
-            const nameKey = (s.nombre || '').trim().toLowerCase();
-            if (seenNames.has(nameKey)) return false;
-            seenNames.add(nameKey);
-            return true;
-        }).slice(0, 40);
-    }
-
-    if (!isBot && mpChannel) {
-        mpChannel
-            .on('broadcast', { event: 'round_attempt' }, (payload) => {
-                const data = payload.payload;
-                if (data) {
-                    handleMpRivalAttempt(data.isFirst, data.isCorrect, data.newPoints);
-                }
-            })
-            .on('broadcast', { event: 'player_left' }, () => {
-                alert(currentLang === 'es'
-                    ? `${mpRivalUsername} ha abandonado la partida.`
-                    : `${mpRivalUsername} has left the match.`);
-                finishMpMatch(true);
-            });
+    if (!mpMatchPlan || mpMatchPlan.length === 0) {
+        applyMpMatchPlan(generateMpMatchPlan(40));
     }
 
     if (mpLocalName)  mpLocalName.innerText  = getPlayerDisplayName();
@@ -2574,18 +2827,11 @@ function disableLocalButtons() {
 }
 
 function startMpRound() {
-    if (mpTimerInterval) { clearInterval(mpTimerInterval); mpTimerInterval = null; }
-    if (mpBotTimeout)    { clearTimeout(mpBotTimeout);    mpBotTimeout = null; }
+    if (mpTimerInterval)    { clearInterval(mpTimerInterval);    mpTimerInterval = null; }
+    if (mpBotTimeout)       { clearTimeout(mpBotTimeout);        mpBotTimeout = null; }
+    if (mpNextRoundTimeout) { clearTimeout(mpNextRoundTimeout);  mpNextRoundTimeout = null; }
 
     if (mpCurrentIndex >= mpSneakersList.length) {
-        const seenNames = new Set();
-        const shuffled = [...sneakers].sort(() => Math.random() - 0.5);
-        mpSneakersList = shuffled.filter(s => {
-            const nameKey = (s.nombre || '').trim().toLowerCase();
-            if (seenNames.has(nameKey)) return false;
-            seenNames.add(nameKey);
-            return true;
-        }).slice(0, 40);
         mpCurrentIndex = 0;
     }
 
@@ -2601,26 +2847,34 @@ function startMpRound() {
     mpLocalAttemptDone = false;
     mpRivalAttemptDone = false;
     mpAnswerLocked = false;
+    mpRoundEnded = false;
 
     const currentSneaker = mpSneakersList[mpCurrentIndex];
-    if (mpSneakerImg) mpSneakerImg.src = currentSneaker.imagen;
+    if (mpSneakerImg && currentSneaker) mpSneakerImg.src = currentSneaker.imagen;
 
-    // Generar 4 opciones únicas
-    const correctText = currentSneaker.nombre.trim();
-    const sameBrand = sneakers.filter(s => s.marca.toLowerCase() === currentSneaker.marca.toLowerCase());
-    let distractors = [...new Set(sameBrand.map(s => s.nombre.trim()))]
-        .filter(n => n.toLowerCase() !== correctText.toLowerCase());
-    distractors.sort(() => Math.random() - 0.5);
+    const correctText = currentSneaker ? currentSneaker.nombre.trim() : "";
+    const planEntry = mpMatchPlan[mpCurrentIndex];
 
-    if (distractors.length < 3) {
-        const otherDistractors = [...new Set(sneakers.map(s => s.nombre.trim()))]
-            .filter(n => n.toLowerCase() !== correctText.toLowerCase() && !distractors.some(d => d.toLowerCase() === n.toLowerCase()));
-        otherDistractors.sort(() => Math.random() - 0.5);
-        distractors = distractors.concat(otherDistractors.slice(0, 3 - distractors.length));
+    let options = (planEntry && Array.isArray(planEntry.opts) && planEntry.opts.length === 4)
+        ? [...planEntry.opts]
+        : null;
+
+    if (!options) {
+        const sameBrand = sneakers.filter(s => s.marca.toLowerCase() === currentSneaker.marca.toLowerCase());
+        let distractors = [...new Set(sameBrand.map(s => s.nombre.trim()))]
+            .filter(n => n.toLowerCase() !== correctText.toLowerCase());
+        distractors.sort(() => Math.random() - 0.5);
+
+        if (distractors.length < 3) {
+            const otherDistractors = [...new Set(sneakers.map(s => s.nombre.trim()))]
+                .filter(n => n.toLowerCase() !== correctText.toLowerCase() && !distractors.some(d => d.toLowerCase() === n.toLowerCase()));
+            otherDistractors.sort(() => Math.random() - 0.5);
+            distractors = distractors.concat(otherDistractors.slice(0, 3 - distractors.length));
+        }
+
+        options = [correctText, distractors[0], distractors[1], distractors[2]];
+        options.sort(() => Math.random() - 0.5);
     }
-
-    const options = [correctText, distractors[0], distractors[1], distractors[2]];
-    options.sort(() => Math.random() - 0.5);
 
     // 4 Botones con la paleta de SneakerGuessr e insignias estilizadas (A, B, C, D)
     const badges = ["A", "B", "C", "D"];
@@ -2655,7 +2909,7 @@ function startMpRound() {
                 mpLocalAttemptDone = true;
                 if (mpLocalStatus) mpLocalStatus.innerText = currentLang === 'es' ? "⏰ Tiempo agotado" : "⏰ Time's up";
             }
-            endMpRound(correctText);
+            endMpRound(correctText, false);
         }
     }, 100);
 
@@ -2664,10 +2918,11 @@ function startMpRound() {
         const botDelay = Math.random() * 3200 + 1700; // 1.7s a 4.9s
 
         mpBotTimeout = setTimeout(() => {
-            if (mpRoundWinner !== null) return; // Si el local ya ganó la ronda
+            if (mpRoundWinner !== null || mpRoundEnded) return;
 
             const isFirst = !mpFirstAttemptMade;
             mpFirstAttemptMade = true;
+            mpRivalAttemptDone = true;
 
             if (isFirst) {
                 const botCorrect = Math.random() < 0.70;
@@ -2679,9 +2934,8 @@ function startMpRound() {
                     if (mpRivalStatus) mpRivalStatus.innerText = dictionary[currentLang].mpFirstCorrect;
                     if (mpLocalStatus) mpLocalStatus.innerText = dictionary[currentLang].mpRivalFirstCorrect;
                     disableLocalButtons();
-                    endMpRound(correctText);
+                    endMpRound(correctText, true);
                 } else {
-                    // Bot se precipita y falla primero: -1 punto
                     mpRivalPoints = Math.max(0, mpRivalPoints - 1);
                     if (mpRivalScore) mpRivalScore.innerText = mpRivalPoints;
                     if (mpRivalBar)   mpRivalBar.style.width = Math.min(100, (mpRivalPoints / MP_GOAL_POINTS) * 100) + '%';
@@ -2690,11 +2944,10 @@ function startMpRound() {
                         mpLocalStatus.innerText = currentLang === 'es' ? "⚡ ¡Rival falló! ¡Acierta para sumar +1!" : "⚡ Rival missed! Guess now for +1!";
                     }
                     if (mpLocalAttemptDone) {
-                        endMpRound(correctText);
+                        endMpRound(correctText, true);
                     }
                 }
             } else {
-                // Bot responde en segundo lugar (el jugador local falló primero)
                 const botCorrect = Math.random() < 0.80;
                 if (botCorrect) {
                     mpRoundWinner = 'rival';
@@ -2702,10 +2955,10 @@ function startMpRound() {
                     if (mpRivalScore) mpRivalScore.innerText = mpRivalPoints;
                     if (mpRivalBar)   mpRivalBar.style.width = Math.min(100, (mpRivalPoints / MP_GOAL_POINTS) * 100) + '%';
                     if (mpRivalStatus) mpRivalStatus.innerText = dictionary[currentLang].mpStealCorrect;
-                    endMpRound(correctText);
+                    endMpRound(correctText, true);
                 } else {
                     if (mpRivalStatus) mpRivalStatus.innerText = currentLang === 'es' ? "❌ Rival también falló" : "❌ Rival also missed";
-                    endMpRound(correctText);
+                    endMpRound(correctText, true);
                 }
             }
         }, botDelay);
@@ -2713,12 +2966,12 @@ function startMpRound() {
 }
 
 function handleMpLocalAnswer(chosenText, correctText, btnElement) {
-    if (mpLocalAttemptDone || mpRoundWinner !== null) return;
+    if (mpLocalAttemptDone || mpRoundWinner !== null || mpRoundEnded) return;
     mpLocalAttemptDone = true;
 
     const isFirst = !mpFirstAttemptMade;
     mpFirstAttemptMade = true;
-    const isCorrect = (chosenText === correctText);
+    const isCorrect = (chosenText.trim().toLowerCase() === correctText.trim().toLowerCase());
 
     if (isFirst) {
         if (isCorrect) {
@@ -2735,10 +2988,15 @@ function handleMpLocalAnswer(chosenText, correctText, btnElement) {
                 mpChannel.send({
                     type: 'broadcast',
                     event: 'round_attempt',
-                    payload: { isFirst: true, isCorrect: true, newPoints: mpLocalPoints }
+                    payload: {
+                        roundIndex: mpCurrentIndex,
+                        isFirst: true,
+                        isCorrect: true,
+                        senderPoints: mpLocalPoints
+                    }
                 });
             }
-            endMpRound(correctText);
+            endMpRound(correctText, true);
         } else {
             // Se precipita y falla primero: PENALIZACIÓN -1 PUNTO
             mpLocalPoints = Math.max(0, mpLocalPoints - 1);
@@ -2752,12 +3010,17 @@ function handleMpLocalAnswer(chosenText, correctText, btnElement) {
                 mpChannel.send({
                     type: 'broadcast',
                     event: 'round_attempt',
-                    payload: { isFirst: true, isCorrect: false, newPoints: mpLocalPoints }
+                    payload: {
+                        roundIndex: mpCurrentIndex,
+                        isFirst: true,
+                        isCorrect: false,
+                        senderPoints: mpLocalPoints
+                    }
                 });
             }
 
             if (mpRivalAttemptDone) {
-                endMpRound(correctText);
+                endMpRound(correctText, false);
             }
         }
     } else {
@@ -2775,10 +3038,15 @@ function handleMpLocalAnswer(chosenText, correctText, btnElement) {
                 mpChannel.send({
                     type: 'broadcast',
                     event: 'round_attempt',
-                    payload: { isFirst: false, isCorrect: true, newPoints: mpLocalPoints }
+                    payload: {
+                        roundIndex: mpCurrentIndex,
+                        isFirst: false,
+                        isCorrect: true,
+                        senderPoints: mpLocalPoints
+                    }
                 });
             }
-            endMpRound(correctText);
+            endMpRound(correctText, true);
         } else {
             if (mpLocalStatus) mpLocalStatus.innerText = currentLang === 'es' ? "❌ Fallaste" : "❌ Missed";
             if (btnElement) btnElement.classList.add("mp-btn-incorrect");
@@ -2788,65 +3056,93 @@ function handleMpLocalAnswer(chosenText, correctText, btnElement) {
                 mpChannel.send({
                     type: 'broadcast',
                     event: 'round_attempt',
-                    payload: { isFirst: false, isCorrect: false, newPoints: mpLocalPoints }
+                    payload: {
+                        roundIndex: mpCurrentIndex,
+                        isFirst: false,
+                        isCorrect: false,
+                        senderPoints: mpLocalPoints
+                    }
                 });
             }
-            endMpRound(correctText);
+            endMpRound(correctText, false);
         }
     }
 }
 
-function handleMpRivalAttempt(isFirst, isCorrect, newPoints) {
+function handleMpRivalAttempt(data) {
+    if (data.roundIndex !== undefined && data.roundIndex !== mpCurrentIndex) return;
+    if (mpRoundEnded) return;
+
     mpRivalAttemptDone = true;
-    mpRivalPoints = newPoints;
-    if (mpRivalScore) mpRivalScore.innerText = mpRivalPoints;
-    if (mpRivalBar)   mpRivalBar.style.width = Math.min(100, (mpRivalPoints / MP_GOAL_POINTS) * 100) + '%';
+    const newPoints = typeof data.senderPoints === 'number' ? data.senderPoints : data.newPoints;
+    if (typeof newPoints === 'number') {
+        mpRivalPoints = newPoints;
+        if (mpRivalScore) mpRivalScore.innerText = mpRivalPoints;
+        if (mpRivalBar)   mpRivalBar.style.width = Math.min(100, (mpRivalPoints / MP_GOAL_POINTS) * 100) + '%';
+    }
 
     const currentSneaker = mpSneakersList[mpCurrentIndex];
     const correctText = currentSneaker ? currentSneaker.nombre.trim() : "";
 
-    if (isFirst) {
+    if (data.isFirst && !mpLocalAttemptDone) {
         mpFirstAttemptMade = true;
-        if (isCorrect) {
+        if (data.isCorrect) {
             mpRoundWinner = 'rival';
             if (mpRivalStatus) mpRivalStatus.innerText = dictionary[currentLang].mpFirstCorrect;
             if (mpLocalStatus) mpLocalStatus.innerText = dictionary[currentLang].mpRivalFirstCorrect;
             disableLocalButtons();
-            endMpRound(correctText);
+            endMpRound(correctText, true);
         } else {
             if (mpRivalStatus) mpRivalStatus.innerText = currentLang === 'es' ? "💥 ¡Rival se precipitó! (-1 pt)" : "💥 Rival rushed! (-1 pt)";
             if (mpLocalStatus && !mpLocalAttemptDone) {
                 mpLocalStatus.innerText = currentLang === 'es' ? "⚡ ¡Rival falló! ¡Acierta para sumar +1!" : "⚡ Rival missed! Guess now for +1!";
             }
-            if (mpLocalAttemptDone) {
-                endMpRound(correctText);
-            }
         }
     } else {
-        if (isCorrect) {
-            mpRoundWinner = 'rival';
+        mpFirstAttemptMade = true;
+        if (data.isCorrect) {
+            if (mpRoundWinner !== 'local') {
+                mpRoundWinner = 'rival';
+            }
             if (mpRivalStatus) mpRivalStatus.innerText = dictionary[currentLang].mpStealCorrect;
             disableLocalButtons();
-            endMpRound(correctText);
+            endMpRound(correctText, true);
         } else {
             if (mpRivalStatus) mpRivalStatus.innerText = currentLang === 'es' ? "❌ Rival también falló" : "❌ Rival also missed";
-            endMpRound(correctText);
+            if (mpLocalAttemptDone) {
+                endMpRound(correctText, true);
+            }
         }
     }
 }
 
-function endMpRound(correctText) {
-    if (mpTimerInterval) { clearInterval(mpTimerInterval); mpTimerInterval = null; }
-    if (mpBotTimeout)    { clearTimeout(mpBotTimeout);    mpBotTimeout = null; }
+function endMpRound(correctText, skipSyncBroadcast) {
+    if (mpRoundEnded) return;
+    mpRoundEnded = true;
+
+    if (mpTimerInterval)    { clearInterval(mpTimerInterval);    mpTimerInterval = null; }
+    if (mpBotTimeout)       { clearTimeout(mpBotTimeout);        mpBotTimeout = null; }
+    if (mpNextRoundTimeout) { clearTimeout(mpNextRoundTimeout);  mpNextRoundTimeout = null; }
 
     disableLocalButtons();
+
+    if (!skipSyncBroadcast && mpChannel && !mpIsBot) {
+        mpChannel.send({
+            type: 'broadcast',
+            event: 'round_sync_end',
+            payload: {
+                roundIndex: mpCurrentIndex,
+                senderPoints: mpLocalPoints
+            }
+        });
+    }
 
     // Revelar la respuesta correcta con estilo verde
     if (mpOptionsContainer) {
         const buttons = mpOptionsContainer.querySelectorAll(".mp-answer-btn");
         buttons.forEach(b => {
             const textSpan = b.querySelector(".mp-btn-text");
-            if (textSpan && textSpan.innerText.trim() === correctText) {
+            if (textSpan && textSpan.innerText.trim().toLowerCase() === correctText.trim().toLowerCase()) {
                 b.classList.add("mp-btn-correct");
             }
         });
@@ -2863,7 +3159,8 @@ function endMpRound(correctText) {
         mpRoundFeedback.classList.remove("hidden");
     }
 
-    setTimeout(() => {
+    mpNextRoundTimeout = setTimeout(() => {
+        mpNextRoundTimeout = null;
         if (mpLocalPoints >= MP_GOAL_POINTS || mpRivalPoints >= MP_GOAL_POINTS) {
             finishMpMatch(false);
         } else {
@@ -2874,8 +3171,9 @@ function endMpRound(correctText) {
 }
 
 function finishMpMatch(forfeitLocalWin) {
-    if (mpTimerInterval) { clearInterval(mpTimerInterval); mpTimerInterval = null; }
-    if (mpBotTimeout)    { clearTimeout(mpBotTimeout);    mpBotTimeout = null; }
+    if (mpTimerInterval)    { clearInterval(mpTimerInterval);    mpTimerInterval = null; }
+    if (mpBotTimeout)       { clearTimeout(mpBotTimeout);        mpBotTimeout = null; }
+    if (mpNextRoundTimeout) { clearTimeout(mpNextRoundTimeout);  mpNextRoundTimeout = null; }
 
     const localWon = forfeitLocalWin || (mpLocalPoints >= MP_GOAL_POINTS && mpLocalPoints >= mpRivalPoints) || (mpLocalPoints > mpRivalPoints);
 
@@ -2897,7 +3195,7 @@ function finishMpMatch(forfeitLocalWin) {
 
         startConfetti();
 
-        // Registrar victoria 1vs1
+        // Registrar victoria 1vs1 local y en la nube
         let currentMpWins = parseInt(localStorage.getItem("sneaker_mp_wins") || "0");
         currentMpWins++;
         localStorage.setItem("sneaker_mp_wins", currentMpWins);
@@ -2909,6 +3207,9 @@ function finishMpMatch(forfeitLocalWin) {
 
         if (currentUser) {
             savePointsToSupabase(totalPts).catch(console.error);
+            supabaseClient.auth.updateUser({
+                data: { mp_wins: currentMpWins }
+            }).catch(console.error);
         }
         updateHeaderScore();
     } else {
@@ -2923,9 +3224,12 @@ function finishMpMatch(forfeitLocalWin) {
 }
 
 function cleanupMpMatch() {
-    if (mpTimerInterval) { clearInterval(mpTimerInterval); mpTimerInterval = null; }
-    if (mpBotTimeout)    { clearTimeout(mpBotTimeout);    mpBotTimeout = null; }
+    if (mpTimerInterval)      { clearInterval(mpTimerInterval);      mpTimerInterval = null; }
+    if (mpBotTimeout)         { clearTimeout(mpBotTimeout);          mpBotTimeout = null; }
+    if (mpNextRoundTimeout)   { clearTimeout(mpNextRoundTimeout);    mpNextRoundTimeout = null; }
+    if (mpGuestReadyInterval) { clearInterval(mpGuestReadyInterval); mpGuestReadyInterval = null; }
     stopConfetti();
+    mpMatchStarted = false;
 
     if (mpChannel) {
         try {
@@ -2952,7 +3256,20 @@ if (mpBtnRematch) {
     mpBtnRematch.addEventListener("click", () => {
         stopConfetti();
         if (mpResultsModal) mpResultsModal.classList.add("hidden");
-        startMultiplayerMatch(true, mpRivalUsername, mpIsBot, mpRoomCode);
+        if (mpIsBot) {
+            startMultiplayerMatch(true, mpRivalUsername, true, null);
+        } else if (mpChannel && mpRoomCode) {
+            const newPlan = generateMpMatchPlan(40);
+            applyMpMatchPlan(newPlan);
+            mpChannel.send({
+                type: 'broadcast',
+                event: 'rematch_start',
+                payload: { matchPlan: newPlan }
+            });
+            beginMpMatchLoop();
+        } else {
+            startMultiplayerMatch(true, mpRivalUsername, true, null);
+        }
     });
 }
 
