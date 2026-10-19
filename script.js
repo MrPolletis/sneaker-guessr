@@ -18,6 +18,33 @@ function usernameToAuthEmail(username) {
     return `${username.toLowerCase()}${AUTH_EMAIL_DOMAIN}`;
 }
 
+async function resolveAuthEmailForUsername(usernameVal) {
+    let authEmail = usernameToAuthEmail(usernameVal);
+    try {
+        const { data: prof } = await supabaseClient
+            .from('profiles')
+            .select('id, username')
+            .ilike('username', usernameVal)
+            .maybeSingle();
+
+        if (prof) {
+            const { data: authRecord } = await supabaseClient
+                .from('player_stats')
+                .select('difficulty')
+                .eq('user_id', prof.id)
+                .eq('game_mode', '_account_auth')
+                .maybeSingle();
+
+            if (authRecord && authRecord.difficulty) {
+                authEmail = authRecord.difficulty;
+            }
+        }
+    } catch (err) {
+        console.log("Nota en resolveAuthEmailForUsername:", err);
+    }
+    return authEmail;
+}
+
 // ==========================================
 // CONFIGURACIÓN DE PROGRAMAS DE AFILIADOS
 // Para activar comisiones reales, introduce tu ID en cada plataforma:
@@ -133,6 +160,15 @@ const loggedUsernameDisplay = document.getElementById("logged-username-display")
 const loggedStatsDisplay    = document.getElementById("logged-stats-display");
 const btnModalLogout        = document.getElementById("btn-modal-logout");
 const btnModalDeleteLogged  = document.getElementById("btn-modal-delete-logged");
+const btnModalChangeUsername      = document.getElementById("btn-modal-change-username");
+const changeUsernameBox           = document.getElementById("change-username-box");
+const changeUsernameTitle         = document.getElementById("change-username-title");
+const changeUsernameCooldownInfo  = document.getElementById("change-username-cooldown-info");
+const newUsernameInput            = document.getElementById("new-username-input");
+const changeUsernameError         = document.getElementById("change-username-error");
+const changeUsernameSuccess       = document.getElementById("change-username-success");
+const btnSubmitChangeUsername     = document.getElementById("btn-submit-change-username");
+const btnCancelChangeUsername     = document.getElementById("btn-cancel-change-username");
 
 const tabLoginBtn           = document.getElementById("tab-login-btn");
 const tabRegisterBtn        = document.getElementById("tab-register-btn");
@@ -722,6 +758,10 @@ if (filterDiffContainer) {
 // Abre el modal de autenticación adaptado al estado del usuario (sesión activa o invitado)
 function openAuthModal() {
     resetAuthFormErrors();
+    if (changeUsernameBox) changeUsernameBox.classList.add("hidden");
+    if (newUsernameInput) newUsernameInput.value = "";
+    if (changeUsernameError) { changeUsernameError.classList.add("hidden"); changeUsernameError.textContent = ""; }
+    if (changeUsernameSuccess) { changeUsernameSuccess.classList.add("hidden"); changeUsernameSuccess.textContent = ""; }
     if (currentUser && profileData) {
         if (authLoggedView) authLoggedView.classList.remove("hidden");
         if (authGuestView)  authGuestView.classList.add("hidden");
@@ -866,6 +906,244 @@ if (btnModalDeleteLogged) {
     });
 }
 
+// ==========================================
+// CAMBIO DE NOMBRE DE USUARIO (LÍMITE: 1 VEZ AL MES)
+// ==========================================
+const USERNAME_CHANGE_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000; // 30 días
+
+function getUsernameChangeCooldown() {
+    let lastChangedStr = null;
+    if (currentUser && currentUser.user_metadata && currentUser.user_metadata.username_last_changed) {
+        lastChangedStr = currentUser.user_metadata.username_last_changed;
+    }
+    if (!lastChangedStr) {
+        lastChangedStr = localStorage.getItem("sneaker_username_last_changed");
+    }
+    if (!lastChangedStr) {
+        return { canChange: true, daysLeft: 0 };
+    }
+    const lastDate = new Date(lastChangedStr);
+    const now = Date.now();
+    const diff = now - lastDate.getTime();
+    if (isNaN(diff) || diff >= USERNAME_CHANGE_COOLDOWN_MS) {
+        return { canChange: true, daysLeft: 0 };
+    }
+    const daysLeft = Math.max(1, Math.ceil((USERNAME_CHANGE_COOLDOWN_MS - diff) / (24 * 60 * 60 * 1000)));
+    return { canChange: false, daysLeft };
+}
+
+function updateChangeUsernameUI() {
+    if (!changeUsernameCooldownInfo) return;
+    const cooldown = getUsernameChangeCooldown();
+    if (cooldown.canChange) {
+        changeUsernameCooldownInfo.textContent = dictionary[currentLang].changeUsernameInfo;
+        changeUsernameCooldownInfo.style.color = "#aaa";
+        if (newUsernameInput) newUsernameInput.disabled = false;
+        if (btnSubmitChangeUsername) {
+            btnSubmitChangeUsername.disabled = false;
+            btnSubmitChangeUsername.style.opacity = "1";
+            btnSubmitChangeUsername.style.cursor = "pointer";
+        }
+    } else {
+        changeUsernameCooldownInfo.textContent = dictionary[currentLang].changeUsernameCooldown(cooldown.daysLeft);
+        changeUsernameCooldownInfo.style.color = "#f39c12";
+        if (newUsernameInput) newUsernameInput.disabled = true;
+        if (btnSubmitChangeUsername) {
+            btnSubmitChangeUsername.disabled = true;
+            btnSubmitChangeUsername.style.opacity = "0.5";
+            btnSubmitChangeUsername.style.cursor = "not-allowed";
+        }
+    }
+}
+
+if (btnModalChangeUsername) {
+    btnModalChangeUsername.addEventListener("click", () => {
+        if (!currentUser) return;
+        if (changeUsernameBox.classList.contains("hidden")) {
+            changeUsernameBox.classList.remove("hidden");
+            if (newUsernameInput) {
+                newUsernameInput.value = "";
+                newUsernameInput.focus();
+            }
+            if (changeUsernameError) {
+                changeUsernameError.classList.add("hidden");
+                changeUsernameError.textContent = "";
+            }
+            if (changeUsernameSuccess) {
+                changeUsernameSuccess.classList.add("hidden");
+                changeUsernameSuccess.textContent = "";
+            }
+            updateChangeUsernameUI();
+        } else {
+            changeUsernameBox.classList.add("hidden");
+        }
+    });
+}
+
+if (btnCancelChangeUsername) {
+    btnCancelChangeUsername.addEventListener("click", () => {
+        if (changeUsernameBox) changeUsernameBox.classList.add("hidden");
+        if (newUsernameInput) newUsernameInput.value = "";
+        if (changeUsernameError) changeUsernameError.classList.add("hidden");
+        if (changeUsernameSuccess) changeUsernameSuccess.classList.add("hidden");
+    });
+}
+
+if (btnSubmitChangeUsername) {
+    btnSubmitChangeUsername.addEventListener("click", async () => {
+        if (!currentUser) return;
+        if (changeUsernameError) {
+            changeUsernameError.classList.add("hidden");
+            changeUsernameError.textContent = "";
+        }
+        if (changeUsernameSuccess) {
+            changeUsernameSuccess.classList.add("hidden");
+            changeUsernameSuccess.textContent = "";
+        }
+
+        // 1. Validar límite mensual (1 vez al mes)
+        const cooldown = getUsernameChangeCooldown();
+        if (!cooldown.canChange) {
+            if (changeUsernameError) {
+                changeUsernameError.textContent = dictionary[currentLang].changeUsernameCooldown(cooldown.daysLeft);
+                changeUsernameError.classList.remove("hidden");
+            }
+            return;
+        }
+
+        // 2. Normalizar y validar formato
+        const rawNewUser = newUsernameInput ? newUsernameInput.value : "";
+        const newUsername = normalizeUsername(rawNewUser);
+
+        if (newUsername.length < 3 || newUsername.length > 20) {
+            if (changeUsernameError) {
+                changeUsernameError.textContent = currentLang === 'es'
+                    ? "El usuario debe tener entre 3 y 20 caracteres."
+                    : "Username must have between 3 and 20 characters.";
+                changeUsernameError.classList.remove("hidden");
+            }
+            return;
+        }
+
+        if (!/^[a-zA-Z0-9_]+$/.test(newUsername)) {
+            if (changeUsernameError) {
+                changeUsernameError.textContent = currentLang === 'es'
+                    ? "El usuario solo puede usar letras, números y guion bajo (_)."
+                    : "Username can only use letters, numbers and underscores (_).";
+                changeUsernameError.classList.remove("hidden");
+            }
+            return;
+        }
+
+        const currentName = (profileData && profileData.username)
+            || (currentUser.user_metadata && currentUser.user_metadata.username)
+            || "";
+
+        if (currentName.toLowerCase() === newUsername.toLowerCase()) {
+            if (changeUsernameError) {
+                changeUsernameError.textContent = dictionary[currentLang].errUserSame;
+                changeUsernameError.classList.remove("hidden");
+            }
+            return;
+        }
+
+        btnSubmitChangeUsername.disabled = true;
+        btnSubmitChangeUsername.textContent = currentLang === 'es' ? "Comprobando..." : "Checking...";
+
+        try {
+            // 3. Comprobar que no coincida con ningún usuario ya existente (case-insensitive)
+            const { data: existingUser, error: checkErr } = await supabaseClient
+                .from('profiles')
+                .select('id, username')
+                .ilike('username', newUsername)
+                .maybeSingle();
+
+            if (checkErr) {
+                console.error("Error al comprobar unicidad de usuario:", checkErr);
+            }
+
+            if (existingUser && existingUser.id !== currentUser.id) {
+                if (changeUsernameError) {
+                    changeUsernameError.textContent = dictionary[currentLang].errUserTaken;
+                    changeUsernameError.classList.remove("hidden");
+                }
+                btnSubmitChangeUsername.disabled = false;
+                btnSubmitChangeUsername.textContent = dictionary[currentLang].btnSaveUsername;
+                return;
+            }
+
+            btnSubmitChangeUsername.textContent = currentLang === 'es' ? "Guardando..." : "Saving...";
+
+            const nowIso = new Date().toISOString();
+            const originalAuthEmail = (currentUser && currentUser.email)
+                || usernameToAuthEmail(currentName);
+
+            // 4. Guardar vinculación en player_stats para que pueda iniciar sesión con el nuevo nombre
+            await supabaseClient
+                .from('player_stats')
+                .upsert({
+                    user_id: currentUser.id,
+                    game_mode: '_account_auth',
+                    difficulty: originalAuthEmail,
+                    best_streak: 0,
+                    updated_at: nowIso
+                }, { onConflict: 'user_id,game_mode,difficulty' });
+
+            // 5. Actualizar la tabla profiles con el nuevo username
+            const { error: updateProfErr } = await supabaseClient
+                .from('profiles')
+                .update({ username: newUsername })
+                .eq('id', currentUser.id);
+
+            if (updateProfErr) throw updateProfErr;
+
+            // 6. Actualizar user_metadata en Supabase Auth
+            await supabaseClient.auth.updateUser({
+                data: {
+                    username: newUsername,
+                    username_last_changed: nowIso
+                }
+            });
+
+            // 7. Guardar timestamp en localStorage
+            localStorage.setItem("sneaker_username_last_changed", nowIso);
+
+            // 8. Actualizar variables en memoria y UI
+            if (profileData) profileData.username = newUsername;
+            if (currentUser.user_metadata) {
+                currentUser.user_metadata.username = newUsername;
+                currentUser.user_metadata.username_last_changed = nowIso;
+            }
+            if (loggedUsernameDisplay) loggedUsernameDisplay.textContent = `@${newUsername}`;
+            updateAuthButton();
+
+            if (changeUsernameSuccess) {
+                changeUsernameSuccess.textContent = dictionary[currentLang].successUserChanged(newUsername);
+                changeUsernameSuccess.classList.remove("hidden");
+            }
+
+            setTimeout(() => {
+                if (changeUsernameBox) changeUsernameBox.classList.add("hidden");
+                if (newUsernameInput) newUsernameInput.value = "";
+                if (changeUsernameSuccess) changeUsernameSuccess.classList.add("hidden");
+                btnSubmitChangeUsername.disabled = false;
+                btnSubmitChangeUsername.textContent = dictionary[currentLang].btnSaveUsername;
+            }, 1800);
+
+        } catch (saveErr) {
+            console.error("Error al cambiar nombre de usuario:", saveErr);
+            if (changeUsernameError) {
+                changeUsernameError.textContent = currentLang === 'es'
+                    ? "Error al actualizar el nombre. Inténtalo de nuevo."
+                    : "Error updating username. Please try again.";
+                changeUsernameError.classList.remove("hidden");
+            }
+            btnSubmitChangeUsername.disabled = false;
+            btnSubmitChangeUsername.textContent = dictionary[currentLang].btnSaveUsername;
+        }
+    });
+}
+
 // Eliminar cuenta desde el formulario (cuando no hay sesión activa o se ingresan credenciales)
 if (deleteForm) {
     deleteForm.addEventListener("submit", async (e) => {
@@ -889,7 +1167,7 @@ if (deleteForm) {
         submitDelBtn.disabled = true;
         submitDelBtn.textContent = currentLang === 'es' ? "Verificando..." : "Verifying...";
 
-        const authEmail = usernameToAuthEmail(usernameVal);
+        const authEmail = await resolveAuthEmailForUsername(usernameVal);
 
         const { data, error } = await supabaseClient.auth.signInWithPassword({
             email:    authEmail,
@@ -1051,7 +1329,7 @@ loginForm.addEventListener("submit", async (e) => {
     submitLoginBtn.disabled = true;
     submitLoginBtn.textContent = currentLang === 'es' ? "Entrando..." : "Logging in...";
 
-    const authEmail = usernameToAuthEmail(usernameVal);
+    const authEmail = await resolveAuthEmailForUsername(usernameVal);
 
     const { data, error } = await supabaseClient.auth.signInWithPassword({
         email:    authEmail,
@@ -1923,6 +2201,17 @@ const dictionary = {
         delError:           "Ocurrió un error al intentar eliminar la cuenta. Por favor, inténtalo de nuevo.",
         delWrongCreds:      "Usuario o contraseña incorrectos.",
         loggedAccountTitle: "👤 MI CUENTA",
+        changeUsernameBtn:      "✏️ CAMBIAR NOMBRE",
+        changeUsernameTitle:    "✏️ Cambiar nombre de usuario",
+        changeUsernameInfo:     "ℹ️ Límite: Solo puedes cambiar tu nombre de usuario 1 vez al mes (cada 30 días).",
+        changeUsernameCooldown: (days) => `⏳ Límite alcanzado: Solo puedes cambiar tu nombre 1 vez al mes. Podrás volver a cambiarlo en ${days} ${days === 1 ? 'día' : 'días'}.`,
+        lblNewUsername:         "Nuevo usuario (@) — 3 a 20 caracteres",
+        placeholderNewUser:     "Tu nuevo usuario",
+        btnSaveUsername:        "GUARDAR",
+        btnCancelUsername:      "CANCELAR",
+        errUserTaken:           "Ese nombre de usuario ya está en uso. Elige otro.",
+        errUserSame:            "El nuevo nombre de usuario no puede ser idéntico al actual.",
+        successUserChanged:     (u) => `¡Nombre cambiado a @${u}! 🎉`,
 
         // Catálogo SneakerDex
         catalogBtn:         "👟 CATÁLOGO",
@@ -2077,6 +2366,17 @@ const dictionary = {
         delError:           "An error occurred while deleting your account. Please try again.",
         delWrongCreds:      "Incorrect username or password.",
         loggedAccountTitle: "👤 MY ACCOUNT",
+        changeUsernameBtn:      "✏️ CHANGE USERNAME",
+        changeUsernameTitle:    "✏️ Change username",
+        changeUsernameInfo:     "ℹ️ Limit: You can only change your username once a month (every 30 days).",
+        changeUsernameCooldown: (days) => `⏳ Limit reached: You can only change your username once a month. You can change it again in ${days} ${days === 1 ? 'day' : 'days'}.`,
+        lblNewUsername:         "New username (@) — 3 to 20 chars",
+        placeholderNewUser:     "Your new username",
+        btnSaveUsername:        "SAVE",
+        btnCancelUsername:      "CANCEL",
+        errUserTaken:           "That username is already taken. Please choose another.",
+        errUserSame:            "The new username cannot be the same as the current one.",
+        successUserChanged:     (u) => `Username changed to @${u}! 🎉`,
 
         // Catalog
         catalogBtn:         "👟 CATALOG",
@@ -2239,6 +2539,13 @@ function applyLanguage(lang) {
     if (el("btn-modal-logout"))        el("btn-modal-logout").innerText        = texts.logoutModalBtn;
     if (el("btn-modal-delete-logged")) el("btn-modal-delete-logged").innerText = texts.delLoggedBtn;
     if (el("logged-title"))            el("logged-title").innerText            = texts.loggedAccountTitle;
+    if (el("btn-modal-change-username"))  el("btn-modal-change-username").innerText  = texts.changeUsernameBtn;
+    if (el("change-username-title"))      el("change-username-title").innerText      = texts.changeUsernameTitle;
+    if (el("lbl-new-username"))           el("lbl-new-username").innerText           = texts.lblNewUsername;
+    if (el("new-username-input"))         el("new-username-input").placeholder       = texts.placeholderNewUser;
+    if (el("btn-submit-change-username")) el("btn-submit-change-username").innerText = texts.btnSaveUsername;
+    if (el("btn-cancel-change-username")) el("btn-cancel-change-username").innerText = texts.btnCancelUsername;
+    if (typeof updateChangeUsernameUI === 'function') updateChangeUsernameUI();
 
     // Catálogo SneakerDex
     if (el("catalog-title"))          el("catalog-title").innerText          = texts.catalogTitle;
